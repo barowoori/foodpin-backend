@@ -56,7 +56,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      # 1. Discord 알림 (빌드 성공/실패)
+      # 1. 코드 체크아웃
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      # 2. Discord 알림 (빌드 성공/실패)
       - name: Notify Discord
         uses: ./.github/actions/notify-discord
         with:

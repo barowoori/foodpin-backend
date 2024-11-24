@@ -1,4 +1,4 @@
-name: Notify Discord
+name: "Notify Discord"
 description: "Send notifications to Discord"
 
 inputs:
@@ -15,7 +15,9 @@ runs:
   using: "composite"
   steps:
     - name: Notify Discord
-      uses: tsickert/discord-webhook@v6.0.0
-      with:
-        webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        content: ":loudspeaker: ${{ inputs.branch-type }} branch's build result is ${{ inputs.build-result }}."
+      run: |
+        curl -X POST -H "Content-Type: application/json" \
+        -d "{ \"content\": \":loudspeaker: Branch '${{ inputs.branch-type }}' build result is '${{ inputs.build-result }}'\" }" \
+        ${{ secrets.DISCORD_WEBHOOK_URL }}
+      env:
+        DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}

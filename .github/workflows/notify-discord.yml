@@ -1,0 +1,25 @@
+name: Notify Discord Workflow
+
+on:
+  workflow_call:
+	  inputs:
+		  branch-type:
+			  description: "main or dev"
+			  required: true
+			  type: string
+		  build-result:
+			  description: "success or failure"
+			  required: true
+			  type: string
+
+jobs:
+  notify-discord:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Discord 알림 (빌드 성공/실패)
+      - name: Notify Discord
+        run: |
+          curl -X POST -H "Content-Type: application/json" \
+          -d '{"content": ":loudspeaker: ${{inputs.branch-type}} branch's build result is ${{ inputs.build-result }}."}' \
+          ${{ secrets.DISCORD_WEBHOOK_URL }}

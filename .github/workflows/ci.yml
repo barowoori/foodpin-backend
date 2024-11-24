@@ -58,7 +58,7 @@ jobs:
     steps:
       # 1. Discord 알림 (빌드 성공/실패)
       - name: Notify Discord
-        uses: ./.github/workflows/notify-discord.yml
+        uses: ./.github/actions/notify-discord
         with:
           branch-type : ${{ github.ref_name }}
           build-result : ${{ needs.build.result }}

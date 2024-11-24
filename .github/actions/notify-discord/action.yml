@@ -15,6 +15,7 @@ runs:
   using: "composite"
   steps:
     - name: Notify Discord
+      shell: bash
       run: |
         curl -X POST -H "Content-Type: application/json" \
         -d "{ \"content\": \":loudspeaker: Branch '${{ inputs.branch-type }}' build result is '${{ inputs.build-result }}'\" }" \

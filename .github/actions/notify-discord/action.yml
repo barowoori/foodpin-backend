@@ -18,6 +18,6 @@ runs:
       run: |
         curl -X POST -H "Content-Type: application/json" \
         -d "{ \"content\": \":loudspeaker: Branch '${{ inputs.branch-type }}' build result is '${{ inputs.build-result }}'\" }" \
-        ${{ secrets.DISCORD_WEBHOOK_URL }}
+        $DISCORD_WEBHOOK_URL
       env:
         DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}

@@ -66,3 +66,5 @@ jobs:
         with:
           branch-type : ${{ github.ref_name }}
           build-result : ${{ needs.build.result }}
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}

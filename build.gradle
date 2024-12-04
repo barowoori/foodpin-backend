@@ -33,7 +33,7 @@ dependencies {
 	implementation 'mysql:mysql-connector-java:8.0.33'
 	runtimeOnly 'mysql:mysql-connector-java:8.0.33'
 
-//	runtimeOnly 'com.h2database:h2'
+	runtimeOnly 'com.h2database:h2'
 
 
 	annotationProcessor 'org.projectlombok:lombok'
@@ -43,4 +43,9 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+
+	// ByteBuddy Agent를 Java Agent로 등록
+	doFirst {
+		jvmArgs += ['-javaagent:' + configurations.testRuntimeClasspath.find { it.name.contains("byte-buddy-agent") }]
+	}
 }

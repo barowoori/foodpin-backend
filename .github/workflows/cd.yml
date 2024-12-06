@@ -22,20 +22,26 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      # 2. Gradle 빌드 및 Docker 이미지 생성
+      # 3. Gradle 빌드 및 Docker 이미지 생성
       - name: Build Docker image
         run: |
           # Gradle 빌드 명령어 실행
           ./gradlew build
           # Docker 이미지 빌드
           docker build -t my-springboot-app .
-
-      # 3. DockerHub / ECR 로그인
+      # 4. AWS 자격증명
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      # 5. DockerHub / ECR 로그인
       - name: Login to AWS ECR
         run: |
           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
-      # 4. Docker 이미지 ECR에 푸시
+      # 6. Docker 이미지 ECR에 푸시
       - name: Push Docker image to ECR
         env:
           ECR_URI: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}
@@ -46,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 5. EC2 인스턴스에 SSH로 접속하여 Docker 이미지 풀 및 실행
+      # EC2 인스턴스에 SSH로 접속하여 Docker 이미지 풀 및 실행
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v0.1.5
         with:

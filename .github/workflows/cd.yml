@@ -51,7 +51,7 @@ jobs:
           # Gradle 빌드 명령어 실행
           ./gradlew build
           # Docker 이미지 빌드
-          docker build -t ${SERVICE} .
+          docker build -t $SERVICE .
       # 4. AWS 자격증명
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
@@ -67,8 +67,8 @@ jobs:
       # 6. Docker 이미지 ECR에 푸시
       - name: Push Docker image to ECR
         run: |
-          docker tag ${SERVICE}:latest ${ECR_URI}_${PROFILE}:latest
-          docker push ${ECR_URI}_${PROFILE}:latest
+          docker tag $SERVICE:latest $ECR_URI_$PROFILE:latest
+          docker push $ECR_URI_$PROFILE:latest
   deploy:
     runs-on: ubuntu-latest
     needs: build
@@ -86,23 +86,23 @@ jobs:
             aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
             
             # 기존 컨테이너가 있다면 종료하고 삭제
-            docker stop ${SERVICE}-${PROFILE} || true
-            docker rm ${SERVICE}-${PROFILE} || true
+            docker stop $SERVICE-$PROFILE || true
+            docker rm $SERVICE-$PROFILE || true
             # 브랜치에 따른 포트 설정
-            if [[ ${PROFILE} == "prod" ]]; then
+            if [[ $PROFILE == "prod" ]]; then
               PORT=8080
-            elif [[ ${PROFILE} == "dev" ]]; then
+            elif [[ $PROFILE == "dev" ]]; then
               PORT=8081
             fi
 
-            echo "Deploying ${SERVICE} to port $PORT with profile ${PROFILE}"
+            echo "Deploying $SERVICE to port $PORT with profile $PROFILE"
             
             # ECR에서 Docker 이미지 풀
-            docker pull ${ECR_URI}_${PROFILE}:latest
+            docker pull $ECR_URI_$PROFILE:latest
 
             # Docker 컨테이너 실행
             docker run -d \
-            --name ${SERVICE}-${PROFILE} \
+            --name $SERVICE-$PROFILE \
             -p $PORT:$PORT \
-            -e SPRING_PROFILES_ACTIVE=${PROFILE} \
-            ${ECR_URI}_${PROFILE}:latest
+            -e SPRING_PROFILES_ACTIVE=$PROFILE \
+            $ECR_URI_$PROFILE:latest

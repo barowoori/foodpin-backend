@@ -21,14 +21,14 @@ jobs:
         run: |
           if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
             echo "PROFILE=prod" >> $GITHUB_ENV
-            echo "main PROFILE is set to ${PROFILE}"
           elif [[ "${GITHUB_REF_NAME}" == "dev" ]]; then
             echo "PROFILE=dev" >> $GITHUB_ENV
-            echo "dev PROFILE is set to ${PROFILE}"
           fi
 
       - name: Set SERVICE variables
         run: |
+          echo "PROFILE is set to ${PROFILE}"
+          echo "github_repository is $(basename ${GITHUB_REPOSITORY})"
           echo "SERVICE=$(basename ${GITHUB_REPOSITORY})" >> $GITHUB_ENV
 
   build:

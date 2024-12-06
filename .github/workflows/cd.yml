@@ -78,7 +78,7 @@ jobs:
         uses: appleboy/ssh-action@v0.1.5
         env:
           SERVICE: ${SERVICE}
-          PROFILE: ${{ env.PROFILE }}
+          PROFILE: ${PROFILE}
           ECR_URI: ${ECR_URI}
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -101,7 +101,7 @@ jobs:
               PORT=8080
             fi
 
-            echo "Deploying ${SERVICE} to port ${PORT} with profile ${PROFILE}"
+            echo "Deploying ${{env.SERVICE}} to port ${{env.PORT}} with profile ${{env.PROFILE}}."
             
             # ECR에서 Docker 이미지 풀
             docker pull ${ECR_URI}:${PROFILE}-latest

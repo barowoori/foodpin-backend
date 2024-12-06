@@ -24,16 +24,17 @@ jobs:
         run: |
           if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
             echo "PROFILE=prod" >> $GITHUB_ENV
-            echo "::set-output name=profile::prod"
+            echo "profile=prod" >> $GITHUB_ENV
           elif [[ "${GITHUB_REF_NAME}" == "dev" ]]; then
             echo "PROFILE=dev" >> $GITHUB_ENV
-            echo "::set-output name=profile::dev"
+            echo "profile=dev" >> $GITHUB_ENV
           fi
 
       - name: Set SERVICE variables
+        id: set-service
         run: |
           echo "SERVICE=$(basename ${GITHUB_REPOSITORY})" >> $GITHUB_ENV
-          echo "::set-output name=service::${SERVICE}"
+          echo "service=${SERVICE}" >> $GITHUB_ENV
 
   build:
     if: ${{ github.event.workflow_run.event == 'push' }}

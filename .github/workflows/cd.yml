@@ -74,7 +74,7 @@ jobs:
     needs: build
     env:
       SERVICE: ${SERVICE}
-      PROFILE: ${{env.PROFILE}}
+      PROFILE: ${PROFILE}
       ECR_URI: ${ECR_URI}
     steps:
       # EC2 인스턴스에 SSH로 접속하여 Docker 이미지 풀 및 실행
@@ -101,8 +101,8 @@ jobs:
               PORT=8080
             fi
 
-            echo "Deploying ${SERVICE} to port ${PORT} with profile ${PROFILE}"
-            echo "Deploying $SERVICE to port $PORT with profile $PROFILE"
+            echo "Deploying ${SERVICE} to port ${PORT} with profile ${{env.PROFILE}}"
+            echo "Deploying $SERVICE to port $PORT with profile $env.PROFILE"
             
             # ECR에서 Docker 이미지 풀
             docker pull ${ECR_URI}:${PROFILE}-latest

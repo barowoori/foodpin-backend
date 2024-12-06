@@ -19,10 +19,12 @@ jobs:
       - name: Set dynamic PROFILE based on branch
         id: set-env
         run: |
-          if [[ "${github.ref_name}" == "main" ]]; then
+          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
             echo "PROFILE=prod" >> $GITHUB_ENV
-          elif [[ "${github.ref_name}" == "dev" ]]; then
+            echo "main PROFILE is set to ${PROFILE}"
+          elif [[ "${GITHUB_REF_NAME}" == "dev" ]]; then
             echo "PROFILE=dev" >> $GITHUB_ENV
+            echo "dev PROFILE is set to ${PROFILE}"
           fi
 
       - name: Set SERVICE variables

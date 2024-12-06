@@ -1,0 +1,76 @@
+name: CD Workflow
+
+on:
+  push:
+    branches:
+      - dev  # dev 브랜치에 푸시될 때 실행됩니다.
+      - main  # main 브랜치에 푸시될 때 실행됩니다.
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. GitHub 저장소 코드 체크아웃
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Gradle 빌드 및 Docker 이미지 생성
+      - name: Build Docker image
+        run: |
+          # Gradle 빌드 명령어 실행
+          ./gradlew build
+          # Docker 이미지 빌드
+          docker build -t my-springboot-app .
+
+      # 3. DockerHub / ECR 로그인
+      - name: Login to AWS ECR
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+      # 4. Docker 이미지 ECR에 푸시
+      - name: Push Docker image to ECR
+        env:
+          ECR_URI: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}
+        run: |
+          docker tag my-springboot-app:latest $ECR_URI:latest
+          docker push $ECR_URI:latest
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 5. EC2 인스턴스에 SSH로 접속하여 Docker 이미지 풀 및 실행
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            # AWS CLI로 ECR 로그인
+            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+            
+            # 기존 컨테이너가 있다면 종료하고 삭제
+            docker stop springboot-app || true
+            docker rm springboot-app || true
+            # 브랜치에 따른 포트 설정
+            if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+              PORT=8080
+              PROFILE=prod
+            else
+              PORT=8081
+              PROFILE=dev
+            fi
+
+            echo "Deploying to port $PORT with profile $PROFILE"
+            
+            # ECR에서 Docker 이미지 풀
+            docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}:latest
+
+            # Docker 컨테이너 실행
+            docker run -d \
+            --name springboot-app \
+            -p $PORT:$PORT \
+            -e SPRING_PROFILES_ACTIVE=$PROFILE \
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}:latest

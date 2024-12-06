@@ -83,7 +83,7 @@ jobs:
       - build
     env:
       PROFILE: ${{ needs.setup-env.outputs.profile }}
-      SERVICE: ${{ needs.setup-env.outputs.service }}
+#      SERVICE: ${{ needs.setup-env.outputs.service }}
     steps:
       # EC2 인스턴스에 SSH로 접속하여 Docker 이미지 풀 및 실행
       - name: Deploy to EC2 via SSH

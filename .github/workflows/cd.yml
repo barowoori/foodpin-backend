@@ -81,6 +81,10 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           port: 22
+          env:
+            SERVICE: ${{ env.SERVICE }}
+            PROFILE: ${{ env.PROFILE }}
+            ECR_URI: ${{ env.ECR_URI }}
           script: |
             # AWS CLI로 ECR 로그인
             aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com

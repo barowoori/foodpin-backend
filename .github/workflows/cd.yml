@@ -93,9 +93,11 @@ jobs:
               PORT=8080
             elif [[ ${PROFILE} == "dev" ]]; then
               PORT=8081
+            else
+              PORT=8080
             fi
 
-            echo "Deploying ${SERVICE} to port $PORT with profile ${PROFILE}"
+            echo "Deploying ${SERVICE} to port ${PORT} with profile ${PROFILE}"
             
             # ECR에서 Docker 이미지 풀
             docker pull ${ECR_URI}:${PROFILE}-latest
@@ -103,6 +105,6 @@ jobs:
             # Docker 컨테이너 실행
             docker run -d \
             --name ${SERVICE}-${PROFILE} \
-            -p $PORT:$PORT \
+            -p ${PORT}:${PORT} \
             -e SPRING_PROFILES_ACTIVE=${PROFILE} \
             ${ECR_URI}:${PROFILE}-latest

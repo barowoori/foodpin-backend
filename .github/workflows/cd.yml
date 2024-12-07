@@ -99,27 +99,26 @@ jobs:
             aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
             
             # 기존 컨테이너가 있다면 종료하고 삭제
-            docker stop ${SERVICE}-${PROFILE} || true
-            docker rm ${SERVICE}-${PROFILE} || true
+            docker stop ${env.SERVICE}-${env.PROFILE} || true
+            docker rm ${env.SERVICE}-${env.PROFILE} || true
             # 브랜치에 따른 포트 설정
-            if [[ ${PROFILE} == "prod" ]]; then
+            if [[ ${env.PROFILE} == "prod" ]]; then
               PORT=8080
-            elif [[ ${PROFILE} == "dev" ]]; then
+            elif [[ ${env.PROFILE} == "dev" ]]; then
               PORT=8081
             else
               PORT=8080
             fi
 
             echo "Deploying ${{ env.SERVICE }} to port ${PORT} with profile ${{ env.PROFILE }}"
-            echo "Deploying $SERVICE to port ${PORT} with profile $PROFILE"
-            echo "Deploying ${{SERVICE}} to port ${PORT} with profile ${{PROFILE}}"
+            echo "Deploying ${env.SERVICE} to port ${PORT} with profile ${env.PROFILE}"
             
             # ECR에서 Docker 이미지 풀
-            docker pull ${{ env.ECR_URI }}:${PROFILE}-latest
+            docker pull ${{ env.ECR_URI }}:${env.PROFILE}-latest
 
             # Docker 컨테이너 실행
             docker run -d \
-            --name ${SERVICE}-${PROFILE} \
+            --name ${env.SERVICE}-${env.PROFILE} \
             -p ${PORT}:${PORT} \
-            -e SPRING_PROFILES_ACTIVE=${PROFILE} \
-            ${{ env.ECR_URI }}:${PROFILE}-latest
+            -e SPRING_PROFILES_ACTIVE=${env.PROFILE} \
+            ${{ env.ECR_URI }}:${env.PROFILE}-latest

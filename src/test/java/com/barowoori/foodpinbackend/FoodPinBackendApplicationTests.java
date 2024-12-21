@@ -1,4 +1,4 @@
-package com.barowoori.server;
+package com.barowoori.foodpinbackend;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -6,7 +6,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 @ActiveProfiles("test")
 @SpringBootTest
-class ServerApplicationTests {
+class FoodPinBackendApplicationTests {
 
 	@Test
 	void contextLoads() {

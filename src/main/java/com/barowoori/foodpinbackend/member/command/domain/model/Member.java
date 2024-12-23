@@ -60,17 +60,20 @@ public class Member {
         this.type = MemberType.NORMAL;
         this.socialLoginInfo = socialLoginInfo;
     }
+    public void updateProfile(ImageManager imageManager, String nickname, MultipartFile image) {
+        setNickname(nickname);
+        setImage(imageManager, image);
+    }
+
+    public void updatePhone(String phone){
+        setPhone(phone);
+    }
 
     private String makeNickname(GenerateNicknameService nicknameGenerator, String nickname) {
         if (nickname == null || nickname.isEmpty()) {
             return nicknameGenerator.generationNickname();
         }
         return nickname;
-    }
-
-    public void updateProfile(ImageManager imageManager, String nickname, MultipartFile image) {
-        setNickname(nickname);
-        setImage(imageManager, image);
     }
 
     private void setNickname(String nickname) {
@@ -83,6 +86,13 @@ public class Member {
     private void setName(String name) {
         if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException("NAME EMPTY");
+        }
+        this.name = name;
+    }
+
+    private void setPhone(String phone){
+        if (phone == null || phone.isEmpty()) {
+            throw new IllegalArgumentException("PHONE EMPTY");
         }
         this.name = name;
     }

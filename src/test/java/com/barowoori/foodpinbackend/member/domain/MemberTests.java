@@ -1,6 +1,5 @@
 package com.barowoori.foodpinbackend.member.domain;
 
-import com.barowoori.foodpinbackend.member.command.application.requestDto.JoinRequest;
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
 import com.barowoori.foodpinbackend.member.command.domain.model.MemberType;
 import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginInfo;

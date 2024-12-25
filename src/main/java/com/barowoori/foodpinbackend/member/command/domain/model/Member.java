@@ -102,8 +102,8 @@ public class Member {
             return;
         }
         if (this.image != null) {
-            imageManager.deleteProfile(this.image);
+            imageManager.deleteFile(this.image);
         }
-        this.image = imageManager.updateProfile(image);
+        this.image = imageManager.updateProfile(image, this.image);
     }
 }

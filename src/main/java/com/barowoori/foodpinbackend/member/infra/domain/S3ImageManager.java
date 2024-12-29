@@ -13,7 +13,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.UUID;
@@ -30,14 +29,18 @@ public class S3ImageManager implements ImageManager {
     }
 
     @Override
-    public String updateProfile(MultipartFile image, String oldFilePath) {
-        String path = null;
+    public String updateFile(MultipartFile newFile, String oldFilePath, ImageDirectory imageDirectory) {
         try {
-            path = updateFile(image, oldFilePath, "profile");
+            if (oldFilePath != null) { //기존 파일 있을 경우 삭제
+                System.out.println("S3 oldFilePath: " + oldFilePath);
+                deleteFile(oldFilePath);
+            }
+            //새 파일 업로드
+            return upload(newFile, imageDirectory.getPath());
         } catch (IOException e) {
             System.out.println("이미지 업로드 실패");
         }
-        return path;
+        return null;
     }
 
     @Override
@@ -106,16 +109,5 @@ public class S3ImageManager implements ImageManager {
         } else {
             System.out.println("파일이 삭제되지 못했습니다.");
         }
-    }
-
-
-    private String updateFile(MultipartFile newFile, String oldFilePath, String dirName) throws IOException {
-        // 기존 파일 삭제
-        if (oldFilePath != null) {
-            System.out.println("S3 oldFilePath: " + oldFilePath);
-            deleteFile(oldFilePath);
-        }
-        // 새 파일 업로드
-        return upload(newFile, dirName);
     }
 }

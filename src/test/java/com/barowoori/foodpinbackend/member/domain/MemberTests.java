@@ -34,7 +34,6 @@ public class MemberTests {
         void WhenExistNickname(){
             Member memberBuilder = Member.builder()
                     .nicknameGenerator(generateNicknameService)
-                    .name("name")
                     .email("email")
                     .phone("01012341234")
                     .nickname("nickname")
@@ -49,7 +48,6 @@ public class MemberTests {
         void WhenNicknameIsNull(){
             Member memberBuilder = Member.builder()
                     .nicknameGenerator(generateNicknameService)
-                    .name("name")
                     .email("email")
                     .phone("01012341234")
                     .nickname(null)
@@ -66,7 +64,6 @@ public class MemberTests {
         void MemberType_Default_NORMAL(){
             Member memberBuilder = Member.builder()
                     .nicknameGenerator(generateNicknameService)
-                    .name("name")
                     .email("email")
                     .phone("01012341234")
                     .nickname("nickname")
@@ -82,14 +79,13 @@ public class MemberTests {
     class CreateMemberFail{
         @Test
         @Transactional
-        @DisplayName("이름이 없으면 예외 처리")
-        void WhenNameIsNull(){
+        @DisplayName("핸드폰 번호가 없으면 예외 처리")
+        void WhenPhoneIsNull(){
             assertThrows(IllegalArgumentException.class, () -> {
                 Member.builder()
                         .nicknameGenerator(generateNicknameService)
-                        .name(null)
                         .email("email")
-                        .phone("01012341234")
+                        .phone(null)
                         .nickname(null)
                         .socialLoginInfo(new SocialLoginInfo(SocialLoginType.KAKAO, "id123"))
                         .build();

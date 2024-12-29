@@ -48,7 +48,7 @@ public class S3ImageManagerTests {
             when(multipartFile.getBytes()).thenReturn(fileContent);
             when(multipartFile.getInputStream()).thenReturn(fileInputStream);
 
-            String uploadedUrl = s3ImageManager.updateProfile(multipartFile, null);
+            String uploadedUrl = s3ImageManager.updateFile(multipartFile, null, ImageDirectory.PROFILE);
 
             assertNotNull(uploadedUrl);
             System.out.println(uploadedUrl);
@@ -65,9 +65,9 @@ public class S3ImageManagerTests {
             when(multipartFile.getOriginalFilename()).thenReturn(fileName);
             when(multipartFile.getBytes()).thenReturn(fileContent);
             when(multipartFile.getInputStream()).thenReturn(fileInputStream);
-            String oldUploadedUrl = s3ImageManager.updateProfile(multipartFile, null);
+            String oldUploadedUrl = s3ImageManager.updateFile(multipartFile, null, ImageDirectory.PROFILE);
 
-            String uploadedUrl = s3ImageManager.updateProfile(multipartFile, oldUploadedUrl);
+            String uploadedUrl = s3ImageManager.updateFile(multipartFile, oldUploadedUrl, ImageDirectory.PROFILE);
             assertNotEquals(oldUploadedUrl, uploadedUrl);
             assertNotNull(uploadedUrl);
             System.out.println(uploadedUrl);

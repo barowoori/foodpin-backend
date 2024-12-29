@@ -2,6 +2,7 @@ package com.barowoori.foodpinbackend.member.command.domain.model;
 
 import com.barowoori.foodpinbackend.member.command.domain.service.GenerateNicknameService;
 import com.barowoori.foodpinbackend.member.command.domain.service.ImageManager;
+import com.barowoori.foodpinbackend.member.infra.domain.ImageDirectory;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,9 +23,6 @@ public class Member {
     @CreationTimestamp
     @Column(name = "create_at", nullable = false)
     private LocalDateTime createAt;
-
-    @Column(name = "name", nullable = false)
-    private String name;
 
     @Column(name = "phone", nullable = false)
     private String phone;
@@ -52,9 +50,8 @@ public class Member {
     protected Member(){}
 
     @Builder
-    public Member(GenerateNicknameService nicknameGenerator, String name, String phone, String email, String nickname, SocialLoginInfo socialLoginInfo) {
-        setName(name);
-        this.phone = phone;
+    public Member(GenerateNicknameService nicknameGenerator, String phone, String email, String nickname, SocialLoginInfo socialLoginInfo) {
+        setPhone(phone);
         this.email = email;
         this.nickname = makeNickname(nicknameGenerator, nickname);
         this.type = MemberType.NORMAL;
@@ -83,18 +80,11 @@ public class Member {
         this.nickname = nickname;
     }
 
-    private void setName(String name) {
-        if (name == null || name.isEmpty()) {
-            throw new IllegalArgumentException("NAME EMPTY");
-        }
-        this.name = name;
-    }
-
     private void setPhone(String phone){
         if (phone == null || phone.isEmpty()) {
             throw new IllegalArgumentException("PHONE EMPTY");
         }
-        this.name = name;
+        this.phone = phone;
     }
 
     private void setImage(ImageManager imageManager, MultipartFile image) {
@@ -104,6 +94,6 @@ public class Member {
         if (this.image != null) {
             imageManager.deleteFile(this.image);
         }
-        this.image = imageManager.updateProfile(image, this.image);
+        this.image = imageManager.updateFile(image, this.image, ImageDirectory.PROFILE);
     }
 }

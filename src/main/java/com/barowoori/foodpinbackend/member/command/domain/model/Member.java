@@ -1,7 +1,10 @@
 package com.barowoori.foodpinbackend.member.command.domain.model;
 
+import com.barowoori.foodpinbackend.common.exception.CustomException;
+import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
 import com.barowoori.foodpinbackend.member.command.domain.service.GenerateNicknameService;
 import com.barowoori.foodpinbackend.member.command.domain.service.ImageManager;
+import com.barowoori.foodpinbackend.member.infra.domain.ImageDirectory;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,9 +25,6 @@ public class Member {
     @CreationTimestamp
     @Column(name = "create_at", nullable = false)
     private LocalDateTime createAt;
-
-    @Column(name = "name", nullable = false)
-    private String name;
 
     @Column(name = "phone", nullable = false)
     private String phone;
@@ -49,23 +49,25 @@ public class Member {
     @Column(name = "image")
     private String image;
 
-    protected Member(){}
+    protected Member() {
+    }
 
     @Builder
-    public Member(GenerateNicknameService nicknameGenerator, String name, String phone, String email, String nickname, SocialLoginInfo socialLoginInfo) {
-        setName(name);
-        this.phone = phone;
+    public Member(String phone, String email, String image, String nickname, SocialLoginInfo socialLoginInfo) {
+        setPhone(phone);
         this.email = email;
-        this.nickname = makeNickname(nicknameGenerator, nickname);
+        setNickname(nickname);
+        this.image = image;
         this.type = MemberType.NORMAL;
         this.socialLoginInfo = socialLoginInfo;
     }
-    public void updateProfile(ImageManager imageManager, String nickname, MultipartFile image) {
+
+    public void updateProfile(ImageManager imageManager, String nickname, String originImageUrl, MultipartFile image) {
         setNickname(nickname);
-        setImage(imageManager, image);
+        setImage(imageManager, originImageUrl, image);
     }
 
-    public void updatePhone(String phone){
+    public void updatePhone(String phone) {
         setPhone(phone);
     }
 
@@ -78,32 +80,26 @@ public class Member {
 
     private void setNickname(String nickname) {
         if (nickname == null || nickname.isEmpty()) {
-            throw new IllegalArgumentException("NICKNAME EMPTY");
+            throw new CustomException(MemberErrorCode.MEMBER_NICKNAME_EMPTY);
         }
         this.nickname = nickname;
     }
 
-    private void setName(String name) {
-        if (name == null || name.isEmpty()) {
-            throw new IllegalArgumentException("NAME EMPTY");
-        }
-        this.name = name;
-    }
-
-    private void setPhone(String phone){
+    private void setPhone(String phone) {
         if (phone == null || phone.isEmpty()) {
-            throw new IllegalArgumentException("PHONE EMPTY");
+            throw new CustomException(MemberErrorCode.MEMBER_PHONE_EMPTY);
         }
-        this.name = name;
+        this.phone = phone;
     }
 
-    private void setImage(ImageManager imageManager, MultipartFile image) {
+    private void setImage(ImageManager imageManager, String originImageUrl, MultipartFile image) {
         if (image == null) {
+            this.image = originImageUrl;
             return;
         }
         if (this.image != null) {
-            imageManager.deleteProfile(this.image);
+            imageManager.deleteFile(this.image);
         }
-        this.image = imageManager.updateProfile(image);
+        this.image = imageManager.updateFile(image, this.image, ImageDirectory.PROFILE);
     }
 }

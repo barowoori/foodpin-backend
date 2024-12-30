@@ -40,6 +40,7 @@ jobs:
         env: # 환경 변수로 GitHub Secrets 값을 읽어옵니다.
           APP_CONFIG_FILE: src/main/resources/secrets/aws-s3-config.yml
         run: |
+          mkdir -p $(dirname ${APP_CONFIG_FILE}) # 디렉토리가 없으면 생성
           echo "s3:" >> ${APP_CONFIG_FILE}
           echo "  credentials:" >> ${APP_CONFIG_FILE}
           echo "    access-key: ${{ secrets.AWS_S3_ACCESS_KEY_ID }}" >> ${APP_CONFIG_FILE}

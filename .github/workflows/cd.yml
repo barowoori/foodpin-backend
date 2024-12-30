@@ -56,7 +56,50 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      - name: Set DB_URL based on PROFILE
+        run: |
+          if [ "${PROFILE}" = "prod" ]; then
+            echo "DB_URL=${{ secrets.DB_URL_PROD }}" >> $GITHUB_ENV
+          elif [ "${PROFILE}" = "dev" ]; then
+            echo "DB_URL=${{ secrets.DB_URL_DEV }}" >> $GITHUB_ENV
+          else
+            echo "Unknown PROFILE: ${PROFILE}"
+            exit 1
+          fi
+
+      - name: Create application.yml dynamically
+        env: # 환경 변수로 GitHub Secrets 값을 읽어옵니다.
+          APP_CONFIG_FILE: src/main/resources/application-${{ env.PROFILE }}.yml
+        run: |
+          echo "spring:" >> ${APP_CONFIG_FILE}
+          echo "  datasource:" >> ${APP_CONFIG_FILE}
+          echo "    driver-class-name: org.mariadb.jdbc.Driver" >> ${APP_CONFIG_FILE}
+          echo "    url: ${DB_URL}" >> ${APP_CONFIG_FILE}
+          echo "    username: ${{ secrets.DB_USERNAME }}" >> ${APP_CONFIG_FILE}
+          echo "    password: ${{ secrets.DB_PASSWORD }}" >> ${APP_CONFIG_FILE}
+          echo "  jpa:" >> ${APP_CONFIG_FILE}
+          echo "    database: mysql" >> ${APP_CONFIG_FILE}
+          echo "    show-sql: false" >> ${APP_CONFIG_FILE}
+          echo "    generate-ddl: false" >> ${APP_CONFIG_FILE}
+          echo "    hibernate:" >> ${APP_CONFIG_FILE}
+          echo "      ddl-auto: none" >> ${APP_CONFIG_FILE}
+
+      # application-S3.properties 생성
+      - name: Create aws-s3-config.yml
+        env: # 환경 변수로 GitHub Secrets 값을 읽어옵니다.
+          APP_CONFIG_FILE: src/main/resources/secrets/aws-s3-config.yml
+        run: |
+          echo "s3:" >> ${APP_CONFIG_FILE}
+          echo "  credentials:" >> ${APP_CONFIG_FILE}
+          echo "    access-key: ${{ secrets.AWS_S3_ACCESS_KEY_ID }}" >> ${APP_CONFIG_FILE}
+          echo "    secret-key: ${{ secrets.AWS_S3_SECRET_ACCESS_KEY }}" >> ${APP_CONFIG_FILE}
+          echo "  region: ${{ secrets.AWS_REGION }}" >> ${APP_CONFIG_FILE}
+          echo "  bucket: ${{ secrets.S3_BUCKET }}" >> ${APP_CONFIG_FILE}
+
       # 3. Gradle 빌드 및 Docker 이미지 생성
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
       - name: Build Docker image
         run: |
           # Gradle 빌드 명령어 실행
@@ -67,8 +110,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.AWS_ECR_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_ECR_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
       # 5. DockerHub / ECR 로그인
       - name: Login to AWS ECR

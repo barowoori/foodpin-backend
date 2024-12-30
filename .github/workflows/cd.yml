@@ -73,7 +73,7 @@ jobs:
         run: |
           echo "spring:" >> ${APP_CONFIG_FILE}
           echo "  datasource:" >> ${APP_CONFIG_FILE}
-          echo "    driver-class-name: org.mariadb.jdbc.Driver" >> ${APP_CONFIG_FILE}
+          echo "    driver-class-name: com.mysql.cj.jdbc.Driver" >> ${APP_CONFIG_FILE}
           echo "    url: ${DB_URL}" >> ${APP_CONFIG_FILE}
           echo "    username: ${{ secrets.DB_USERNAME }}" >> ${APP_CONFIG_FILE}
           echo "    password: ${{ secrets.DB_PASSWORD }}" >> ${APP_CONFIG_FILE}

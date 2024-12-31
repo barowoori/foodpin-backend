@@ -98,7 +98,7 @@ public class MemberTests {
         @Transactional
         @DisplayName("닉네임이 없으면 예외 처리")
         void WhenNicknameIsNull() {
-            CustomException exception = assertThrows(CustomException.class, ()->{
+            CustomException exception = assertThrows(CustomException.class, () -> {
                 Member.builder()
                         .email("email")
                         .phone("01012341234")
@@ -114,8 +114,9 @@ public class MemberTests {
     @DisplayName("회원 프로필 변경 테스트")
     class UpdateProfileSuccess {
         private Member member;
+
         @BeforeEach
-        void setUp()throws IOException {
+        void setUp() throws IOException {
             MockitoAnnotations.openMocks(this);
 
             String fileName = "test-file.jpg";
@@ -143,24 +144,24 @@ public class MemberTests {
         @Test
         @Transactional
         @DisplayName("닉네임은 전달된 값으로 변경된다")
-        void WhenChangedNickname(){
+        void WhenChangedNickname() {
             String originNickname = member.getNickname();
             assertEquals("nickname", originNickname);
 
-            member.updateProfile(imageManager, member.getNickname()+"1","originImageUrl", null);
+            member.updateProfile(imageManager, member.getNickname() + "1", "originImageUrl", null);
 
             String updatedNickname = member.getNickname();
-            assertEquals(originNickname+"1", updatedNickname);
+            assertEquals(originNickname + "1", updatedNickname);
         }
 
         @Test
         @Transactional
         @DisplayName("새 파일이 없고 기존 이미지 url을 전달할 경우 이미지는 변경되지 않는다")
-        void WhenNotExistNewFileAndExistOriginImageUrl(){
+        void WhenNotExistNewFileAndExistOriginImageUrl() {
             String originImage = member.getImage();
             assertEquals("originImageUrl", originImage);
 
-            member.updateProfile(imageManager, member.getNickname(),"originImageUrl", null);
+            member.updateProfile(imageManager, member.getNickname(), "originImageUrl", null);
 
             String updatedImage = member.getImage();
             assertEquals(originImage, updatedImage);
@@ -169,11 +170,11 @@ public class MemberTests {
         @Test
         @Transactional
         @DisplayName("새 파일이 있으면 이미지는 변경된다")
-        void WhenExistNewFileAndNotExistOriginImageUrl(){
+        void WhenExistNewFileAndNotExistOriginImageUrl() {
             String originImage = member.getImage();
             assertEquals("originImageUrl", originImage);
 
-            member.updateProfile(imageManager, member.getNickname(),null, multipartFile);
+            member.updateProfile(imageManager, member.getNickname(), null, multipartFile);
 
             String updatedImage = member.getImage();
             assertEquals("updatedImageUrl", updatedImage);
@@ -183,11 +184,11 @@ public class MemberTests {
         @Test
         @Transactional
         @DisplayName("새 파일이 있으면 기존 이미지 url을 보내도 이미지는 변경된다")
-        void WhenExistNewFileAndExistOriginImageUrl(){
+        void WhenExistNewFileAndExistOriginImageUrl() {
             String originImage = member.getImage();
             assertEquals("originImageUrl", originImage);
 
-            member.updateProfile(imageManager, member.getNickname(),"originImageUrl", multipartFile);
+            member.updateProfile(imageManager, member.getNickname(), "originImageUrl", multipartFile);
 
             String updatedImage = member.getImage();
             assertEquals("updatedImageUrl", updatedImage);
@@ -197,13 +198,105 @@ public class MemberTests {
         @Test
         @Transactional
         @DisplayName("새 파일과 기존 이미지 url이 없을 경우 이미지는 null로 저장된다")
-        void WhenNotExistNewFileAndNotExistOriginImageUrl(){
+        void WhenNotExistNewFileAndNotExistOriginImageUrl() {
             String originImage = member.getImage();
             assertEquals("originImageUrl", originImage);
 
-            member.updateProfile(imageManager, member.getNickname(),null, null);
+            member.updateProfile(imageManager, member.getNickname(), null, null);
 
             assertNull(member.getImage());
+        }
+    }
+
+    @Nested
+    @DisplayName("회원 핸드폰 번호 변경 테스트")
+    class UpdatePhone {
+        private Member member;
+
+        @BeforeEach
+        void setUp() {
+            Member memberBuilder = Member.builder()
+                    .email("email")
+                    .phone("01012341234")
+                    .nickname("nickname")
+                    .socialLoginInfo(new SocialLoginInfo(SocialLoginType.KAKAO, "id123"))
+                    .image("originImageUrl")
+                    .build();
+            member = memberRepository.save(memberBuilder);
+        }
+
+        @Test
+        @Transactional
+        @DisplayName("전달 받은 값으로 핸드폰 번호가 변경된다")
+        void WhenChangePhoneSuccess() {
+            String originPhone = member.getPhone();
+            assertEquals("01012341234", originPhone);
+
+            member.updatePhone(member.getPhone() + "1");
+
+            String updatedPhone = member.getPhone();
+            assertEquals(originPhone + "1", updatedPhone);
+        }
+
+        @Test
+        @Transactional
+        @DisplayName("핸드폰 번호는 null이 될 수 없다")
+        void WhenChangePhoneFailed() {
+            CustomException exception = assertThrows(CustomException.class, () -> member.updatePhone(null));
+            assertEquals(MemberErrorCode.MEMBER_PHONE_EMPTY.getMessage(), exception.getMessage());
+        }
+    }
+
+    @Nested
+    @DisplayName("리프래시 토큰 관리 테스트")
+    class ManageRefreshToken {
+
+        private Member member;
+
+        @BeforeEach
+        void setUp() {
+            Member memberBuilder = Member.builder()
+                    .email("email")
+                    .phone("01012341234")
+                    .nickname("nickname")
+                    .socialLoginInfo(new SocialLoginInfo(SocialLoginType.KAKAO, "id123"))
+                    .image("originImageUrl")
+                    .refreshToken("originToken")
+                    .build();
+            member = memberRepository.save(memberBuilder);
+        }
+
+        @Test
+        @Transactional
+        @DisplayName("업데이트할 때 리프레시 토큰은 전달받은 값으로 변경된다")
+        void WhenChangeRefreshTokenSuccess() {
+            member.updateRefreshToken("updatedToken");
+            assertEquals("updatedToken", member.getRefreshToken());
+        }
+
+
+        @Test
+        @Transactional
+        @DisplayName("리프레시 토큰이 일치하면 true를 반환한다")
+        void WhenMatchRefreshTokenSuccess() {
+            assertTrue(member.matchRefreshToken(member.getRefreshToken()));
+        }
+
+        @Test
+        @Transactional
+        @DisplayName("리프레시 토큰이 일치하지 않으면 false를 반환한다")
+        void WhenNotMatchRefreshTokenSuccess() {
+            assertFalse(member.matchRefreshToken(member.getRefreshToken() + "1"));
+        }
+
+        @Test
+        @Transactional
+        @DisplayName("기존 리프레시 토큰이 null이면 예외 처리")
+        void WhenOriginRefreshTokenIsNull() {
+            member.updateRefreshToken(null);
+
+            CustomException exception = assertThrows(CustomException.class, () -> member.matchRefreshToken("new"));
+            assertEquals(MemberErrorCode.MEMBER_ORIGIN_REFRESH_TOKEN_EMPTY.getMessage(), exception.getMessage());
         }
     }
 }

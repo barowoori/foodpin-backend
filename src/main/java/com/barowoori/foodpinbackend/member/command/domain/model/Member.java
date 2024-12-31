@@ -49,17 +49,21 @@ public class Member {
     @Column(name = "image")
     private String image;
 
+    @Column(name = "refresh_token")
+    private String refreshToken;
+
     protected Member() {
     }
 
     @Builder
-    public Member(String phone, String email, String image, String nickname, SocialLoginInfo socialLoginInfo) {
+    public Member(String phone, String email, String image, String nickname, SocialLoginInfo socialLoginInfo, String refreshToken) {
         setPhone(phone);
         this.email = email;
         setNickname(nickname);
         this.image = image;
         this.type = MemberType.NORMAL;
         this.socialLoginInfo = socialLoginInfo;
+        this.refreshToken = refreshToken;
     }
 
     public void updateProfile(ImageManager imageManager, String nickname, String originImageUrl, MultipartFile image) {
@@ -71,11 +75,15 @@ public class Member {
         setPhone(phone);
     }
 
-    private String makeNickname(GenerateNicknameService nicknameGenerator, String nickname) {
-        if (nickname == null || nickname.isEmpty()) {
-            return nicknameGenerator.generationNickname();
+    public void updateRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public Boolean matchRefreshToken(String refreshToken) {
+        if (this.refreshToken == null) {
+            throw new CustomException(MemberErrorCode.MEMBER_ORIGIN_REFRESH_TOKEN_EMPTY);
         }
-        return nickname;
+        return this.refreshToken.equals(refreshToken);
     }
 
     private void setNickname(String nickname) {

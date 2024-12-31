@@ -55,15 +55,6 @@ dependencies {
 	annotationProcessor "jakarta.persistence:jakarta.persistence-api"
 }
 
-// QueryDSL
-sourceSets {
-	main {
-		java {
-			srcDirs = ["$projectDir/src/main/java", "$projectDir/build/generated"]
-		}
-	}
-}
-
 tasks.named('test') {
 	useJUnitPlatform()
 

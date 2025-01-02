@@ -23,8 +23,8 @@ public class Member {
     private String id;
 
     @CreationTimestamp
-    @Column(name = "create_at", nullable = false)
-    private LocalDateTime createAt;
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 
     @Column(name = "phone", nullable = false)
     private String phone;
@@ -36,8 +36,8 @@ public class Member {
     private String nickname;
 
     @UpdateTimestamp
-    @Column(name = "update_at")
-    private LocalDateTime updateAt;
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @Column(name = "type")
     @Enumerated(value = EnumType.STRING)

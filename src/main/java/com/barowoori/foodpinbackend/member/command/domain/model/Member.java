@@ -46,10 +46,10 @@ public class Member {
     @Embedded
     private SocialLoginInfo socialLoginInfo;
 
-    @Column(name = "image")
+    @Column(name = "image", length = 1000)
     private String image;
 
-    @Column(name = "refresh_token")
+    @Column(name = "refresh_token", length = 1000)
     private String refreshToken;
 
     protected Member() {

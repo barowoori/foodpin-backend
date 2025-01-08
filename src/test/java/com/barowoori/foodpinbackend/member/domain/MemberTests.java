@@ -72,7 +72,7 @@ public class MemberTests {
                     .socialLoginInfo(new SocialLoginInfo(SocialLoginType.KAKAO, "id123"))
                     .build();
             Member member = memberRepository.save(memberBuilder);
-            assertEquals(MemberType.NORMAL, member.getType());
+            assertTrue(member.getTypes().contains(MemberType.NORMAL));
         }
     }
 

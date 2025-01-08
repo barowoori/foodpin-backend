@@ -9,6 +9,7 @@ import com.barowoori.foodpinbackend.member.command.domain.model.Member;
 import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
 import com.barowoori.foodpinbackend.member.command.domain.service.GenerateNicknameService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,7 +43,8 @@ public class MemberService {
     }
 
     @Transactional
-    public ResponseMember.GetMemberDto getMember(String memberId){
+    public ResponseMember.GetMemberDto getMember(){
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
         return ResponseMember.GetMemberDto.toDto(member);

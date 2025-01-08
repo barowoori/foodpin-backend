@@ -90,12 +90,6 @@ public class JwtTokenProvider {
         return info;
     }
 
-    public String getMemberId(HttpServletRequest request){
-        String token = resolveToken(request);
-        Claims claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody();
-        return claims.getSubject(); // sub 값(id) 추출
-    }
-
     public String resolveToken(HttpServletRequest request) {
         LOGGER.info("[resolveToken] HTTP 헤더에서 Token 값 추출");
         return request.getHeader("Authorization");

@@ -39,9 +39,8 @@ public class MemberController {
     }
 
     @GetMapping("/get")
-    public ResponseEntity<CommonResponse> getMember(HttpServletRequest request) {
-        String memberId = jwtTokenProvider.getMemberId(request);
-        ResponseMember.GetMemberDto getMemberDto = memberService.getMember(memberId);
+    public ResponseEntity<CommonResponse> getMember(){
+        ResponseMember.GetMemberDto getMemberDto = memberService.getMember();
         CommonResponse commonResponse = CommonResponse.builder()
                 .data(getMemberDto)
                 .build();

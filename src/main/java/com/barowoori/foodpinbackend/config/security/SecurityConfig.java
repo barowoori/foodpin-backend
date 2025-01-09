@@ -36,7 +36,7 @@ public class SecurityConfig {
                 //리퀘스트에 대한 사용 권한 체크
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/v3/api-docs/**", "/swagger-resources/**", "/swagger-ui/**",
-                                "/api/member/register", "/api/member/login", "/api/member/get","/api/member/generateNickname").permitAll()
+                                "/api/members/v1/register", "/api/members/v1/login", "/api/members/v1/random-nickname","/api/members/v1/nickname/{nickname}/valid").permitAll()
                         .requestMatchers("**exception**").permitAll())
 
                 // 나머지 요청은 인증된 NORMAL 접근 가능

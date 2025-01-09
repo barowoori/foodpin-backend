@@ -9,10 +9,10 @@ import java.util.UUID;
 
 @Getter
 @Builder
-public class CommonResponse {
+public class CommonResponse<T> {
     @Builder.Default
     private String id = UUID.randomUUID().toString();
     @Builder.Default
     private LocalDateTime createAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
-    private Object data;
+    private T data;
 }

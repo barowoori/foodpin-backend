@@ -2,6 +2,7 @@ package com.barowoori.foodpinbackend.truck.command.domain.model;
 
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -37,10 +38,16 @@ public class TruckManager {
     protected TruckManager() {
     }
 
+    @Builder
     public TruckManager(TruckManagerRole role, LocalDateTime roleUpdatedAt, Member member, Truck truck) {
         this.role = role;
         this.roleUpdatedAt = roleUpdatedAt;
         this.member = member;
         this.truck = truck;
+    }
+
+    public void updateRole(TruckManagerRole role){
+        this.role = role;
+        this.roleUpdatedAt = LocalDateTime.now();
     }
 }

@@ -1,6 +1,7 @@
 package com.barowoori.foodpinbackend.truck.command.domain.model;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -46,6 +47,7 @@ public class Truck {
 
     protected Truck(){}
 
+    @Builder
     public Truck(String name, LocalDateTime updatedAt, String updatedBy, String description, Boolean electricityUsage, Boolean gasUsage, Boolean selfGenerationAvailability, Boolean isDeleted) {
         this.name = name;
         this.updatedAt = updatedAt;

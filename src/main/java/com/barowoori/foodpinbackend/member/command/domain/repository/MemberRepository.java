@@ -2,6 +2,7 @@ package com.barowoori.foodpinbackend.member.command.domain.repository;
 
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
 import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginInfo;
+import com.barowoori.foodpinbackend.member.command.domain.repository.querydsl.MemberRepositoryCustom;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MemberRepository extends JpaRepository<Member, String>, MemberRepositoryCustom {

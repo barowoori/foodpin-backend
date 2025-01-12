@@ -21,14 +21,14 @@ jobs:
 
       # 2. Java 설정 (Gradle 빌드에 사용할 JDK 버전 설정)
       - name: Set up JDK 21
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
 
       # 3. Gradle 캐시 설정 (의존성 캐시를 통해 빌드 속도 향상)
       - name: Cache Gradle dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.gradle/caches
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
@@ -48,6 +48,13 @@ jobs:
           echo "  region: ${{ secrets.AWS_REGION }}" >> ${APP_CONFIG_FILE}
           echo "  bucket: ${{ secrets.S3_BUCKET }}" >> ${APP_CONFIG_FILE}
 
+      - name: Create jwt-secret-keys.properties
+        env:
+          APP_CONFIG_FILE: src/main/resources/secrets/jwt-secret-key.properties
+        run: |
+          mkdir -p $(dirname ${APP_CONFIG_FILE}) # 디렉토리가 없으면 생성
+          echo "jwt.secret=${{ secrets.JWT_SECRET_KEY }}" >> ${APP_CONFIG_FILE}
+
       # 4. Gradle 빌드 및 테스트 실행
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
@@ -60,7 +67,7 @@ jobs:
       # 5. 테스트 결과 출력
       - name: Upload Test Results
         if: failure()  # 실패한 경우에만 결과를 업로드합니다.
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: build/test-results/test
@@ -68,7 +75,7 @@ jobs:
       # 6. 빌드 결과 출력 (예: JAR 파일 위치)
       - name: Upload Build Artifacts
         if: success()  # 성공한 경우에만 업로드
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: build/libs

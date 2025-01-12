@@ -46,8 +46,7 @@ public class SecurityConfig {
                 //우리 서비스에 권한 자체가 없을 경우
                 .exceptionHandling(handler -> handler.authenticationEntryPoint(new CustomAuthenticationEntryPoint()))
                 //토큰 유효 체크 필터 -> 아이디/비번 체크 필터 순으로 실행
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
-                .rememberMe(Customizer.withDefaults());
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

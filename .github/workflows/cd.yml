@@ -97,6 +97,13 @@ jobs:
           echo "  region: ${{ secrets.AWS_REGION }}" >> ${APP_CONFIG_FILE}
           echo "  bucket: ${{ secrets.S3_BUCKET }}" >> ${APP_CONFIG_FILE}
 
+      - name: Create jwt-secret-keys.properties
+        env:
+          APP_CONFIG_FILE: src/main/resources/secrets/jwt-secret-key.properties
+        run: |
+          mkdir -p $(dirname ${APP_CONFIG_FILE}) # 디렉토리가 없으면 생성
+          echo "jwt.secret=${{ secrets.JWT_SECRET_KEY }}" >> ${APP_CONFIG_FILE}
+
       # 3. Gradle 빌드 및 Docker 이미지 생성
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew

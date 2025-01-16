@@ -29,21 +29,28 @@ public class MemberService {
     private final JwtTokenProvider jwtTokenProvider;
     private final ImageManager imageManager;
 
+    private Member getMember(){
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+        return member;
+    }
+
     @Transactional
     public void registerMember(RequestMember.RegisterMemberDto registerMemberDto) {
 
-        Member member = memberRepository.findBySocialLoginInfo(CommonMember.SocialInfoDto.toEntity(registerMemberDto.getSocialInfoDto()));
+        Member member = memberRepository.findBySocialLoginInfo(registerMemberDto.getSocialInfoDto().toEntity());
         if(member != null){
             throw new CustomException(MemberErrorCode.MEMBER_SOCIAL_LOGIN_INFO_EXISTS);
         }
 
-        member = RequestMember.RegisterMemberDto.toEntity(registerMemberDto);
+        member = registerMemberDto.toEntity();
         memberRepository.save(member);
     }
 
     @Transactional
     public ResponseMember.LoginMemberRsDto loginMember(RequestMember.LoginMemberRqDto loginMemberRqDto) {
-        Member member = memberRepository.findBySocialLoginInfo(CommonMember.SocialInfoDto.toEntity(loginMemberRqDto.getSocialInfoDto()));
+        Member member = memberRepository.findBySocialLoginInfo(loginMemberRqDto.getSocialInfoDto().toEntity());
         if (member == null)
             throw new CustomException(MemberErrorCode.MEMBER_NOT_FOUND);
         String accessToken = jwtTokenProvider.createAccessToken(member.getId());
@@ -55,9 +62,7 @@ public class MemberService {
 
     @Transactional
     public ResponseMember.ReissueTokenDto reissueToken(String refreshToken){
-        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+        Member member = getMember();
         String accessToken;
         if (member.matchRefreshToken(refreshToken)) {
             accessToken = jwtTokenProvider.createAccessToken(member.getId());
@@ -74,9 +79,7 @@ public class MemberService {
 
     @Transactional
     public ResponseMember.GetInfoDto getInfo(){
-        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+        Member member = getMember();
         return ResponseMember.GetInfoDto.toDto(member);
     }
 
@@ -99,28 +102,22 @@ public class MemberService {
     @Transactional
     public ResponseMember.CheckPhoneDto checkPhone(String phone){
         Member member = memberRepository.findByPhone(phone);
-        boolean isRegistered = false;
         if (member != null) {
-            isRegistered = true;
-            return  ResponseMember.CheckPhoneDto.toDto(isRegistered, member.getSocialLoginInfo());
+            return  ResponseMember.CheckPhoneDto.toDto(member.getSocialLoginInfo());
         }
-        return ResponseMember.CheckPhoneDto.toDto(isRegistered, new SocialLoginInfo(SocialLoginType.valueOf("NONE"),"null"));
+        return ResponseMember.CheckPhoneDto.toDto(new SocialLoginInfo(SocialLoginType.valueOf("NONE"),"null"));
     }
 
     @Transactional
     public void updateProfile(RequestMember.UpdateProfileRqDto updateProfileRqDto, MultipartFile image){
-        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+        Member member = getMember();
         member.updateProfile(imageManager, updateProfileRqDto.getNickname(), updateProfileRqDto.getOriginImageUrl(), image);
         memberRepository.save(member);
     }
 
     @Transactional
     public void logoutMember(String refreshToken){
-        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+        Member member = getMember();
         if (member.matchRefreshToken(refreshToken)) {
             member.updateRefreshToken(null);
             memberRepository.save(member);

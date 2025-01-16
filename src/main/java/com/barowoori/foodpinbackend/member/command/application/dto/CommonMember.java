@@ -22,10 +22,10 @@ public class CommonMember {
                     .build();
         }
 
-        public static SocialLoginInfo toEntity(SocialInfoDto socialInfoDto){
+        public SocialLoginInfo toEntity(){
             return SocialLoginInfo.builder()
-                    .type(socialInfoDto.getType())
-                    .id(socialInfoDto.getId())
+                    .type(this.type)
+                    .id(this.id)
                     .build();
         }
     }

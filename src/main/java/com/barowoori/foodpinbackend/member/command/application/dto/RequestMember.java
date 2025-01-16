@@ -24,11 +24,11 @@ public class RequestMember {
         @NotEmpty(message = "닉네임이 비었습니다")
         private String nickname;
 
-        public static Member toEntity(RegisterMemberDto registerMemberDto){
+        public Member toEntity(){
             return Member.builder()
-                    .phone(registerMemberDto.getPhone())
-                    .socialLoginInfo(CommonMember.SocialInfoDto.toEntity(registerMemberDto.getSocialInfoDto()))
-                    .nickname(registerMemberDto.getNickname())
+                    .phone(this.phone)
+                    .socialLoginInfo(this.socialInfoDto.toEntity())
+                    .nickname(this.nickname)
                     .build();
         }
     }

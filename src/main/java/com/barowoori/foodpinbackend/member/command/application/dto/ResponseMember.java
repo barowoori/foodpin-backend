@@ -93,14 +93,11 @@ public class ResponseMember {
     @Data
     @Builder
     public static class CheckPhoneDto{
-        @Schema(description = "번호 가입 여부")
-        private Boolean isRegistered;
         @Schema(description = "소셜 로그인 정보")
         private CommonMember.SocialInfoDto socialInfoDto;
 
-        public static CheckPhoneDto toDto(Boolean isRegistered, SocialLoginInfo socialLoginInfo){
+        public static CheckPhoneDto toDto(SocialLoginInfo socialLoginInfo){
             return CheckPhoneDto.builder()
-                    .isRegistered(isRegistered)
                     .socialInfoDto(CommonMember.SocialInfoDto.toDto(socialLoginInfo))
                     .build();
         }

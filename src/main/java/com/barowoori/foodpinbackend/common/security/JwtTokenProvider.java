@@ -35,7 +35,9 @@ public class JwtTokenProvider {
     @Value("${jwt.secret}")
     private String secretKey;
 
-    private final long tokenValidMillisecond = 1000L * 60 * 60; // 1시간 토큰 유효
+    private final long accessTokenValidMillisecond = 1000L * 60 * 60; // 1시간 액세스 토큰 유효
+    private final long refreshTokenValidMillisecond = 1000L * 60 * 60 * 24 * 30; // 30일 리프레쉬 토큰 유효
+    private final long millisecondBeforeExpiry = 1000L * 60 * 60 * 24 * 7; // 7일 이내 만료인 지
 
     @PostConstruct
     protected void init() {
@@ -44,22 +46,33 @@ public class JwtTokenProvider {
         LOGGER.info("[init] JwtTokenProvider 내 secretKey 초기화 완료");
     }
 
-    public String createToken(String id, Set<MemberType> types) {
-        LOGGER.info("[createToken] 토큰 생성 시작");
-        Claims claims = Jwts.claims().setSubject(id);
-        claims.put("types", types.stream().map(Enum::name).collect(Collectors.toList()));
-
+    public String createAccessToken(String id) {
+        LOGGER.info("[createAccessToken] access 토큰 생성 시작");
         Date now = new Date();
-        String token = Jwts.builder()
-            .setClaims(claims)
+        String accessToken = Jwts.builder()
+            .setSubject(id)
             .setIssuedAt(now)
-            .setExpiration(new Date(now.getTime() + tokenValidMillisecond))
+            .setExpiration(new Date(now.getTime() + accessTokenValidMillisecond))
             .signWith(SignatureAlgorithm.HS256, secretKey)
             .compact();
 
-        LOGGER.info("[createToken] 토큰 생성 완료");
-        return token;
+        LOGGER.info("[createAccessToken] access 토큰 생성 완료");
+        return accessToken;
     }
+
+    public String createRefreshToken(String id) {
+        LOGGER.info("[createRefreshToken] 리프레시 토큰 생성 시작");
+        Date now = new Date();
+        String refreshToken = Jwts.builder()
+                .setSubject(id)
+                .setIssuedAt(now)
+                .setExpiration(new Date(now.getTime() + refreshTokenValidMillisecond)) // 7일 유효
+                .signWith(SignatureAlgorithm.HS256, secretKey)
+                .compact();
+        LOGGER.info("[createRefreshToken] 리프레시 토큰 생성 완료");
+        return refreshToken;
+    }
+
 
     public boolean validateToken(String token) {
         LOGGER.info("[validateToken] 토큰 유효 체크 시작");
@@ -76,22 +89,28 @@ public class JwtTokenProvider {
     public Authentication getAuthentication(String token) {
         LOGGER.info("[getAuthentication] 토큰 인증 정보 조회 시작");
         UserDetails userDetails = userDetailsService.loadUserByUsername(this.getUsername(token));
-        LOGGER.info("[getAuthentication] 토큰 인증 정보 조회 완료, UserDetails UserName : {}",
+        LOGGER.info("[getAuthentication] 인증 정보 조회 완료, UserDetails UserName : {}",
             userDetails.getUsername());
         return new UsernamePasswordAuthenticationToken(userDetails, "",
             userDetails.getAuthorities());
     }
 
-    public String getUsername(String token) {
-        LOGGER.info("[getUsername] 토큰 기반 회원 구별 정보 추출");
-        String info = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody()
+    public String getUsername(String accessToken) {
+        LOGGER.info("[getUsername] access 토큰 기반 회원 구별 정보 추출");
+        String info = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(accessToken).getBody()
             .getSubject();
-        LOGGER.info("[getUsername] 토큰 기반 회원 구별 정보 추출 완료, info : {}", info);
+        LOGGER.info("[getUsername] access 토큰 기반 회원 구별 정보 추출 완료, info : {}", info);
         return info;
     }
 
     public String resolveToken(HttpServletRequest request) {
         LOGGER.info("[resolveToken] HTTP 헤더에서 Token 값 추출");
         return request.getHeader("Authorization");
+    }
+
+    public Boolean checkExpiry(String token) {
+        Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
+        Date now = new Date();
+        return claims.getBody().getExpiration().before(new Date(now.getTime() + millisecondBeforeExpiry));
     }
 }

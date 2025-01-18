@@ -1,11 +1,14 @@
 package com.barowoori.foodpinbackend.truck.command.domain.model;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "truck_menus")
@@ -35,13 +38,17 @@ public class TruckMenu {
     @Column(name = "price")
     private Integer price;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trucks_id", nullable = false)
     private Truck truck;
+
+    @OneToMany(mappedBy = "truckMenu")
+    private List<TruckMenuPhoto> photos = new ArrayList<>();
 
     protected TruckMenu() {
     }
 
+    @Builder
     public TruckMenu(String name, LocalDateTime updatedAt, String updatedBy, String description, Integer price, Truck truck) {
         this.name = name;
         this.updatedAt = updatedAt;

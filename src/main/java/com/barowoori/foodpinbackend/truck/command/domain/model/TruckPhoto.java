@@ -1,6 +1,7 @@
 package com.barowoori.foodpinbackend.truck.command.domain.model;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -24,13 +25,14 @@ public class TruckPhoto {
     @Column(name = "updated_by")
     private String updatedBy;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trucks_id")
     private Truck truck;
 
     protected TruckPhoto() {
     }
 
+    @Builder
     public TruckPhoto(String path, String updatedBy, Truck truck) {
         this.path = path;
         this.updatedBy = updatedBy;

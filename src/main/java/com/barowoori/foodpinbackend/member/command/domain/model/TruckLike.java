@@ -20,11 +20,11 @@ public class TruckLike {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createAt;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "members_id", nullable = false)
     private Member member;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trucks_id", nullable = false)
     private Truck truck;
 

@@ -5,4 +5,5 @@ import com.barowoori.foodpinbackend.truck.command.domain.repository.querydsl.Tru
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TruckManagerRepository extends JpaRepository<TruckManager, String>, TruckManagerRepositoryCustom {
+    TruckManager findByTruckIdAndMemberId(String truckId, String memberId);
 }

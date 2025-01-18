@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public enum TruckErrorCode implements ErrorCode {
-    MEMBER_NICKNAME_EMPTY(HttpStatus.BAD_REQUEST, 20000, "MEMBER_NICKNAME_EMPTY");
+    NOT_FOUND_TRUCK(HttpStatus.BAD_REQUEST, 30000, "NOT_FOUND_TRUCK");
 
     private final HttpStatus httpStatus;
     private final Integer code;

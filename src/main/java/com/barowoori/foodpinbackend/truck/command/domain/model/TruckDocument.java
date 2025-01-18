@@ -1,6 +1,7 @@
 package com.barowoori.foodpinbackend.truck.command.domain.model;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -36,13 +37,14 @@ public class TruckDocument {
     @Column(name = "is_approval")
     private Boolean approval;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trucks_id")
     private Truck truck;
 
     protected TruckDocument() {
     }
 
+    @Builder
     public TruckDocument(LocalDateTime updatedAt, String updatedBy, DocumentType type, String path, Boolean approval, Truck truck) {
         this.updatedAt = updatedAt;
         this.updatedBy = updatedBy;

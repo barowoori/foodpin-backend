@@ -62,7 +62,7 @@ public class TruckManagerRepositoryTests {
         TruckManager truckManager = TruckManager.builder()
                 .truck(truck)
                 .member(member)
-                .role(TruckManagerRole.MEMBER)
+                .role(role)
                 .build();
         return truckManagerRepository.save(truckManager);
 

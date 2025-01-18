@@ -1,11 +1,14 @@
 package com.barowoori.foodpinbackend.truck.command.domain.model;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "trucks")
@@ -44,8 +47,15 @@ public class Truck {
     @Column(name = "is_deleted")
     private Boolean isDeleted = false;
 
+    @OneToMany(mappedBy = "truck")
+    private List<TruckMenu> menus = new ArrayList<>();
+
+    @OneToMany(mappedBy = "truck")
+    private List<TruckPhoto> photos = new ArrayList<>();
+
     protected Truck(){}
 
+    @Builder
     public Truck(String name, LocalDateTime updatedAt, String updatedBy, String description, Boolean electricityUsage, Boolean gasUsage, Boolean selfGenerationAvailability, Boolean isDeleted) {
         this.name = name;
         this.updatedAt = updatedAt;

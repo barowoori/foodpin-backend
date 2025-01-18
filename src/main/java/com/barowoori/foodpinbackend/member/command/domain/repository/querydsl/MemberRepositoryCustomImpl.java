@@ -1,9 +1,7 @@
-package com.barowoori.foodpinbackend.member.command.domain.repository;
+package com.barowoori.foodpinbackend.member.command.domain.repository.querydsl;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.stereotype.Repository;
-
-import static com.barowoori.foodpinbackend.member.command.domain.model.QMember.member;
 
 @Repository
 public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {

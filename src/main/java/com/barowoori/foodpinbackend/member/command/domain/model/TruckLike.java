@@ -1,5 +1,6 @@
-package com.barowoori.foodpinbackend.truck.command.domain.model;
+package com.barowoori.foodpinbackend.member.command.domain.model;
 
+import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -8,9 +9,9 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "truck_photos")
+@Table(name = "truck_likes")
 @Getter
-public class TruckPhoto {
+public class TruckLike {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
@@ -19,23 +20,19 @@ public class TruckPhoto {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createAt;
 
-    @Column(name = "path", length = 500)
-    private String path;
-
-    @Column(name = "updated_by")
-    private String updatedBy;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "members_id", nullable = false)
+    private Member member;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "trucks_id")
+    @JoinColumn(name = "trucks_id", nullable = false)
     private Truck truck;
 
-    protected TruckPhoto() {
-    }
+    protected TruckLike(){}
 
     @Builder
-    public TruckPhoto(String path, String updatedBy, Truck truck) {
-        this.path = path;
-        this.updatedBy = updatedBy;
+    public TruckLike(Member member, Truck truck) {
+        this.member = member;
         this.truck = truck;
     }
 }

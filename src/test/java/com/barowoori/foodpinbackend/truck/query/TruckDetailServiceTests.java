@@ -1,5 +1,7 @@
 package com.barowoori.foodpinbackend.truck.query;
 
+import com.barowoori.foodpinbackend.file.domain.model.File;
+import com.barowoori.foodpinbackend.file.domain.repository.FileRepository;
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
 import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginInfo;
 import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginType;
@@ -17,6 +19,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -39,7 +44,8 @@ public class TruckDetailServiceTests {
     private TruckDocumentRepository truckDocumentRepository;
     @Autowired
     private TruckManagerRepository truckManagerRepository;
-
+    @Autowired
+    private FileRepository fileRepository;
     @Autowired
     private TruckDetailService truckDetailService;
 
@@ -65,8 +71,9 @@ public class TruckDetailServiceTests {
         member = memberRepository.save(member);
         //트럭 사진 필수
         for (int i = 0; i < 5; i++) {
+            File file = fileRepository.save(File.builder().path("path" + i).build());
             TruckPhoto truckPhoto = TruckPhoto.builder()
-                    .path("path" + i)
+                    .file(file)
                     .truck(truck)
                     .build();
             truckPhotoRepository.save(truckPhoto);
@@ -81,9 +88,10 @@ public class TruckDetailServiceTests {
                     .build();
             truckMenuRepository.save(truckMenu);
             for (int j = 0; j < 5; j++) {
+                File file = fileRepository.save(File.builder().path("path" + i).build());
                 TruckMenuPhoto truckMenuPhoto = TruckMenuPhoto.builder()
                         .truckMenu(truckMenu)
-                        .path("path" + j)
+                        .file(file)
                         .build();
                 truckMenuPhotoRepository.save(truckMenuPhoto);
             }
@@ -105,6 +113,17 @@ public class TruckDetailServiceTests {
         TruckDetail truckDetail = truckDetailService.getTruckDetail(member.getId(), truck.getId());
         assertEquals(5, truckDetail.getMenus().size());
         assertEquals(5, truckDetail.getMenus().get(0).getPhotos().size());
+    }
+
+    @Test
+    @DisplayName("트럭 메뉴는 등록된 순으로 조회되어야 한다")
+    void When_ExistTruckMenu_Then_OrderByCreatedAt() {
+        TruckDetail truckDetail = truckDetailService.getTruckDetail(member.getId(), truck.getId());
+        List<Integer> numbers = new ArrayList<>();
+        for (TruckDetail.MenuInfo menuInfo : truckDetail.getMenus()){
+            numbers.add(Integer.valueOf(menuInfo.getName().replace("떡볶이","")));
+        }
+        assertEquals(numbers.stream().sorted().toList(), numbers);
     }
 
 

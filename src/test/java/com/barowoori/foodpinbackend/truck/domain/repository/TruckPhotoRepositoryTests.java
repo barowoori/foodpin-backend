@@ -1,5 +1,7 @@
 package com.barowoori.foodpinbackend.truck.domain.repository;
 
+import com.barowoori.foodpinbackend.file.domain.model.File;
+import com.barowoori.foodpinbackend.file.domain.repository.FileRepository;
 import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckPhoto;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckPhotoRepository;
@@ -24,6 +26,9 @@ public class TruckPhotoRepositoryTests {
     @Autowired
     private TruckPhotoRepository truckPhotoRepository;
 
+    @Autowired
+    private FileRepository fileRepository;
+
     Truck truck;
 
     @BeforeEach
@@ -36,8 +41,9 @@ public class TruckPhotoRepositoryTests {
         truck = truckRepository.save(truck);
 
         for (int i = 0; i < 5; i++) {
+            File file = fileRepository.save(File.builder().path("path" + i).build());
             TruckPhoto truckPhoto = TruckPhoto.builder()
-                    .path("path" + i)
+                    .file(file)
                     .truck(truck)
                     .build();
             truckPhotoRepository.save(truckPhoto);

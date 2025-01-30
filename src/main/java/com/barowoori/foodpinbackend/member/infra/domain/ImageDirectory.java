@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum ImageDirectory {
-    PROFILE("profile");
+    PROFILE("profile"), DEFAULT("");
 
     private final String path;
     ImageDirectory(String path){

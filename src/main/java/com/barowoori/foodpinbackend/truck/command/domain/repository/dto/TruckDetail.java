@@ -105,14 +105,14 @@ public class TruckDetail {
         public static Photo ofTruckPhoto(TruckPhoto truckPhoto) {
             return Photo.builder()
                     .id(truckPhoto.getId())
-                    .path(truckPhoto.getPath())
+                    .path(truckPhoto.getFile().getPath())
                     .build();
         }
 
         public static Photo ofTruckMenuPhoto(TruckMenuPhoto truckMenuPhoto) {
             return Photo.builder()
                     .id(truckMenuPhoto.getId())
-                    .path(truckMenuPhoto.getPath())
+                    .path(truckMenuPhoto.getFile().getPath())
                     .build();
         }
     }

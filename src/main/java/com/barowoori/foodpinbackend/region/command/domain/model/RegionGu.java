@@ -5,9 +5,9 @@ import lombok.Builder;
 import lombok.Getter;
 
 @Entity
-@Table(name = "sidos")
+@Table(name = "region_gu")
 @Getter
-public class Sido {
+public class RegionGu {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
@@ -15,10 +15,18 @@ public class Sido {
     @Column(name = "name", nullable = false)
     private String name;
 
-    protected Sido(){}
+    @ManyToOne
+    @JoinColumn(name = "region_do_id")
+    private RegionDo regionDo;
+
+    @ManyToOne
+    @JoinColumn(name = "region_si_id")
+    private RegionSi regionSi;
+
+    protected RegionGu(){}
 
     @Builder
-    public Sido(String name) {
+    public RegionGu(String name) {
         this.name = name;
     }
 }

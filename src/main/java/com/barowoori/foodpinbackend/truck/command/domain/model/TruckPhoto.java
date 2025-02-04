@@ -1,5 +1,6 @@
 package com.barowoori.foodpinbackend.truck.command.domain.model;
 
+import com.barowoori.foodpinbackend.file.domain.model.File;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,8 +20,9 @@ public class TruckPhoto {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createAt;
 
-    @Column(name = "path", length = 500)
-    private String path;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "files_id")
+    private File file;
 
     @Column(name = "updated_by")
     private String updatedBy;
@@ -33,8 +35,8 @@ public class TruckPhoto {
     }
 
     @Builder
-    public TruckPhoto(String path, String updatedBy, Truck truck) {
-        this.path = path;
+    public TruckPhoto(File file, String updatedBy, Truck truck) {
+        this.file = file;
         this.updatedBy = updatedBy;
         this.truck = truck;
     }

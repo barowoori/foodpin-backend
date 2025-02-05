@@ -1,10 +1,10 @@
-package com.barowoori.foodpinbackend.member.infra.domain;
+package com.barowoori.foodpinbackend.file.infra.domain;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.barowoori.foodpinbackend.config.factory.YamlPropertySourceFactory;
-import com.barowoori.foodpinbackend.member.command.domain.service.ImageManager;
+import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;

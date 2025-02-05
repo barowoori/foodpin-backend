@@ -45,7 +45,7 @@ public class MemberController {
     public ResponseEntity<CommonResponse<String>> registerMember(@Valid @RequestBody RequestMember.RegisterMemberDto registerMemberDto) {
         memberService.registerMember(registerMemberDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
-                .data("User registered successfully.")
+                .data("Member registered successfully.")
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }

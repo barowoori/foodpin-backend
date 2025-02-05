@@ -1,4 +1,4 @@
-package com.barowoori.foodpinbackend.file.domain.model;
+package com.barowoori.foodpinbackend.file.command.domain.model;
 
 import jakarta.persistence.*;
 import lombok.Builder;

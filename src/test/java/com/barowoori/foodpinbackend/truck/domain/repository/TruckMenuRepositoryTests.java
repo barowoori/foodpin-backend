@@ -1,7 +1,7 @@
 package com.barowoori.foodpinbackend.truck.domain.repository;
 
-import com.barowoori.foodpinbackend.file.domain.model.File;
-import com.barowoori.foodpinbackend.file.domain.repository.FileRepository;
+import com.barowoori.foodpinbackend.file.command.domain.model.File;
+import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepository;
 import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckMenu;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckMenuPhoto;

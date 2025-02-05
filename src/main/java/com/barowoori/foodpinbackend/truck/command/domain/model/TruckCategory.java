@@ -2,6 +2,7 @@ package com.barowoori.foodpinbackend.truck.command.domain.model;
 
 import com.barowoori.foodpinbackend.category.command.domain.model.Category;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -30,6 +31,7 @@ public class TruckCategory {
     protected TruckCategory(){
     }
 
+    @Builder
     public TruckCategory(Truck truck, Category category) {
         this.truck = truck;
         this.category = category;

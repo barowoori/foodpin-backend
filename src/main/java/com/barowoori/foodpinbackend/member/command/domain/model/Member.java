@@ -2,9 +2,8 @@ package com.barowoori.foodpinbackend.member.command.domain.model;
 
 import com.barowoori.foodpinbackend.common.exception.CustomException;
 import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
-import com.barowoori.foodpinbackend.member.command.domain.service.GenerateNicknameService;
-import com.barowoori.foodpinbackend.member.command.domain.service.ImageManager;
-import com.barowoori.foodpinbackend.member.infra.domain.ImageDirectory;
+import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
+import com.barowoori.foodpinbackend.file.infra.domain.ImageDirectory;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,7 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 

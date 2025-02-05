@@ -1,10 +1,10 @@
 package com.barowoori.foodpinbackend.file.command.application.service;
 
 import com.barowoori.foodpinbackend.file.command.application.dto.ResponseFile;
-import com.barowoori.foodpinbackend.file.domain.model.File;
-import com.barowoori.foodpinbackend.file.domain.repository.FileRepository;
-import com.barowoori.foodpinbackend.member.command.domain.service.ImageManager;
-import com.barowoori.foodpinbackend.member.infra.domain.ImageDirectory;
+import com.barowoori.foodpinbackend.file.command.domain.model.File;
+import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepository;
+import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
+import com.barowoori.foodpinbackend.file.infra.domain.ImageDirectory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;

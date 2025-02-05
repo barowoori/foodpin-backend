@@ -1,6 +1,6 @@
 package com.barowoori.foodpinbackend.truck.command.domain.repository.querydsl;
 
-import com.barowoori.foodpinbackend.file.domain.model.QFile;
+import com.barowoori.foodpinbackend.file.command.domain.model.QFile;
 import com.barowoori.foodpinbackend.truck.command.domain.model.QTruck;
 import com.barowoori.foodpinbackend.truck.command.domain.model.QTruckMenu;
 import com.barowoori.foodpinbackend.truck.command.domain.model.QTruckPhoto;

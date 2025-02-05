@@ -1,5 +1,7 @@
 package com.barowoori.foodpinbackend.member.infra.domain;
 
+import com.barowoori.foodpinbackend.file.infra.domain.ImageDirectory;
+import com.barowoori.foodpinbackend.file.infra.domain.S3ImageManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

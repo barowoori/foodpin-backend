@@ -2,7 +2,6 @@ package com.barowoori.foodpinbackend.member.command.application.service;
 
 import com.barowoori.foodpinbackend.common.exception.CustomException;
 import com.barowoori.foodpinbackend.common.security.JwtTokenProvider;
-import com.barowoori.foodpinbackend.member.command.application.dto.CommonMember;
 import com.barowoori.foodpinbackend.member.command.application.dto.RequestMember;
 import com.barowoori.foodpinbackend.member.command.application.dto.ResponseMember;
 import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
@@ -11,14 +10,12 @@ import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginInfo;
 import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginType;
 import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
 import com.barowoori.foodpinbackend.member.command.domain.service.GenerateNicknameService;
-import com.barowoori.foodpinbackend.member.command.domain.service.ImageManager;
+import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.Date;
 
 @Service
 @RequiredArgsConstructor

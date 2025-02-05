@@ -1,6 +1,6 @@
-package com.barowoori.foodpinbackend.member.command.domain.service;
+package com.barowoori.foodpinbackend.file.command.domain.service;
 
-import com.barowoori.foodpinbackend.member.infra.domain.ImageDirectory;
+import com.barowoori.foodpinbackend.file.infra.domain.ImageDirectory;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface ImageManager {

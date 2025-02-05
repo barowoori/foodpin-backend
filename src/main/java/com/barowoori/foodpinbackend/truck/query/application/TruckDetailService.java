@@ -10,6 +10,7 @@ import com.barowoori.foodpinbackend.truck.command.domain.model.TruckMenu;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.*;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckDetail;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckDocumentManager;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 

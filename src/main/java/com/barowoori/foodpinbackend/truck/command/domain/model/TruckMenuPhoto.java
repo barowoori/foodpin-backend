@@ -1,6 +1,6 @@
 package com.barowoori.foodpinbackend.truck.command.domain.model;
 
-import com.barowoori.foodpinbackend.file.domain.model.File;
+import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;

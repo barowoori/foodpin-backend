@@ -1,7 +1,7 @@
 package com.barowoori.foodpinbackend.truck.query;
 
-import com.barowoori.foodpinbackend.file.domain.model.File;
-import com.barowoori.foodpinbackend.file.domain.repository.FileRepository;
+import com.barowoori.foodpinbackend.file.command.domain.model.File;
+import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepository;
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
 import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginInfo;
 import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginType;

@@ -7,14 +7,7 @@ import lombok.Getter;
 @Entity
 @Table(name = "region_gu")
 @Getter
-public class RegionGu {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
-
-    @Column(name = "name", nullable = false)
-    private String name;
-
+public class RegionGu extends Region {
     @ManyToOne
     @JoinColumn(name = "region_do_id")
     private RegionDo regionDo;
@@ -23,10 +16,37 @@ public class RegionGu {
     @JoinColumn(name = "region_si_id")
     private RegionSi regionSi;
 
-    protected RegionGu(){}
+    public static class Builder extends Region.Builder<RegionGu.Builder> {
+        private RegionDo regionDo;
+        private RegionSi regionSi;
 
-    @Builder
-    public RegionGu(String name) {
-        this.name = name;
+        public Builder() {
+        }
+
+        public Builder addRegionDo(RegionDo regionDo) {
+            this.regionDo = regionDo;
+            return this;
+        }
+
+        public Builder addRegionSi(RegionSi regionSi) {
+            this.regionSi = regionSi;
+            return this;
+        }
+
+        @Override
+        protected RegionGu.Builder self() {
+            return this;
+        }
+
+        @Override
+        public RegionGu build() {
+            return new RegionGu(this);
+        }
+    }
+
+    public RegionGu(RegionGu.Builder builder) {
+        super(builder);
+        this.regionDo = builder.regionDo;
+        this.regionSi = builder.regionSi;
     }
 }

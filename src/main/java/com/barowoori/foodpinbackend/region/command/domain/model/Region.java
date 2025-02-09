@@ -9,7 +9,6 @@ import lombok.experimental.SuperBuilder;
 
 @Getter
 @MappedSuperclass
-//@SuperBuilder
 public abstract class Region {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

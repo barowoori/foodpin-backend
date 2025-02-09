@@ -1,4 +1,4 @@
-package com.barowoori.foodpinbackend.member.infra.domain;
+package com.barowoori.foodpinbackend.file.domain;
 
 import com.barowoori.foodpinbackend.file.infra.domain.ImageDirectory;
 import com.barowoori.foodpinbackend.file.infra.domain.S3ImageManager;
@@ -76,5 +76,24 @@ public class S3ImageManagerTests {
         }
     }
 
+    @Test
+    @DisplayName("presignUrl로 요청 시 presignUrl로 반환된다")
+    void WhenRequestPreSignUrl()  throws IOException {
+        String fileName = "test-file.jpg";
+        byte[] fileContent = "test-content".getBytes();
+        InputStream fileInputStream = new ByteArrayInputStream(fileContent);
+
+        when(multipartFile.getOriginalFilename()).thenReturn(fileName);
+        when(multipartFile.getBytes()).thenReturn(fileContent);
+        when(multipartFile.getInputStream()).thenReturn(fileInputStream);
+
+        String uploadedUrl = s3ImageManager.updateFile(multipartFile, null, ImageDirectory.DEFAULT);
+        System.out.println(uploadedUrl);
+
+        String preSignUrl = s3ImageManager.getPreSignUrl(uploadedUrl);
+        System.out.println(preSignUrl);
+
+        assertNotEquals(uploadedUrl, preSignUrl);
+    }
 
 }

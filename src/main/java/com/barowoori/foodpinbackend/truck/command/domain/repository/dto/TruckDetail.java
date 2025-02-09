@@ -1,5 +1,6 @@
 package com.barowoori.foodpinbackend.truck.command.domain.repository.dto;
 
+import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import lombok.Builder;
 import lombok.Getter;

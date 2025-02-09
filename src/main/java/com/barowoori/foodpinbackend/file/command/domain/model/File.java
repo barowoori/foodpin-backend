@@ -1,5 +1,6 @@
 package com.barowoori.foodpinbackend.file.command.domain.model;
 
+import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,5 +28,9 @@ public class File {
     @Builder
     public File(String path) {
         this.path = path;
+    }
+
+    public String getPreSignUrl(ImageManager imageManager){
+        return imageManager.getPreSignUrlByFileUrl(this.path);
     }
 }

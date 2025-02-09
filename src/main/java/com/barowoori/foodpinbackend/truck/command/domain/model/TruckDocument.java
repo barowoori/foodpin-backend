@@ -1,5 +1,6 @@
 package com.barowoori.foodpinbackend.truck.command.domain.model;
 
+import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,7 +19,7 @@ public class TruckDocument {
 
     @CreationTimestamp
     @Column(name = "created_at")
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at")
@@ -31,8 +32,8 @@ public class TruckDocument {
     @Column(name = "type", nullable = false)
     private DocumentType type;
 
-    @Column(name = "path", length = 500)
-    private String path;
+    @Column(name = "document_id")
+    private String documentId;
 
     @Column(name = "is_approval")
     private Boolean approval;
@@ -45,11 +46,11 @@ public class TruckDocument {
     }
 
     @Builder
-    public TruckDocument(LocalDateTime updatedAt, String updatedBy, DocumentType type, String path, Boolean approval, Truck truck) {
+    public TruckDocument(LocalDateTime updatedAt, String updatedBy, DocumentType type, String documentId, Boolean approval, Truck truck) {
         this.updatedAt = updatedAt;
         this.updatedBy = updatedBy;
         this.type = type;
-        this.path = path;
+        this.documentId = documentId;
         this.approval = approval;
         this.truck = truck;
     }

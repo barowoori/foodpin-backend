@@ -1,6 +1,6 @@
 package com.barowoori.foodpinbackend.truck.domain.repository;
 
-import com.barowoori.foodpinbackend.truck.command.domain.model.DocumentType;
+import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckDocument;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckDocumentRepository;
@@ -44,14 +44,14 @@ public class TruckDocumentRepositoryTests {
         void setUp(){
             TruckDocument truckDocument = TruckDocument.builder()
                     .type(DocumentType.BUSINESS_LICENSE)
-                    .path("path")
+                    .documentId("documentId")
                     .truck(truck)
                     .build();
             truckDocument = truckDocumentRepository.save(truckDocument);
 
             TruckDocument truckDocument1 = TruckDocument.builder()
                     .type(DocumentType.BUSINESS_LICENSE)
-                    .path("path")
+                    .documentId("documentId")
                     .truck(truck)
                     .build();
             truckDocument1 = truckDocumentRepository.save(truckDocument1);

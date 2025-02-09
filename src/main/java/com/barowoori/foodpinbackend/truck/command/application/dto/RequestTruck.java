@@ -1,6 +1,7 @@
 package com.barowoori.foodpinbackend.truck.command.application.dto;
 
 import com.barowoori.foodpinbackend.category.command.domain.model.Category;
+import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import lombok.Builder;
@@ -9,7 +10,6 @@ import lombok.Getter;
 
 import javax.validation.constraints.NotEmpty;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class RequestTruck {
@@ -106,7 +106,7 @@ public class RequestTruck {
             return TruckDocument.builder()
                     .updatedBy(updatedBy)
                     .type(this.type)
-                    .path(path)
+                    .documentId("documentId")
                     .approval(this.approval)
                     .truck(truck)
                     .build();

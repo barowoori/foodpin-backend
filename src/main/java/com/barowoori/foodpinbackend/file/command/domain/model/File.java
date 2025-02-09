@@ -31,6 +31,6 @@ public class File {
     }
 
     public String getPreSignUrl(ImageManager imageManager){
-        return imageManager.getPreSignUrlByFileUrl(this.path);
+        return imageManager.getPreSignUrl(this.path);
     }
 }

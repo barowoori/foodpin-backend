@@ -1,4 +1,4 @@
-package com.barowoori.foodpinbackend.truck.command.domain.model;
+package com.barowoori.foodpinbackend.document.command.domain.model;
 
 import lombok.Getter;
 

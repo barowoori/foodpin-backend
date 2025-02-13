@@ -1,7 +1,10 @@
 package com.barowoori.foodpinbackend.file.infra.domain;
 
+import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
+import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.barowoori.foodpinbackend.config.factory.YamlPropertySourceFactory;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
@@ -15,6 +18,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.util.Date;
 import java.util.UUID;
 
 @Component
@@ -109,5 +113,41 @@ public class S3ImageManager implements ImageManager {
         } else {
             System.out.println("파일이 삭제되지 못했습니다.");
         }
+    }
+    @Override
+    public String getPreSignUrl(String fileUrl) {
+        if (fileUrl == null || fileUrl.equals("")) {
+            return null;
+        }
+        GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucket, getObjectKey(fileUrl))
+                .withMethod(HttpMethod.GET)
+                .withExpiration(getExpiration());
+
+        URL url = amazonS3.generatePresignedUrl(generatePresignedUrlRequest);
+        return url.toExternalForm();
+    }
+
+    private Date getExpiration() {
+        Date now = new Date();
+        return new Date(now.getTime() + 1000 * 60 * 10); //10분 후 만료
+    }
+
+    private String getObjectKey(String fileUrl) {
+        try {
+            URL url = new URL(fileUrl);
+            String filePath = url.getPath(); // URL의 경로 부분을 가져옴
+            String decodedFilePath = URLDecoder.decode(filePath, "UTF-8"); // 디코딩하여 원본 경로 추출
+
+            String objectKey = decodedFilePath;
+            if (decodedFilePath.startsWith("/")) {
+                objectKey = decodedFilePath.substring(1);
+            }
+
+            return objectKey;
+
+        } catch (Exception e) {
+            System.out.println("change objectKey fail " + e.getMessage());
+        }
+        return null;
     }
 }

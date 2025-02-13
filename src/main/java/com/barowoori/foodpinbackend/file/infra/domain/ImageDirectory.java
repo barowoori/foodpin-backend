@@ -5,7 +5,7 @@ import lombok.Getter;
 @Getter
 public enum ImageDirectory {
     PROFILE("profile"),
-    DEFAULT(""),
+    DEFAULT("default"),
     TRUCK("truck"),
     TRUCK_MENU("truck_menu"),
     TRUCK_DOCUMENT("truck_document");

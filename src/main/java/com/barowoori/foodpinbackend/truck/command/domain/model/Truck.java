@@ -53,7 +53,8 @@ public class Truck {
     @OneToMany(mappedBy = "truck")
     private List<TruckPhoto> photos = new ArrayList<>();
 
-    protected Truck(){}
+    protected Truck() {
+    }
 
     @Builder
     public Truck(String name, LocalDateTime updatedAt, String updatedBy, String description, Boolean electricityUsage, Boolean gasUsage, Boolean selfGenerationAvailability, Boolean isDeleted) {
@@ -67,4 +68,12 @@ public class Truck {
         this.isDeleted = isDeleted;
     }
 
+    public void update(String name, String updatedBy, String description, Boolean electricityUsage, Boolean gasUsage, Boolean selfGenerationAvailability) {
+        this.name = name;
+        this.updatedBy = updatedBy;
+        this.description = description;
+        this.electricityUsage = electricityUsage;
+        this.gasUsage = gasUsage;
+        this.selfGenerationAvailability = selfGenerationAvailability;
+    }
 }

@@ -1,9 +1,12 @@
 package com.barowoori.foodpinbackend.document.command.domain.model;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Entity
@@ -12,6 +15,14 @@ public class BusinessRegistration {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Column(name = "updated_by")
+    private String updatedBy;
+
     @Column(name = "business_number")
     private String businessNumber;
 
@@ -24,7 +35,17 @@ public class BusinessRegistration {
     @Column(name = "opening_date")
     private LocalDate openingDate;
 
-    public BusinessRegistration(String businessNumber, String businessName, String representativeName, LocalDate openingDate) {
+    protected BusinessRegistration(){}
+
+    @Builder
+    public BusinessRegistration(String updatedBy, String businessNumber, String businessName, String representativeName, LocalDate openingDate) {
+        this.businessNumber = businessNumber;
+        this.businessName = businessName;
+        this.representativeName = representativeName;
+        this.openingDate = openingDate;
+    }
+
+    public void update(String updatedBy, String businessNumber, String businessName, String representativeName, LocalDate openingDate){
         this.businessNumber = businessNumber;
         this.businessName = businessName;
         this.representativeName = representativeName;

@@ -1,6 +1,8 @@
 package com.barowoori.foodpinbackend.truck.domain.repository;
 
+import com.barowoori.foodpinbackend.document.command.domain.model.BusinessRegistration;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
+import com.barowoori.foodpinbackend.document.command.domain.repository.BusinessRegistrationRepository;
 import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckDocument;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckDocumentRepository;
@@ -15,6 +17,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 
+import java.time.LocalDate;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
@@ -24,6 +28,8 @@ public class TruckDocumentRepositoryTests {
     private TruckRepository truckRepository;
     @Autowired
     private TruckDocumentRepository truckDocumentRepository;
+    @Autowired
+    private BusinessRegistrationRepository businessRegistrationRepository;
 
     Truck truck;
 
@@ -105,7 +111,39 @@ public class TruckDocumentRepositoryTests {
             TruckDocumentManager documentManager = truckDocumentRepository.getDocumentManager(truck.getId());
             assertEquals(0, documentManager.getTypes().size());
         }
+    }
 
+    @Nested
+    @DisplayName("사업자등록증 조회")
+    class GetBusinessRegistrationDocument{
+        @Test
+        @DisplayName("사업자등록증이 없다면 null을 반환한다.")
+        void When_businessRegistrationDocument_isEmpty_Then_Return_null(){
+            assertNull(truckDocumentRepository.getBusinessRegistrationDocumentByTruckId(truck.getId()));
+        }
+
+        @Test
+        @DisplayName("사업자등록증이 있다면 객체를 반환한다")
+        void When_businessRegistrationDocument_NotEmpty_Then_Return_not_null(){
+            BusinessRegistration businessRegistrationBuilder = BusinessRegistration.builder()
+                    .businessNumber("01010203")
+                    .businessName("바로우리")
+                    .representativeName("대표자성명")
+                    .openingDate(LocalDate.now())
+                    .build();
+            businessRegistrationBuilder = businessRegistrationRepository.save(businessRegistrationBuilder);
+
+            TruckDocument truckDocument = TruckDocument.builder()
+                    .type(DocumentType.BUSINESS_REGISTRATION)
+                    .documentId(businessRegistrationBuilder.getId())
+                    .truck(truck)
+                    .build();
+            truckDocument = truckDocumentRepository.save(truckDocument);
+
+            BusinessRegistration businessRegistration = truckDocumentRepository.getBusinessRegistrationDocumentByTruckId(truck.getId());
+            assertNotNull(businessRegistration);
+            assertEquals(businessRegistrationBuilder.getBusinessName(), businessRegistration.getBusinessName());
+        }
     }
 
 }

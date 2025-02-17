@@ -104,6 +104,15 @@ jobs:
           mkdir -p $(dirname ${APP_CONFIG_FILE}) # 디렉토리가 없으면 생성
           echo "jwt.secret=${{ secrets.JWT_SECRET_KEY }}" >> ${APP_CONFIG_FILE}
 
+      - name: Create odcloud-config.yml
+        env: # 환경 변수로 GitHub Secrets 값을 읽어옵니다.
+          APP_CONFIG_FILE: src/main/resources/secrets/odcloud-config.yml
+        run: |
+          mkdir -p $(dirname ${APP_CONFIG_FILE}) # 디렉토리가 없으면 생성
+          echo "odcloud:" >> ${APP_CONFIG_FILE}
+          echo "  encodingKey: ${{ secrets.ODCLOUD_ENCODING_KEY }}" >> ${APP_CONFIG_FILE}
+          echo "  decodingKey: ${{ secrets.ODCLOUD_DECODING_KEY }}" >> ${APP_CONFIG_FILE}
+
       # 3. Gradle 빌드 및 Docker 이미지 생성
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew

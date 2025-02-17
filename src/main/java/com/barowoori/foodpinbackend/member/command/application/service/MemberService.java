@@ -26,7 +26,7 @@ public class MemberService {
     private final JwtTokenProvider jwtTokenProvider;
     private final ImageManager imageManager;
 
-    private Member getMember(){
+    private Member getMember() {
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
@@ -37,7 +37,7 @@ public class MemberService {
     public void registerMember(RequestMember.RegisterMemberDto registerMemberDto) {
 
         Member member = memberRepository.findBySocialLoginInfo(registerMemberDto.getSocialInfoDto().toEntity());
-        if(member != null){
+        if (member != null) {
             throw new CustomException(MemberErrorCode.MEMBER_SOCIAL_LOGIN_INFO_EXISTS);
         }
 
@@ -58,67 +58,72 @@ public class MemberService {
     }
 
     @Transactional
-    public ResponseMember.ReissueTokenDto reissueToken(String refreshToken){
+    public ResponseMember.ReissueTokenDto reissueToken(String refreshToken) {
         Member member = getMember();
         String accessToken;
         if (member.matchRefreshToken(refreshToken)) {
             accessToken = jwtTokenProvider.createAccessToken(member.getId());
-            if (jwtTokenProvider.checkExpiry(refreshToken)){
+            if (jwtTokenProvider.checkExpiry(refreshToken)) {
                 refreshToken = jwtTokenProvider.createRefreshToken(member.getId());
                 member.updateRefreshToken(refreshToken);
                 memberRepository.save(member);
             }
             return ResponseMember.ReissueTokenDto.toDto(accessToken, refreshToken);
-        }
-        else
+        } else
             throw new CustomException(MemberErrorCode.REFRESH_TOKEN_MATCH_FAILED);
     }
 
     @Transactional
-    public ResponseMember.GetInfoDto getInfo(){
+    public ResponseMember.GetInfoDto getInfo() {
         Member member = getMember();
         return ResponseMember.GetInfoDto.toDto(member);
     }
 
     @Transactional
-    public ResponseMember.GenerateNicknameDto generateNickname(){
+    public ResponseMember.GenerateNicknameDto generateNickname() {
         String nickname = generateNicknameService.generationNickname();
         return ResponseMember.GenerateNicknameDto.toDto(nickname);
     }
 
     @Transactional
-    public ResponseMember.CheckNicknameDto checkNickname(String nickname){
+    public ResponseMember.CheckNicknameDto checkNickname(String nickname) {
         Member member = memberRepository.findByNickname(nickname);
         boolean isNicknameUsable = false;
-        if(member == null){
+        if (member == null) {
             isNicknameUsable = true;
         }
         return ResponseMember.CheckNicknameDto.toDto(isNicknameUsable);
     }
 
     @Transactional
-    public ResponseMember.CheckPhoneDto checkPhone(String phone){
+    public ResponseMember.CheckPhoneDto checkPhone(String phone) {
         Member member = memberRepository.findByPhone(phone);
         if (member != null) {
-            return  ResponseMember.CheckPhoneDto.toDto(member.getSocialLoginInfo());
+            return ResponseMember.CheckPhoneDto.toDto(member.getSocialLoginInfo());
         }
-        return ResponseMember.CheckPhoneDto.toDto(new SocialLoginInfo(SocialLoginType.valueOf("NONE"),"null"));
+        return ResponseMember.CheckPhoneDto.toDto(new SocialLoginInfo(SocialLoginType.valueOf("NONE"), "null"));
     }
 
     @Transactional
-    public void updateProfile(RequestMember.UpdateProfileRqDto updateProfileRqDto, MultipartFile image){
+    public void updateProfile(RequestMember.UpdateProfileRqDto updateProfileRqDto, MultipartFile image) {
         Member member = getMember();
         member.updateProfile(imageManager, updateProfileRqDto.getNickname(), updateProfileRqDto.getOriginImageUrl(), image);
         memberRepository.save(member);
     }
 
     @Transactional
-    public void logoutMember(String refreshToken){
+    public void logoutMember(String refreshToken) {
         Member member = getMember();
         if (member.matchRefreshToken(refreshToken)) {
             member.updateRefreshToken(null);
             memberRepository.save(member);
         } else
             throw new CustomException(MemberErrorCode.REFRESH_TOKEN_MATCH_FAILED);
+    }
+
+    @Transactional
+    public void deleteMember() {
+        Member member = getMember();
+        memberRepository.delete(member);
     }
 }

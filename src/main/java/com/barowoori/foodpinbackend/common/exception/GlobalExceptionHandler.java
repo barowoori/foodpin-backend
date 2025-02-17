@@ -72,4 +72,10 @@ public class GlobalExceptionHandler {
         String errorMessage = "지원하지 않는 HTTP 메서드입니다. 지원되는 메서드: " + String.join(", ", ex.getSupportedMethods());
         return ErrorResponse.toResponseEntity(HttpStatus.METHOD_NOT_ALLOWED, 10004, errorMessage);
     }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(Exception ex) {
+        String errorMessage = "Internal Server Error: " + ex.getMessage();
+        return ErrorResponse.toResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR, 10004, errorMessage);
+    }
 }

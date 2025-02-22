@@ -35,6 +35,7 @@ public class TruckDetailService {
         this.truckManagerRepository = truckManagerRepository;
     }
 
+    // 사진들 돌려줄 때 file id도 줘야 할 듯..? + 카테고리 추가
     @Transactional(readOnly = true)
     public TruckDetail getTruckDetail(String memberId, String truckId) {
         //TODO 트럭 지역 추가하기

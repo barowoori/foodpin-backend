@@ -19,9 +19,10 @@ public class RequestTruck {
         @NotEmpty
         private TruckInfoDto truckInfoDto;
         @NotEmpty
-        private TruckRegionDto truckRegionDto;
+        private Set<TruckRegionDto> truckRegionDtoSet;
         @NotEmpty
         private Set<TruckCategoryDto> truckCategoryDtoSet;
+        @NotEmpty
         private List<TruckMenuDto> truckMenuDtoList;
         private Set<TruckDocumentDto> truckDocumentDtoSet;
     }
@@ -31,9 +32,13 @@ public class RequestTruck {
         @NotEmpty
         private String name;
         private String description;
+        @NotEmpty
         private Boolean electricityUsage;
+        @NotEmpty
         private Boolean gasUsage;
+        @NotEmpty
         private Boolean selfGenerationAvailability;
+        @NotEmpty
         private List<String> fileIdList;
 
         public Truck toEntity(){
@@ -111,5 +116,34 @@ public class RequestTruck {
                     .truck(truck)
                     .build();
         }
+    }
+
+    @Getter
+    public static class UpdateTruckInfoDto{
+        @NotEmpty
+        private String name;
+        private String description;
+        @NotEmpty
+        private List<String> fileIdList;
+    }
+
+    @Getter
+    public static class UpdateTruckOperationDto{
+        @NotEmpty
+        private Boolean electricityUsage;
+        @NotEmpty
+        private Boolean gasUsage;
+        @NotEmpty
+        private Boolean selfGenerationAvailability;
+        @NotEmpty
+        private Set<TruckRegionDto> truckRegionDtoSet;
+    }
+
+    @Getter
+    public static class UpdateTruckMenuDto{
+        @NotEmpty
+        private Set<TruckCategoryDto> truckCategoryDtoSet;
+        @NotEmpty
+        private List<TruckMenuDto> truckMenuDtoList;
     }
 }

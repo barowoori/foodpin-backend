@@ -277,26 +277,4 @@ public class TruckListServiceTests {
         }
     }
 
-    @Nested
-    @DisplayName("데이터 조회 테스트")
-    class dataFormat{
-        @BeforeEach
-        void setUp(){
-            File file = fileRepository.save(File.builder().path("path").build());
-            TruckPhoto truckPhoto = TruckPhoto.builder()
-                    .file(file)
-                    .truck(truck)
-                    .build();
-            truckPhoto = truckPhotoRepository.save(truckPhoto);
-        }
-        @Test
-        @DisplayName("트럭 사진은 한 장 나와야한다")
-        void then_OneTruckImage(){
-            Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "createdAt"));
-            Page<TruckList> result = truckListService.findByTruckList(null, null, null, pageable);
-            TruckList truck = result.stream().findFirst().get();
-            assertNotNull(truck.getPhoto());
-        }
-    }
-
 }

@@ -1,6 +1,7 @@
 package com.barowoori.foodpinbackend.truck.command.domain.repository.dto;
 
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
+import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,14 +19,14 @@ public class TruckDetail {
     private List<MenuInfo> menus;
     private Boolean isLike;
 
-    public static TruckDetail of(TruckManager truckManager, Truck truck, List<DocumentType> documents, List<String> regions, List<TruckMenu> truckMenus, Boolean isLike) {
+    public static TruckDetail of(TruckManager truckManager, Truck truck, List<DocumentType> documents, List<String> regions, List<TruckMenu> truckMenus, Boolean isLike, ImageManager imageManager) {
         return TruckDetail.builder()
                 .isAvailableUpdate(checkAvailableUpdate(truckManager))
                 .isAvailableDelete(checkAvailableDelete(truckManager))
-                .truck(TruckInfo.of(truck))
+                .truck(TruckInfo.of(truck, imageManager))
                 .documents(documents)
                 .regions(regions)
-                .menus(truckMenus.stream().map(MenuInfo::of).toList())
+                .menus(truckMenus.stream().map(truckMenu -> MenuInfo.of(truckMenu, imageManager)).toList())
                 .isLike(isLike)
                 .build();
     }
@@ -55,7 +56,7 @@ public class TruckDetail {
         private Boolean selfGenerationAvailability;
         private List<Photo> photos;
 
-        public static TruckInfo of(Truck truck) {
+        public static TruckInfo of(Truck truck, ImageManager imageManager) {
             return TruckInfo.builder()
                     .id(truck.getId())
                     .name(truck.getName())
@@ -65,7 +66,7 @@ public class TruckDetail {
                     .selfGenerationAvailability(truck.getSelfGenerationAvailability())
                     .photos(truck.getPhotos()
                             .stream()
-                            .map(Photo::ofTruckPhoto)
+                            .map(truckPhoto -> Photo.ofTruckPhoto(truckPhoto, imageManager))
                             .toList())
                     .build();
         }
@@ -80,7 +81,7 @@ public class TruckDetail {
         private String description;
         private List<Photo> photos;
 
-        public static MenuInfo of(TruckMenu truckMenu) {
+        public static MenuInfo of(TruckMenu truckMenu, ImageManager imageManager) {
             return MenuInfo.builder()
                     .id(truckMenu.getId())
                     .name(truckMenu.getName())
@@ -88,7 +89,7 @@ public class TruckDetail {
                     .description(truckMenu.getDescription())
                     .photos(truckMenu.getPhotos()
                             .stream()
-                            .map(Photo::ofTruckMenuPhoto)
+                            .map(truckMenuPhoto -> Photo.ofTruckMenuPhoto(truckMenuPhoto, imageManager))
                             .toList())
 
                     .build();
@@ -103,17 +104,17 @@ public class TruckDetail {
         private String id;
         private String path;
 
-        public static Photo ofTruckPhoto(TruckPhoto truckPhoto) {
+        public static Photo ofTruckPhoto(TruckPhoto truckPhoto, ImageManager imageManager) {
             return Photo.builder()
                     .id(truckPhoto.getId())
-                    .path(truckPhoto.getFile().getPath())
+                    .path(truckPhoto.getFile().getPreSignUrl(imageManager))
                     .build();
         }
 
-        public static Photo ofTruckMenuPhoto(TruckMenuPhoto truckMenuPhoto) {
+        public static Photo ofTruckMenuPhoto(TruckMenuPhoto truckMenuPhoto, ImageManager imageManager) {
             return Photo.builder()
                     .id(truckMenuPhoto.getId())
-                    .path(truckMenuPhoto.getFile().getPath())
+                    .path(truckMenuPhoto.getFile().getPreSignUrl(imageManager))
                     .build();
         }
     }

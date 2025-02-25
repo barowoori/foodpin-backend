@@ -1,6 +1,7 @@
 package com.barowoori.foodpinbackend.truck.query.application;
 
 import com.barowoori.foodpinbackend.common.exception.CustomException;
+import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
 import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
@@ -23,6 +24,7 @@ public class TruckQueryService {
     private final MemberRepository memberRepository;
     private final TruckRepository truckRepository;
     private final TruckManagerRepository truckManagerRepository;
+    private final ImageManager imageManager;
 
     @Transactional(readOnly = true)
     public List<TruckDetail.TruckInfo> getOwnedTruck(){
@@ -33,7 +35,7 @@ public class TruckQueryService {
         List<TruckDetail.TruckInfo> truckInfoList = new ArrayList<>();
         truckManagerList.forEach(truckManager -> {
             Truck truck = truckRepository.findById(truckManager.getTruck().getId()).get();
-            truckInfoList.add(TruckDetail.TruckInfo.of(truck));
+            truckInfoList.add(TruckDetail.TruckInfo.of(truck, imageManager));
         });
         return truckInfoList;
     }

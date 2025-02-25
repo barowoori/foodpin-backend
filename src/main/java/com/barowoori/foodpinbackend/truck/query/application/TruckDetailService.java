@@ -1,6 +1,7 @@
 package com.barowoori.foodpinbackend.truck.query.application;
 
 import com.barowoori.foodpinbackend.common.exception.CustomException;
+import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.member.command.domain.model.TruckLike;
 import com.barowoori.foodpinbackend.member.command.domain.repository.TruckLikeRepository;
 import com.barowoori.foodpinbackend.truck.command.domain.exception.TruckErrorCode;
@@ -25,16 +26,19 @@ public class TruckDetailService {
     private final TruckRepository truckRepository;
     private final TruckMenuRepository truckMenuRepository;
     private final TruckManagerRepository truckManagerRepository;
+    private final ImageManager imageManager;
 
-    public TruckDetailService(TruckDocumentRepository truckDocumentRepository, TruckLikeRepository truckLikeRepository, TruckRegionRepository truckRegionRepository, TruckRepository truckRepository, TruckMenuRepository truckMenuRepository, TruckManagerRepository truckManagerRepository) {
+    public TruckDetailService(TruckDocumentRepository truckDocumentRepository, TruckLikeRepository truckLikeRepository, TruckRegionRepository truckRegionRepository, TruckRepository truckRepository, TruckMenuRepository truckMenuRepository, TruckManagerRepository truckManagerRepository, ImageManager imageManager) {
         this.truckDocumentRepository = truckDocumentRepository;
         this.truckLikeRepository = truckLikeRepository;
         this.truckRegionRepository = truckRegionRepository;
         this.truckRepository = truckRepository;
         this.truckMenuRepository = truckMenuRepository;
         this.truckManagerRepository = truckManagerRepository;
+        this.imageManager = imageManager;
     }
 
+    // 사진들 돌려줄 때 file id도 줘야 할 듯..? + 카테고리 추가
     @Transactional(readOnly = true)
     public TruckDetail getTruckDetail(String memberId, String truckId) {
         Truck truck = truckRepository.getTruckWithPhotoById(truckId);
@@ -46,6 +50,6 @@ public class TruckDetailService {
         TruckLike truckLike = truckLikeRepository.findByMemberIdAndTruckId(memberId, truckId);
         TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(truckId, memberId);
         List<String> regionNames = truckRegionRepository.findRegionNamesByTruckId(truckId);
-        return TruckDetail.of(truckManager, truck, documentManager.getTypes(), regionNames, truckMenus, truckLike != null);
+        return TruckDetail.of(truckManager, truck, documentManager.getTypes(), regionNames, truckMenus, truckLike != null, imageManager);
     }
 }

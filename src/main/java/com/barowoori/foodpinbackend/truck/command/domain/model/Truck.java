@@ -80,8 +80,12 @@ public class Truck {
         this.gasUsage = gasUsage;
         this.selfGenerationAvailability = selfGenerationAvailability;
     }
-
+  
     public void addViews() {
         this.views = this.views + 1;
+
+    public void setIsDeleted(Boolean isDeleted){
+        this.isDeleted = isDeleted;
+
     }
 }

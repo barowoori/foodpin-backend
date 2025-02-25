@@ -34,9 +34,20 @@ public class TruckListService {
     }
 
     @Transactional(readOnly = true)
-    public Page<TruckList> findByTruckList(List<String> regionCodes, List<String> categoryNames, String searchTerm, Pageable pageable) {
+    public Page<TruckList> findTruckList(List<String> regionCodes, List<String> categoryNames, String searchTerm, Pageable pageable) {
         Map<RegionType, List<String>> regionIds = regionDoRepository.findRegionIdsByFilter(regionCodes);
-        Page<Truck> trucks = truckRepository.findTruckRegionsByRegions(searchTerm, categoryNames, regionIds, pageable);
+        Page<Truck> trucks = truckRepository.findTruckListByFilter(searchTerm, categoryNames, regionIds, pageable);
+        List<String> truckIds = trucks.map(Truck::getId).stream().toList();
+        Map<String, List<String>> menuNames = truckMenuRepository.getMenuNamesByTruckIds(truckIds);
+        Map<String, List<DocumentType>> documents = truckDocumentRepository.getDocumentTypeByTruckIds(truckIds);
+        Map<String, List<String>> regionNames = truckRegionRepository.findRegionNamesByTruckIds(truckIds);
+        return trucks.map(truck -> TruckList.of(truck, documents.get(truck.getId()), regionNames.get(truck.getId()), menuNames.get(truck.getId())));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<TruckList> findLikeTruckByTruckList(String memberId, List<String> regionCodes, List<String> categoryNames, String searchTerm, Pageable pageable) {
+        Map<RegionType, List<String>> regionIds = regionDoRepository.findRegionIdsByFilter(regionCodes);
+        Page<Truck> trucks = truckRepository.findLikeTruckListByFilter(memberId, searchTerm, categoryNames, regionIds, pageable);
         List<String> truckIds = trucks.map(Truck::getId).stream().toList();
         Map<String, List<String>> menuNames = truckMenuRepository.getMenuNamesByTruckIds(truckIds);
         Map<String, List<DocumentType>> documents = truckDocumentRepository.getDocumentTypeByTruckIds(truckIds);

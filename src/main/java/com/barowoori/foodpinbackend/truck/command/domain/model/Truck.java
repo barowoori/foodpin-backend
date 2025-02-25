@@ -86,7 +86,7 @@ public class Truck {
 
     }
 
-    public void setIsDeleted(Boolean isDeleted){
-        this.isDeleted = isDeleted;
+    public void delete(){
+        this.isDeleted = true;
     }
 }

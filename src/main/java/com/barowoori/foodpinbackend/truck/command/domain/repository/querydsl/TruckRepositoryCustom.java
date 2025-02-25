@@ -10,5 +10,6 @@ import java.util.Map;
 
 public interface TruckRepositoryCustom {
     Truck getTruckWithPhotoById(String id);
-    Page<Truck> findTruckRegionsByRegions(String searchTerm, List<String> categoryNames, Map<RegionType, List<String>> regionIds, Pageable pageable);
+    Page<Truck> findTruckListByFilter(String searchTerm, List<String> categoryNames, Map<RegionType, List<String>> regionIds, Pageable pageable);
+    Page<Truck> findLikeTruckListByFilter(String memberId, String searchTerm, List<String> categoryCodes, Map<RegionType, List<String>> regionIds, Pageable pageable);
 }

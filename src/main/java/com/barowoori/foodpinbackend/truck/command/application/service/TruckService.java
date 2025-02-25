@@ -5,11 +5,11 @@ import com.barowoori.foodpinbackend.category.command.domain.repository.CategoryR
 import com.barowoori.foodpinbackend.common.exception.CustomException;
 import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepository;
-import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
-import com.barowoori.foodpinbackend.file.infra.domain.ImageDirectory;
 import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
 import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
+import com.barowoori.foodpinbackend.region.command.domain.repository.RegionDoRepository;
+import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionInfo;
 import com.barowoori.foodpinbackend.truck.command.application.dto.RequestTruck;
 import com.barowoori.foodpinbackend.truck.command.domain.exception.TruckErrorCode;
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
@@ -18,11 +18,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 @Service
@@ -39,25 +37,26 @@ public class TruckService {
     private final TruckDocumentRepository truckDocumentRepository;
     private final TruckManagerRepository truckManagerRepository;
     private final FileRepository fileRepository;
+    private final RegionDoRepository regionDoRepository;
 
-    private String getMemberId(){
+    private String getMemberId() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 
-    private Truck getTruck(String truckId){
+    private Truck getTruck(String truckId) {
         return truckRepository.findById(truckId)
                 .orElseThrow(() -> new CustomException(TruckErrorCode.NOT_FOUND_TRUCK));
     }
 
     @Transactional
-    public void createTruck(RequestTruck.CreateTruckDto createTruckDto){
+    public void createTruck(RequestTruck.CreateTruckDto createTruckDto) {
         String memberId = getMemberId();
 
         // 트럭 생성
         Truck truck = createTruckDto.getTruckInfoDto().toEntity();
         truckRepository.save(truck);
         // 트럭 사진 생성
-        for (String fileId : createTruckDto.getTruckInfoDto().getFileIdList()){
+        for (String fileId : createTruckDto.getTruckInfoDto().getFileIdList()) {
             File file = fileRepository.findById(fileId)
                     .orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_PHOTO_NOT_FOUND));
             TruckPhoto truckPhoto = TruckPhoto.builder().file(file).updatedBy(memberId).truck(truck).build();
@@ -65,16 +64,22 @@ public class TruckService {
         }
 
         // 트럭 지역 생성
-        // 현재 지역 제대로 안 들어감, 추후에 지역구 로직 맞춰서 수정 필요할 듯
         createTruckDto.getTruckRegionDtoSet().forEach(truckRegionDto -> {
-            TruckRegion truckRegion = truckRegionDto.toEntity(truck);
+            RegionInfo regionInfo = regionDoRepository.findByCode(truckRegionDto.getRegionCode());
+            TruckRegion truckRegion = TruckRegion.builder()
+                    .truck(truck)
+                    .regionType(regionInfo.getRegionType())
+                    .regionId(regionInfo.getRegionId())
+                    .build();
             truckRegionRepository.save(truckRegion);
         });
 
         // 트럭 카테고리 생성
         createTruckDto.getTruckCategoryDtoSet().forEach(truckCategoryDto -> {
-            Category category = categoryRepository.findById(truckCategoryDto.getCategoryId())
-                    .orElseThrow(()->new CustomException(TruckErrorCode.CATEGORY_NOT_FOUND));
+            Category category = categoryRepository.findByCode(truckCategoryDto.getCategoryCode());
+            if(category == null){
+                throw new CustomException(TruckErrorCode.CATEGORY_NOT_FOUND);
+            }
             TruckCategory truckCategory = truckCategoryDto.toEntity(truck, category);
             truckCategoryRepository.save(truckCategory);
         });
@@ -110,7 +115,7 @@ public class TruckService {
 
         // 트럭 관리자 생성
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(()-> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
         TruckManager truckManager = TruckManager.builder()
                 .role(TruckManagerRole.OWNER)
                 .roleUpdatedAt(LocalDateTime.now())
@@ -121,14 +126,14 @@ public class TruckService {
     }
 
     @Transactional
-    public void addManager(String truckId){
+    public void addManager(String truckId) {
         String memberId = getMemberId();
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
         Truck truck = getTruck(truckId);
 
         TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(truckId, memberId);
-        if (truckManager == null){
+        if (truckManager == null) {
             TruckManager newTruckManager = TruckManager.builder()
                     .role(TruckManagerRole.MEMBER)
                     .roleUpdatedAt(LocalDateTime.now())
@@ -136,12 +141,11 @@ public class TruckService {
                     .truck(truck)
                     .build();
             truckManagerRepository.save(newTruckManager);
-        }
-        else throw new CustomException(TruckErrorCode.TRUCK_MANAGER_EXISTS);
+        } else throw new CustomException(TruckErrorCode.TRUCK_MANAGER_EXISTS);
     }
 
     @Transactional
-    public void updateTruckInfo(String truckId, RequestTruck.UpdateTruckInfoDto updateTruckInfoDto){
+    public void updateTruckInfo(String truckId, RequestTruck.UpdateTruckInfoDto updateTruckInfoDto) {
         String memberId = getMemberId();
         Truck truck = getTruck(truckId);
         truck.update(updateTruckInfoDto.getName(), memberId, updateTruckInfoDto.getDescription(), truck.getElectricityUsage(), truck.getGasUsage(), truck.getSelfGenerationAvailability());
@@ -150,7 +154,7 @@ public class TruckService {
         // truckPhoto id가 아닌 file id로 수정 돌아감
         List<TruckPhoto> photoList = truckPhotoRepository.findByTruckOrderByCreateAt(truck);
         photoList.forEach(truckPhotoRepository::delete);
-        for (String fileId : updateTruckInfoDto.getFileIdList()){
+        for (String fileId : updateTruckInfoDto.getFileIdList()) {
             File file = fileRepository.findById(fileId)
                     .orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_PHOTO_NOT_FOUND));
             TruckPhoto truckPhoto = TruckPhoto.builder().file(file).updatedBy(memberId).truck(truck).build();
@@ -159,7 +163,7 @@ public class TruckService {
     }
 
     @Transactional
-    public void updateTruckOperation(String truckId, RequestTruck.UpdateTruckOperationDto updateTruckOperationDto){
+    public void updateTruckOperation(String truckId, RequestTruck.UpdateTruckOperationDto updateTruckOperationDto) {
         String memberId = getMemberId();
         Truck truck = getTruck(truckId);
         truck.update(truck.getName(), memberId, truck.getDescription(), updateTruckOperationDto.getElectricityUsage(), updateTruckOperationDto.getGasUsage(), updateTruckOperationDto.getSelfGenerationAvailability());
@@ -168,21 +172,28 @@ public class TruckService {
         List<TruckRegion> truckRegionList = truckRegionRepository.findAllByTruck(truck);
         truckRegionList.forEach(truckRegionRepository::delete);
         updateTruckOperationDto.getTruckRegionDtoSet().forEach(truckRegionDto -> {
-            TruckRegion truckRegion = truckRegionDto.toEntity(truck);
+            RegionInfo regionInfo = regionDoRepository.findByCode(truckRegionDto.getRegionCode());
+            TruckRegion truckRegion = TruckRegion.builder()
+                    .truck(truck)
+                    .regionType(regionInfo.getRegionType())
+                    .regionId(regionInfo.getRegionId())
+                    .build();
             truckRegionRepository.save(truckRegion);
         });
     }
 
     @Transactional
-    public void updateTruckMenu(String truckId, RequestTruck.UpdateTruckMenuDto updateTruckMenuDto){
+    public void updateTruckMenu(String truckId, RequestTruck.UpdateTruckMenuDto updateTruckMenuDto) {
         String memberId = getMemberId();
         Truck truck = getTruck(truckId);
 
         List<TruckCategory> truckCategoryList = truckCategoryRepository.findAllByTruck(truck);
         truckCategoryList.forEach(truckCategoryRepository::delete);
         updateTruckMenuDto.getTruckCategoryDtoSet().forEach(truckCategoryDto -> {
-            Category category = categoryRepository.findById(truckCategoryDto.getCategoryId())
-                    .orElseThrow(()->new CustomException(TruckErrorCode.CATEGORY_NOT_FOUND));
+            Category category = categoryRepository.findByCode(truckCategoryDto.getCategoryCode());
+            if(category == null){
+                throw new CustomException(TruckErrorCode.CATEGORY_NOT_FOUND);
+            }
             TruckCategory truckCategory = truckCategoryDto.toEntity(truck, category);
             truckCategoryRepository.save(truckCategory);
         });
@@ -210,40 +221,36 @@ public class TruckService {
     }
 
     @Transactional
-    public void changeOwner(String managerId, String truckId){
+    public void changeOwner(String managerId, String truckId) {
         String memberId = getMemberId();
 
         TruckManager truckOwner = truckManagerRepository.findByTruckIdAndMemberId(truckId, memberId);
         TruckManager truckMember = truckManagerRepository.findByTruckIdAndMemberId(truckId, managerId);
-        if (truckOwner != null && truckMember != null && Objects.equals(truckOwner.getRole(), TruckManagerRole.OWNER)){
+        if (truckOwner != null && truckMember != null && Objects.equals(truckOwner.getRole(), TruckManagerRole.OWNER)) {
             truckMember.updateRole(TruckManagerRole.OWNER);
             truckManagerRepository.save(truckMember);
             truckOwner.updateRole(TruckManagerRole.MEMBER);
             truckManagerRepository.save(truckOwner);
-        }
-        else throw new CustomException(TruckErrorCode.TRUCK_OWNER_NOT_FOUND);
+        } else throw new CustomException(TruckErrorCode.TRUCK_OWNER_NOT_FOUND);
     }
 
     @Transactional
-    public void deleteManager(String managerId, String truckId){
+    public void deleteManager(String managerId, String truckId) {
         String memberId = getMemberId();
 
         TruckManager truckOwner = truckManagerRepository.findByTruckIdAndMemberId(truckId, memberId);
         TruckManager truckMember = truckManagerRepository.findByTruckIdAndMemberId(truckId, managerId);
-        if (truckOwner != null && truckMember != null && Objects.equals(truckOwner.getRole(), TruckManagerRole.OWNER)){
+        if (truckOwner != null && truckMember != null && Objects.equals(truckOwner.getRole(), TruckManagerRole.OWNER)) {
             truckManagerRepository.delete(truckMember);
-        }
-        else throw new CustomException(TruckErrorCode.TRUCK_OWNER_NOT_FOUND);
+        } else throw new CustomException(TruckErrorCode.TRUCK_OWNER_NOT_FOUND);
     }
 
-    // isDeleted true면 조회 쪽에서 안 뜨게 해야 할 듯
     @Transactional
-    public void deleteTruck(String truckId){
+    public void deleteTruck(String truckId) {
         TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(truckId, getMemberId());
-        if (truckManager != null && Objects.equals(truckManager.getRole(), TruckManagerRole.OWNER)){
+        if (truckManager != null && Objects.equals(truckManager.getRole(), TruckManagerRole.OWNER)) {
             Truck truck = getTruck(truckId);
-            truck.setIsDeleted(true);
-        }
-        else throw new CustomException(TruckErrorCode.TRUCK_OWNER_NOT_FOUND);
+            truck.delete();
+        } else throw new CustomException(TruckErrorCode.TRUCK_OWNER_NOT_FOUND);
     }
 }

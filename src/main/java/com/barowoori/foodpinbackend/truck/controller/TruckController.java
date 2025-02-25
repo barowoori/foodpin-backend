@@ -4,12 +4,19 @@ import com.barowoori.foodpinbackend.common.dto.CommonResponse;
 import com.barowoori.foodpinbackend.truck.command.application.dto.RequestTruck;
 import com.barowoori.foodpinbackend.truck.command.application.service.TruckService;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckDetail;
+import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckList;
 import com.barowoori.foodpinbackend.truck.query.application.TruckDetailService;
+import com.barowoori.foodpinbackend.truck.query.application.TruckListService;
 import com.barowoori.foodpinbackend.truck.query.application.TruckQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -29,9 +36,10 @@ public class TruckController {
     private final TruckService truckService;
     private final TruckDetailService truckDetailService;
     private final TruckQueryService truckQueryService;
+    private final TruckListService truckListService;
 
     @Operation(summary = "트럭 생성")
-    @PostMapping(value = "/v1/truck", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/v1", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CommonResponse<String>> createTruck(@Valid @RequestPart(value = "createTruckDto") RequestTruck.CreateTruckDto createTruckDto) {
         truckService.createTruck(createTruckDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
@@ -60,6 +68,36 @@ public class TruckController {
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
+
+    @Operation(summary = "트럭 목록 조회", description = "정렬 : 최신순(createdAt, DESC), 조회순(views, DESC)")
+    @GetMapping(value = "/v1")
+    public ResponseEntity<CommonResponse<Page<TruckList>>> getTruckList(@RequestParam(value = "region", required = false) List<String> regionCodes,
+                                                                        @RequestParam(value = "category", required = false) List<String> categoryNames,
+                                                                        @RequestParam(value = "search", required = false) String searchTerm,
+                                                                        @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        Page<TruckList> truckLists = truckListService.findTruckList(regionCodes, categoryNames, searchTerm, pageable);
+        CommonResponse<Page<TruckList>> commonResponse = CommonResponse.<Page<TruckList>>builder()
+                .data(truckLists)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "찜한 트럭 목록 조회", description = "정렬 : 최신순(createdAt, DESC), 조회순(views, DESC)")
+    @GetMapping(value = "/v1/like")
+    public ResponseEntity<CommonResponse<Page<TruckList>>> getLikeTruckList(@RequestParam(value = "region", required = false) List<String> regionCodes,
+                                                                            @RequestParam(value = "category", required = false) List<String> categoryNames,
+                                                                            @RequestParam(value = "search", required = false) String searchTerm,
+                                                                            @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        Page<TruckList> truckLists = truckListService.findLikeTruckByTruckList(memberId, regionCodes, categoryNames, searchTerm, pageable);
+        CommonResponse<Page<TruckList>> commonResponse = CommonResponse.<Page<TruckList>>builder()
+                .data(truckLists)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
 
     @Operation(summary = "본인 소유 트럭 리스트 조회", description = "소유자 뿐만 아니라 운영자도 트럭 조회 가능")
     @GetMapping(value = "/v1/owned")

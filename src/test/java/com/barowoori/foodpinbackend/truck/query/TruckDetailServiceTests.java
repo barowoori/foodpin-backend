@@ -60,6 +60,7 @@ public class TruckDetailServiceTests {
                 .name("바로우리")
                 .description("바로우리 트럭입니다")
                 .isDeleted(Boolean.FALSE)
+                .views(0)
                 .build();
         truck = truckRepository.save(truck);
 

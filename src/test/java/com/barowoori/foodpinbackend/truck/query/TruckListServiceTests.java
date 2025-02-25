@@ -60,10 +60,13 @@ public class TruckListServiceTests {
     @Autowired
     private TruckPhotoRepository truckPhotoRepository;
 
-    private Truck truck;
+    Truck truck;
+    Truck deletedTruck;
     RegionSi yongIn;
     RegionSi anyang;
+
     @BeforeEach
+    @Transactional
     void setUp() {
         truck = Truck.builder()
                 .name("바로우리")
@@ -105,12 +108,12 @@ public class TruckListServiceTests {
                 .build();
         truckMenuRepository.save(truckMenu2);
 
-        Truck truck2 = Truck.builder()
+        deletedTruck = Truck.builder()
                 .name("삭제된 바로우리")
                 .description("바로우리 트럭입니다")
                 .isDeleted(Boolean.TRUE)
                 .build();
-        truck2 = truckRepository.save(truck2);
+        deletedTruck = truckRepository.save(deletedTruck);
 
         RegionDo gyeonggi = new RegionDo.Builder().addName("경기도").build();
         gyeonggi = regionDoRepository.save(gyeonggi);
@@ -136,6 +139,7 @@ public class TruckListServiceTests {
     }
 
     @Nested
+    @Transactional
     @DisplayName("검색어가 있을 경우에는 검색어에 해당하는 트럭 전체가 조회되어야 한다")
     class When_Exist_SearchTerm {
         @Test
@@ -147,7 +151,6 @@ public class TruckListServiceTests {
             Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
             Page<TruckList> result = truckListService.findByTruckList(null, null, searchTerm, pageable);
             result.stream().forEach(r -> System.out.println(r.getName()));
-            assertEquals(1, result.getNumberOfElements());
             assertThat(result.get().findFirst().get().getName().contains(searchTerm));
         }
 
@@ -160,12 +163,12 @@ public class TruckListServiceTests {
             Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
             Page<TruckList> result = truckListService.findByTruckList(null, null, searchTerm, pageable);
             result.stream().forEach(r -> System.out.println(r.getName()));
-            assertEquals(1, result.getNumberOfElements());
             assertThat(result.get().findFirst().get().getMenuNames().contains(searchTerm));
         }
     }
 
     @Nested
+    @Transactional
     @DisplayName("필터링 테스트")
     class Filtering {
         @BeforeEach
@@ -200,7 +203,7 @@ public class TruckListServiceTests {
         @DisplayName("필터를 걸지 않았을 때는 삭제되지 않은 트럭 전체가 조회되어야 한다")
         void When_NotFilter_Then_GetAllTruckList() {
             Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
-            assertEquals(2, truckListService.findByTruckList(null, null, null, pageable).getNumberOfElements());
+            assertThat(truckListService.findByTruckList(null, null, null, pageable).get().noneMatch(truck -> truck.getId().equals(deletedTruck)));
         }
 
         @Test

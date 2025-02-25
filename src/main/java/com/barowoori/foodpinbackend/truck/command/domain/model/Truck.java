@@ -84,8 +84,9 @@ public class Truck {
     public void addViews() {
         this.views = this.views + 1;
 
+    }
+
     public void setIsDeleted(Boolean isDeleted){
         this.isDeleted = isDeleted;
-
     }
 }

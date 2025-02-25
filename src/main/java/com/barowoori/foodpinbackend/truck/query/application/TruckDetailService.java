@@ -42,7 +42,7 @@ public class TruckDetailService {
     }
 
     //TODO 사진들 돌려줄 때 file id도 줘야 할 듯..?
-    @Transactional(readOnly = true)
+    @Transactional
     public TruckDetail getTruckDetail(String memberId, String truckId) {
         Truck truck = truckRepository.getTruckWithPhotoById(truckId);
         if (truck == null || truck.getIsDeleted()) {
@@ -54,6 +54,7 @@ public class TruckDetailService {
         TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(truckId, memberId);
         List<String> regionNames = truckRegionRepository.findRegionNamesByTruckId(truckId);
         List<Category> categories = truckCategoryRepository.findCategoriesByTruckId(truckId);
+        truck.addViews();
         return TruckDetail.of(truckManager, truck, documentManager.getTypes(), regionNames, categories, truckMenus, truckLike != null, imageManager);
     }
 }

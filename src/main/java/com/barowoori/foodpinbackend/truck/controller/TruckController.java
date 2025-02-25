@@ -5,6 +5,7 @@ import com.barowoori.foodpinbackend.truck.command.application.dto.RequestTruck;
 import com.barowoori.foodpinbackend.truck.command.application.service.TruckService;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckDetail;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckList;
+import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckManagerSummary;
 import com.barowoori.foodpinbackend.truck.query.application.TruckDetailService;
 import com.barowoori.foodpinbackend.truck.query.application.TruckListService;
 import com.barowoori.foodpinbackend.truck.query.application.TruckQueryService;
@@ -160,6 +161,18 @@ public class TruckController {
         truckService.deleteManager(managerId, truckId);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Truck manager deleted successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "트럭 운영자 목록 조회")
+    @GetMapping(value = "/v1/{truckId}/managers")
+    public ResponseEntity<CommonResponse<Page<TruckManagerSummary>>> getTruckManagerList(@Valid @PathVariable("truckId") String truckId,
+                                                                                         @ParameterObject @PageableDefault Pageable pageable) {
+
+        Page<TruckManagerSummary> truckLists = truckService.getTruckManagerList(truckId, pageable);
+        CommonResponse<Page<TruckManagerSummary>> commonResponse = CommonResponse.<Page<TruckManagerSummary>>builder()
+                .data(truckLists)
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }

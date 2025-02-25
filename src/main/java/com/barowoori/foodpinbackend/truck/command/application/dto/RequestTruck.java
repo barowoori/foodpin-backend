@@ -55,6 +55,8 @@ public class RequestTruck {
                     .electricityUsage(this.electricityUsage)
                     .gasUsage(this.gasUsage)
                     .selfGenerationAvailability(this.selfGenerationAvailability)
+                    .views(0)
+                    .isDeleted(Boolean.FALSE)
                     .build();
         }
     }

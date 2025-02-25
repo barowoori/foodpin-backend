@@ -7,6 +7,7 @@ import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepository;
 import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
+import com.barowoori.foodpinbackend.member.command.domain.model.TruckLike;
 import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionDoRepository;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionInfo;
@@ -14,7 +15,10 @@ import com.barowoori.foodpinbackend.truck.command.application.dto.RequestTruck;
 import com.barowoori.foodpinbackend.truck.command.domain.exception.TruckErrorCode;
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.*;
+import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckManagerSummary;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -252,5 +256,10 @@ public class TruckService {
             Truck truck = getTruck(truckId);
             truck.delete();
         } else throw new CustomException(TruckErrorCode.TRUCK_OWNER_NOT_FOUND);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<TruckManagerSummary> getTruckManagerList(String truckId, Pageable pageable){
+        return truckManagerRepository.findTruckManagerPages(truckId, getMemberId(), pageable);
     }
 }

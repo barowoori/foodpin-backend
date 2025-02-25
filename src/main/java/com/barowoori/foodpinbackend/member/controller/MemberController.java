@@ -60,7 +60,7 @@ public class MemberController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/v1/login")
-    public ResponseEntity<CommonResponse<ResponseMember.LoginMemberRsDto>> loginMember(@Valid @RequestBody RequestMember.LoginMemberRqDto loginMemberRqDto){
+    public ResponseEntity<CommonResponse<ResponseMember.LoginMemberRsDto>> loginMember(@Valid @RequestBody RequestMember.LoginMemberRqDto loginMemberRqDto) {
         ResponseMember.LoginMemberRsDto loginMemberRsDto = memberService.loginMember(loginMemberRqDto);
         CommonResponse<ResponseMember.LoginMemberRsDto> commonResponse = CommonResponse.<ResponseMember.LoginMemberRsDto>builder()
                 .data(loginMemberRsDto)
@@ -78,7 +78,7 @@ public class MemberController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/v1/reissued-token")
-    public ResponseEntity<CommonResponse<ResponseMember.ReissueTokenDto>> reissueToken(HttpServletRequest request){
+    public ResponseEntity<CommonResponse<ResponseMember.ReissueTokenDto>> reissueToken(HttpServletRequest request) {
         String refreshToken = jwtTokenProvider.resolveToken(request);
         ResponseMember.ReissueTokenDto reissueTokenDto = memberService.reissueToken(refreshToken);
         CommonResponse<ResponseMember.ReissueTokenDto> commonResponse = CommonResponse.<ResponseMember.ReissueTokenDto>builder()
@@ -96,7 +96,7 @@ public class MemberController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/v1/info")
-    public ResponseEntity<CommonResponse<ResponseMember.GetInfoDto>> getInfo(){
+    public ResponseEntity<CommonResponse<ResponseMember.GetInfoDto>> getInfo() {
         ResponseMember.GetInfoDto getInfoDto = memberService.getInfo();
         CommonResponse<ResponseMember.GetInfoDto> commonResponse = CommonResponse.<ResponseMember.GetInfoDto>builder()
                 .data(getInfoDto)
@@ -109,7 +109,7 @@ public class MemberController {
             @ApiResponse(responseCode = "200", description = "성공")
     })
     @GetMapping("/v1/random-nickname")
-    public ResponseEntity<CommonResponse<ResponseMember.GenerateNicknameDto>> generateNickname(){
+    public ResponseEntity<CommonResponse<ResponseMember.GenerateNicknameDto>> generateNickname() {
         ResponseMember.GenerateNicknameDto generateNicknameDto = memberService.generateNickname();
         CommonResponse<ResponseMember.GenerateNicknameDto> commonResponse = CommonResponse.<ResponseMember.GenerateNicknameDto>builder()
                 .data(generateNicknameDto)
@@ -122,7 +122,7 @@ public class MemberController {
             @ApiResponse(responseCode = "200", description = "성공")
     })
     @GetMapping("/v1/nickname/{nickname}/valid")
-    public ResponseEntity<CommonResponse<ResponseMember.CheckNicknameDto>> checkNickname(@Valid @PathVariable("nickname") String nickname){
+    public ResponseEntity<CommonResponse<ResponseMember.CheckNicknameDto>> checkNickname(@Valid @PathVariable("nickname") String nickname) {
         ResponseMember.CheckNicknameDto checkNicknameDto = memberService.checkNickname(nickname);
         CommonResponse<ResponseMember.CheckNicknameDto> commonResponse = CommonResponse.<ResponseMember.CheckNicknameDto>builder()
                 .data(checkNicknameDto)
@@ -135,7 +135,7 @@ public class MemberController {
             @ApiResponse(responseCode = "200", description = "성공")
     })
     @GetMapping("/v1/phone/{phone}/valid")
-    public ResponseEntity<CommonResponse<ResponseMember.CheckPhoneDto>> checkPhone(@Valid @PathVariable("phone") String phone){
+    public ResponseEntity<CommonResponse<ResponseMember.CheckPhoneDto>> checkPhone(@Valid @PathVariable("phone") String phone) {
         ResponseMember.CheckPhoneDto checkPhoneDto = memberService.checkPhone(phone);
         CommonResponse<ResponseMember.CheckPhoneDto> commonResponse = CommonResponse.<ResponseMember.CheckPhoneDto>builder()
                 .data(checkPhoneDto)
@@ -157,7 +157,7 @@ public class MemberController {
     })
     @PutMapping(value = "/v1/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CommonResponse<String>> updateProfile(@Valid @RequestPart(name = "updateProfileRqDto") RequestMember.UpdateProfileRqDto updateProfileRqDto,
-                                                                @RequestPart(name = "image", required = false) MultipartFile image){
+                                                                @RequestPart(name = "image", required = false) MultipartFile image) {
         memberService.updateProfile(updateProfileRqDto, image);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Profile updated successfully.")
@@ -174,7 +174,7 @@ public class MemberController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/v1/logout")
-    public ResponseEntity<CommonResponse<String>> logoutMember(HttpServletRequest request){
+    public ResponseEntity<CommonResponse<String>> logoutMember(HttpServletRequest request) {
         String refreshToken = jwtTokenProvider.resolveToken(request);
         memberService.logoutMember(refreshToken);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
@@ -193,11 +193,27 @@ public class MemberController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @DeleteMapping("/v1/test")
-    public ResponseEntity<CommonResponse<String>> deleteMember(HttpServletRequest request){
+    public ResponseEntity<CommonResponse<String>> deleteMember(HttpServletRequest request) {
         memberService.deleteMember();
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Member deleted successfully.")
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
+
+    @Operation(summary = "푸드트럭 좋아요/취소", description = "좋아요가 이미 있을 경우 좋아요 취소, 없을 경우 좋아요 등록")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004], 해당 트럭 정보가 없을 경우[30000]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PutMapping("/v1/trucks/{truckId}/like")
+    public ResponseEntity<CommonResponse<String>> likeTruck(@Valid @PathVariable(name = "truckId") String truckId) {
+        memberService.likeTruck(truckId);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("successfully")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
 }

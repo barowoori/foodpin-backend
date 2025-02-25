@@ -44,6 +44,10 @@ public class RegionGu extends Region {
         }
     }
 
+    protected RegionGu(){
+        super();
+    }
+
     public RegionGu(RegionGu.Builder builder) {
         super(builder);
         this.regionDo = builder.regionDo;

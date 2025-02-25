@@ -21,6 +21,10 @@ public abstract class Region {
         this.name = name;
     }
 
+    public Region() {
+
+    }
+
     abstract static class Builder<T extends Builder<T>> {
         private String name;
 

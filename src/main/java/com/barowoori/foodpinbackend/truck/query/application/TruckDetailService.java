@@ -37,7 +37,6 @@ public class TruckDetailService {
 
     @Transactional(readOnly = true)
     public TruckDetail getTruckDetail(String memberId, String truckId) {
-        //TODO 트럭 지역 추가하기
         Truck truck = truckRepository.getTruckWithPhotoById(truckId);
         if (truck == null) {
             throw new CustomException(TruckErrorCode.NOT_FOUND_TRUCK);
@@ -46,6 +45,7 @@ public class TruckDetailService {
         List<TruckMenu> truckMenus = truckMenuRepository.getMenuListWithPhotoByTruckId(truckId);
         TruckLike truckLike = truckLikeRepository.findByMemberIdAndTruckId(memberId, truckId);
         TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(truckId, memberId);
-        return TruckDetail.of(truckManager, truck, documentManager.getTypes(), new ArrayList<>(), truckMenus, truckLike != null);
+        List<String> regionNames = truckRegionRepository.findRegionNamesByTruckId(truckId);
+        return TruckDetail.of(truckManager, truck, documentManager.getTypes(), regionNames, truckMenus, truckLike != null);
     }
 }

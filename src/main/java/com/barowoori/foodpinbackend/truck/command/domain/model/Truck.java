@@ -20,7 +20,7 @@ public class Truck {
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -44,6 +44,9 @@ public class Truck {
     @Column(name = "self_generation_availability")
     private Boolean selfGenerationAvailability;
 
+    @Column(name = "views")
+    private Integer views = 0;
+
     @Column(name = "is_deleted")
     private Boolean isDeleted = false;
 
@@ -57,7 +60,7 @@ public class Truck {
     }
 
     @Builder
-    public Truck(String name, LocalDateTime updatedAt, String updatedBy, String description, Boolean electricityUsage, Boolean gasUsage, Boolean selfGenerationAvailability, Boolean isDeleted) {
+    public Truck(String name, LocalDateTime updatedAt, String updatedBy, String description, Boolean electricityUsage, Boolean gasUsage, Boolean selfGenerationAvailability, Boolean isDeleted, Integer views) {
         this.name = name;
         this.updatedAt = updatedAt;
         this.updatedBy = updatedBy;
@@ -66,6 +69,7 @@ public class Truck {
         this.gasUsage = gasUsage;
         this.selfGenerationAvailability = selfGenerationAvailability;
         this.isDeleted = isDeleted;
+        this.views = views;
     }
 
     public void update(String name, String updatedBy, String description, Boolean electricityUsage, Boolean gasUsage, Boolean selfGenerationAvailability) {
@@ -75,5 +79,9 @@ public class Truck {
         this.electricityUsage = electricityUsage;
         this.gasUsage = gasUsage;
         this.selfGenerationAvailability = selfGenerationAvailability;
+    }
+
+    public void addViews() {
+        this.views = this.views + 1;
     }
 }

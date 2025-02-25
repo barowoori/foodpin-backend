@@ -76,4 +76,8 @@ public class Truck {
         this.gasUsage = gasUsage;
         this.selfGenerationAvailability = selfGenerationAvailability;
     }
+
+    public void setIsDeleted(Boolean isDeleted){
+        this.isDeleted = isDeleted;
+    }
 }

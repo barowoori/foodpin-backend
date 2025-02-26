@@ -41,7 +41,6 @@ public class TruckDetailService {
         this.truckCategoryRepository = truckCategoryRepository;
     }
 
-    //TODO 사진들 돌려줄 때 file id도 줘야 할 듯..?
     @Transactional
     public TruckDetail getTruckDetail(String memberId, String truckId) {
         Truck truck = truckRepository.getTruckWithPhotoById(truckId);

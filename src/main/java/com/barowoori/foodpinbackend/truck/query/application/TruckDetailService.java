@@ -5,6 +5,7 @@ import com.barowoori.foodpinbackend.common.exception.CustomException;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.member.command.domain.model.TruckLike;
 import com.barowoori.foodpinbackend.member.command.domain.repository.TruckLikeRepository;
+import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionCode;
 import com.barowoori.foodpinbackend.truck.command.domain.exception.TruckErrorCode;
 import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckManager;
@@ -52,7 +53,7 @@ public class TruckDetailService {
         List<TruckMenu> truckMenus = truckMenuRepository.getMenuListWithPhotoByTruckId(truckId);
         TruckLike truckLike = truckLikeRepository.findByMemberIdAndTruckId(memberId, truckId);
         TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(truckId, memberId);
-        List<String> regionNames = truckRegionRepository.findRegionNamesByTruckId(truckId);
+        List<RegionCode> regionNames = truckRegionRepository.findRegionCodesByTruckId(truckId);
         List<Category> categories = truckCategoryRepository.findCategoriesByTruckId(truckId);
         truck.addViews();
         return TruckDetail.of(truckManager, truck, documentManager.getTypes(), regionNames, categories, truckMenus, truckLike != null, imageManager);

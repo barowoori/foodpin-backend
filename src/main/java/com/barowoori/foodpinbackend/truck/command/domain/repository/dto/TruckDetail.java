@@ -3,6 +3,7 @@ package com.barowoori.foodpinbackend.truck.command.domain.repository.dto;
 import com.barowoori.foodpinbackend.category.command.domain.model.Category;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
+import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionCode;
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,12 +17,12 @@ public class TruckDetail {
     private Boolean isAvailableDelete;
     private TruckInfo truck;
     private List<DocumentType> documents;
-    private List<String> regions;
+    private List<RegionCode> regions;
     private List<CategoryInfo> categories;
     private List<MenuInfo> menus;
     private Boolean isLike;
 
-    public static TruckDetail of(TruckManager truckManager, Truck truck, List<DocumentType> documents, List<String> regions, List<Category> categories, List<TruckMenu> truckMenus, Boolean isLike, ImageManager imageManager) {
+    public static TruckDetail of(TruckManager truckManager, Truck truck, List<DocumentType> documents, List<RegionCode> regions, List<Category> categories, List<TruckMenu> truckMenus, Boolean isLike, ImageManager imageManager) {
         return TruckDetail.builder()
                 .isAvailableUpdate(checkAvailableUpdate(truckManager))
                 .isAvailableDelete(checkAvailableDelete(truckManager))

@@ -1,7 +1,10 @@
 package com.barowoori.foodpinbackend.truck.command.domain.repository.querydsl;
 
 import com.barowoori.foodpinbackend.region.command.domain.model.*;
+import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionCode;
+import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionInfo;
 import com.barowoori.foodpinbackend.truck.command.domain.model.QTruckRegion;
+import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckDetail;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -51,6 +54,28 @@ public class TruckRegionRepositoryCustomImpl implements TruckRegionRepositoryCus
         }
 
         return regionNames;
+    }
+
+    @Override
+    public List<RegionCode> findRegionCodesByTruckId(String truckId) {
+        QTruckRegion truckRegion = QTruckRegion.truckRegion;
+
+        List<Tuple> results = jpaQueryFactory
+                .select(truckRegion.regionType, truckRegion.regionId)
+                .from(truckRegion)
+                .where(truckRegion.truck.id.eq(truckId))
+                .fetch();
+
+        List<RegionCode> regionCodes = new ArrayList<>();
+
+        for (Tuple result : results) {
+            RegionType regionType = result.get(truckRegion.regionType);
+            String regionId = result.get(truckRegion.regionId);
+            String fullRegionName = findFullRegionName(regionType, regionId);
+            regionCodes.add(RegionCode.of(regionType.makeCode(regionId), fullRegionName));
+        }
+
+        return regionCodes;
     }
 
     private String findFullRegionName(RegionType regionType, String regionId) {

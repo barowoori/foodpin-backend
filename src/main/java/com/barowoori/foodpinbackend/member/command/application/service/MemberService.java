@@ -8,9 +8,14 @@ import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorC
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
 import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginInfo;
 import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginType;
+import com.barowoori.foodpinbackend.member.command.domain.model.TruckLike;
 import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
+import com.barowoori.foodpinbackend.member.command.domain.repository.TruckLikeRepository;
 import com.barowoori.foodpinbackend.member.command.domain.service.GenerateNicknameService;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
+import com.barowoori.foodpinbackend.truck.command.domain.exception.TruckErrorCode;
+import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
+import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -25,6 +30,8 @@ public class MemberService {
     private final GenerateNicknameService generateNicknameService;
     private final JwtTokenProvider jwtTokenProvider;
     private final ImageManager imageManager;
+    private final TruckLikeRepository truckLikeRepository;
+    private final TruckRepository truckRepository;
 
     private Member getMember() {
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -125,5 +132,21 @@ public class MemberService {
     public void deleteMember() {
         Member member = getMember();
         memberRepository.delete(member);
+    }
+
+    @Transactional
+    public void likeTruck(String truckId) {
+        Member member = getMember();
+        Truck truck = truckRepository.findById(truckId).orElseThrow(() -> new CustomException(TruckErrorCode.NOT_FOUND_TRUCK));
+        TruckLike truckLike = truckLikeRepository.findByMemberIdAndTruckId(member.getId(), truckId);
+        if (truckLike == null) {
+            truckLike = TruckLike.builder()
+                    .truck(truck)
+                    .member(member)
+                    .build();
+            truckLikeRepository.save(truckLike);
+        } else {
+            truckLikeRepository.delete(truckLike);
+        }
     }
 }

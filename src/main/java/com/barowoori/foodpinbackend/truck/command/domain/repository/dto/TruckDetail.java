@@ -1,5 +1,6 @@
 package com.barowoori.foodpinbackend.truck.command.domain.repository.dto;
 
+import com.barowoori.foodpinbackend.category.command.domain.model.Category;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
@@ -16,16 +17,18 @@ public class TruckDetail {
     private TruckInfo truck;
     private List<DocumentType> documents;
     private List<String> regions;
+    private List<CategoryInfo> categories;
     private List<MenuInfo> menus;
     private Boolean isLike;
 
-    public static TruckDetail of(TruckManager truckManager, Truck truck, List<DocumentType> documents, List<String> regions, List<TruckMenu> truckMenus, Boolean isLike, ImageManager imageManager) {
+    public static TruckDetail of(TruckManager truckManager, Truck truck, List<DocumentType> documents, List<String> regions, List<Category> categories, List<TruckMenu> truckMenus, Boolean isLike, ImageManager imageManager) {
         return TruckDetail.builder()
                 .isAvailableUpdate(checkAvailableUpdate(truckManager))
                 .isAvailableDelete(checkAvailableDelete(truckManager))
                 .truck(TruckInfo.of(truck, imageManager))
                 .documents(documents)
                 .regions(regions)
+                .categories(categories.stream().map(CategoryInfo::of).toList())
                 .menus(truckMenus.stream().map(truckMenu -> MenuInfo.of(truckMenu, imageManager)).toList())
                 .isLike(isLike)
                 .build();
@@ -96,6 +99,20 @@ public class TruckDetail {
 
         }
 
+    }
+
+    @Getter
+    @Builder
+    public static class CategoryInfo {
+        private String code;
+        private String name;
+
+        public static CategoryInfo of(Category category) {
+            return CategoryInfo.builder()
+                    .code(category.getCode())
+                    .name(category.getName())
+                    .build();
+        }
     }
 
     @Getter

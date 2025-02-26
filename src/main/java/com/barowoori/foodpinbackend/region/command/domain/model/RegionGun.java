@@ -54,10 +54,15 @@ public class RegionGun extends Region {
         }
     }
 
+    protected RegionGun(){
+        super();
+    }
+
     public RegionGun(RegionGun.Builder builder) {
         super(builder);
         this.regionDo = builder.regionDo;
         this.regionSi = builder.regionSi;
         this.regionGu = builder.regionGu;
     }
+
 }

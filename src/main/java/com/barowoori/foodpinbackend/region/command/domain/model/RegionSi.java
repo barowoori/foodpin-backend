@@ -35,6 +35,10 @@ public class RegionSi extends Region{
         }
     }
 
+    protected RegionSi(){
+        super();
+    }
+
     public RegionSi (RegionSi.Builder builder) {
         super(builder);
         this.regionDo = builder.regionDo;

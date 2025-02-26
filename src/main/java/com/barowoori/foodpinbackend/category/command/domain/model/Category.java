@@ -1,6 +1,7 @@
 package com.barowoori.foodpinbackend.category.command.domain.model;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 
 @Entity
@@ -12,11 +13,14 @@ public class Category {
     private String id;
 
     private String name;
+    private String code;
 
     protected Category(){
     }
 
-    public Category(String name) {
+    @Builder
+    public Category(String name, String code) {
         this.name = name;
+        this.code = code;
     }
 }

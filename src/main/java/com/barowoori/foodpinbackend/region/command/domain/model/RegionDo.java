@@ -6,7 +6,7 @@ import lombok.Getter;
 @Entity
 @Table(name = "region_do")
 @Getter
-public class RegionDo extends Region{
+public class RegionDo extends Region {
 
     public static class Builder extends Region.Builder<Builder> {
 
@@ -25,7 +25,11 @@ public class RegionDo extends Region{
         }
     }
 
-    public RegionDo (Builder builder) {
+    protected RegionDo() {
+        super();
+    }
+
+    public RegionDo(Builder builder) {
         super(builder);
     }
 }

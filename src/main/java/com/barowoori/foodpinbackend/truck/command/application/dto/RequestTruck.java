@@ -55,32 +55,23 @@ public class RequestTruck {
                     .electricityUsage(this.electricityUsage)
                     .gasUsage(this.gasUsage)
                     .selfGenerationAvailability(this.selfGenerationAvailability)
+                    .views(0)
+                    .isDeleted(Boolean.FALSE)
                     .build();
         }
     }
 
     @Getter
     public static class TruckRegionDto{
-        @Schema(description = "지역 타입")
+        @Schema(description = "지역코드")
         @NotEmpty
-        private RegionType regionType;
-        @Schema(description = "지역 id")
-        @NotEmpty
-        private String regionId;
-
-        public TruckRegion toEntity(Truck truck){
-            return TruckRegion.builder()
-                    .regionType(this.regionType)
-                    .regionId(this.regionId)
-                    .truck(truck)
-                    .build();
-        }
+        private String regionCode;
     }
 
     @Getter
     public static class TruckCategoryDto{
-        @Schema(description = "트럭 카테고리 id")
-        private String categoryId;
+        @Schema(description = "트럭 카테고리 코드")
+        private String categoryCode;
 
         public TruckCategory toEntity(Truck truck, Category category){
             return TruckCategory.builder()

@@ -28,10 +28,11 @@ public class TruckDetailService {
     private final TruckManagerRepository truckManagerRepository;
     private final ImageManager imageManager;
     private final TruckCategoryRepository truckCategoryRepository;
+    private final TruckRegionFullNameGenerator truckRegionFullNameGenerator;
 
     public TruckDetailService(TruckDocumentRepository truckDocumentRepository, TruckLikeRepository truckLikeRepository, TruckRegionRepository truckRegionRepository,
                               TruckRepository truckRepository, TruckMenuRepository truckMenuRepository, TruckManagerRepository truckManagerRepository,
-                              ImageManager imageManager, TruckCategoryRepository truckCategoryRepository) {
+                              ImageManager imageManager, TruckCategoryRepository truckCategoryRepository, TruckRegionFullNameGenerator truckRegionFullNameGenerator) {
         this.truckDocumentRepository = truckDocumentRepository;
         this.truckLikeRepository = truckLikeRepository;
         this.truckRegionRepository = truckRegionRepository;
@@ -40,6 +41,7 @@ public class TruckDetailService {
         this.truckManagerRepository = truckManagerRepository;
         this.imageManager = imageManager;
         this.truckCategoryRepository = truckCategoryRepository;
+        this.truckRegionFullNameGenerator = truckRegionFullNameGenerator;
     }
 
     @Transactional
@@ -52,7 +54,7 @@ public class TruckDetailService {
         List<TruckMenu> truckMenus = truckMenuRepository.getMenuListWithPhotoByTruckId(truckId);
         TruckLike truckLike = truckLikeRepository.findByMemberIdAndTruckId(memberId, truckId);
         TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(truckId, memberId);
-        List<RegionCode> regionNames = truckRegionRepository.findRegionCodesByTruckId(truckId);
+        List<RegionCode> regionNames = truckRegionFullNameGenerator.findRegionCodesByTruckId(truckId);
         List<Category> categories = truckCategoryRepository.findCategoriesByTruckId(truckId);
         truck.addViews();
         return TruckDetail.of(truckManager, truck, documentManager.getTypes(), regionNames, categories, truckMenus, truckLike != null, imageManager);

@@ -1,6 +1,7 @@
 package com.barowoori.foodpinbackend.truck.query.application;
 
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
+import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionDoRepository;
 import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
@@ -24,13 +25,19 @@ public class TruckListService {
     private final TruckMenuRepository truckMenuRepository;
     private final TruckDocumentRepository truckDocumentRepository;
     private final TruckRegionRepository truckRegionRepository;
+    private final ImageManager imageManager;
+    private final TruckRegionFullNameGenerator truckRegionFullNameGenerator;
 
-    public TruckListService(TruckRepository truckRepository, RegionDoRepository regionDoRepository, TruckMenuRepository truckMenuRepository, TruckDocumentRepository truckDocumentRepository, TruckRegionRepository truckRegionRepository) {
+    public TruckListService(TruckRepository truckRepository, RegionDoRepository regionDoRepository, TruckMenuRepository truckMenuRepository,
+                            TruckDocumentRepository truckDocumentRepository, TruckRegionRepository truckRegionRepository,TruckRegionFullNameGenerator truckRegionFullNameGenerator,
+                            ImageManager imageManager) {
         this.truckRepository = truckRepository;
         this.regionDoRepository = regionDoRepository;
         this.truckMenuRepository = truckMenuRepository;
         this.truckDocumentRepository = truckDocumentRepository;
         this.truckRegionRepository = truckRegionRepository;
+        this.imageManager = imageManager;
+        this.truckRegionFullNameGenerator = truckRegionFullNameGenerator;
     }
 
     @Transactional(readOnly = true)
@@ -40,8 +47,8 @@ public class TruckListService {
         List<String> truckIds = trucks.map(Truck::getId).stream().toList();
         Map<String, List<String>> menuNames = truckMenuRepository.getMenuNamesByTruckIds(truckIds);
         Map<String, List<DocumentType>> documents = truckDocumentRepository.getDocumentTypeByTruckIds(truckIds);
-        Map<String, List<String>> regionNames = truckRegionRepository.findRegionNamesByTruckIds(truckIds);
-        return trucks.map(truck -> TruckList.of(truck, documents.get(truck.getId()), regionNames.get(truck.getId()), menuNames.get(truck.getId())));
+        Map<String, List<String>> regionNames = truckRegionFullNameGenerator.findRegionNamesByTruckIds(truckIds);
+        return trucks.map(truck -> TruckList.of(truck, documents.get(truck.getId()), regionNames.get(truck.getId()), menuNames.get(truck.getId()), imageManager));
     }
 
     @Transactional(readOnly = true)
@@ -51,7 +58,7 @@ public class TruckListService {
         List<String> truckIds = trucks.map(Truck::getId).stream().toList();
         Map<String, List<String>> menuNames = truckMenuRepository.getMenuNamesByTruckIds(truckIds);
         Map<String, List<DocumentType>> documents = truckDocumentRepository.getDocumentTypeByTruckIds(truckIds);
-        Map<String, List<String>> regionNames = truckRegionRepository.findRegionNamesByTruckIds(truckIds);
-        return trucks.map(truck -> TruckList.of(truck, documents.get(truck.getId()), regionNames.get(truck.getId()), menuNames.get(truck.getId())));
+        Map<String, List<String>> regionNames = truckRegionFullNameGenerator.findRegionNamesByTruckIds(truckIds);
+        return trucks.map(truck -> TruckList.of(truck, documents.get(truck.getId()), regionNames.get(truck.getId()), menuNames.get(truck.getId()), imageManager));
     }
 }

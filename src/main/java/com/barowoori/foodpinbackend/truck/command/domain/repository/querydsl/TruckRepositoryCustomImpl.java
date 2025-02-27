@@ -84,15 +84,12 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
                         truck.isDeleted.isFalse()
                                 .and(
                                         createFilterBuilder(searchTerm, categoryCodes, regionIds, truck, truckMenu, category)
-                                                .or(categoryFilterCondition(category, categoryCodes))
                                                 .or(regionFilterCondition(truckRegion, RegionType.REGION_DO, regionIds.get(RegionType.REGION_DO)))
                                                 .or(regionFilterCondition(truckRegion, RegionType.REGION_SI, regionIds.get(RegionType.REGION_SI)))
                                                 .or(regionFilterCondition(truckRegion, RegionType.REGION_GU, regionIds.get(RegionType.REGION_GU)))
                                                 .or(regionFilterCondition(truckRegion, RegionType.REGION_GUN, regionIds.get(RegionType.REGION_GUN)))
                                 )
                 )
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
                 .fetchOne();
 
         return new PageImpl<>(trucks, pageable, total);
@@ -117,8 +114,7 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
                 .leftJoin(truckCategory.category, category)
                 .leftJoin(truckMenu).on(truckMenu.truck.eq(truck))
                 .leftJoin(truck.photos, photo).fetchJoin()
-                .leftJoin
-                        (photo.file, file)
+                .leftJoin(photo.file, file)
                 .where(
                         truck.isDeleted.isFalse()
                                 .and(
@@ -145,15 +141,12 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
                         truck.isDeleted.isFalse()
                                 .and(
                                         createFilterBuilder(searchTerm, categoryCodes, regionIds, truck, truckMenu, category)
-                                                .or(categoryFilterCondition(category, categoryCodes))
                                                 .or(regionFilterCondition(truckRegion, RegionType.REGION_DO, regionIds.get(RegionType.REGION_DO)))
                                                 .or(regionFilterCondition(truckRegion, RegionType.REGION_SI, regionIds.get(RegionType.REGION_SI)))
                                                 .or(regionFilterCondition(truckRegion, RegionType.REGION_GU, regionIds.get(RegionType.REGION_GU)))
                                                 .or(regionFilterCondition(truckRegion, RegionType.REGION_GUN, regionIds.get(RegionType.REGION_GUN)))
                                 )
                 )
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
                 .fetchOne();
 
         return new PageImpl<>(trucks, pageable, total);
@@ -181,13 +174,6 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
             return;
         }
         builder.or(category.code.in(categoryCodes));
-    }
-
-    private BooleanExpression categoryFilterCondition(QCategory category, List<String> categoryCodes) {
-        if (categoryCodes == null || categoryCodes.isEmpty()) {
-            return null;
-        }
-        return category.code.in(categoryCodes);
     }
 
     private BooleanExpression regionFilterCondition(QTruckRegion truckRegion, RegionType regionType, List<String> regionIds) {

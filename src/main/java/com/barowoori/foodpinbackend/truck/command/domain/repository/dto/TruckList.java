@@ -1,6 +1,7 @@
 package com.barowoori.foodpinbackend.truck.command.domain.repository.dto;
 
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
+import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckPhoto;
 import lombok.Builder;
@@ -16,9 +17,9 @@ public class TruckList {
         private List<DocumentType> documents;
         private List<String> regions;
         private List<String> menuNames;
-        private Photo photo;
+        private String photo;
 
-        public static TruckList of(Truck truck, List<DocumentType> documents, List<String> regions, List<String> truckMenuNames) {
+        public static TruckList of(Truck truck, List<DocumentType> documents, List<String> regions, List<String> truckMenuNames, ImageManager imageManager) {
 
             return TruckList.builder()
                     .id(truck.getId())
@@ -28,7 +29,7 @@ public class TruckList {
                     .menuNames(truckMenuNames)
                     .photo(truck.getPhotos()
                             .stream()
-                            .map(Photo::ofTruckPhoto)
+                            .map(truckPhoto -> imageManager.getPreSignUrl(truckPhoto.getFile().getPath()))
                             .findFirst().orElse(null))
                     .build();
         }
@@ -39,10 +40,10 @@ public class TruckList {
             private String id;
             private String path;
 
-            public static Photo ofTruckPhoto(TruckPhoto truckPhoto) {
+            public static Photo ofTruckPhoto(TruckPhoto truckPhoto, ImageManager imageManager) {
                 return Photo.builder()
                         .id(truckPhoto.getId())
-                        .path(truckPhoto.getFile().getPath())
+                        .path(imageManager.getPreSignUrl(truckPhoto.getFile().getPath()))
                         .build();
             }
         }

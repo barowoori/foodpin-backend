@@ -1,4 +1,4 @@
-package com.barowoori.foodpinbackend.truck.domain.repository;
+package com.barowoori.foodpinbackend.truck.query;
 
 import com.barowoori.foodpinbackend.region.command.domain.model.*;
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionDoRepository;
@@ -9,6 +9,7 @@ import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckRegion;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckRegionRepository;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckRepository;
+import com.barowoori.foodpinbackend.truck.query.application.TruckRegionFullNameGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,7 @@ import java.util.List;
 
 @SpringBootTest
 @ActiveProfiles("test")
-public class TruckRegionRepositoryTests {
+public class TruckRegionFullNameGeneratorTests {
     @Autowired
     private TruckRepository truckRepository;
     @Autowired
@@ -32,6 +33,8 @@ public class TruckRegionRepositoryTests {
     private RegionGunRepository regionGunRepository;
     @Autowired
     private TruckRegionRepository truckRegionRepository;
+    @Autowired
+    private TruckRegionFullNameGenerator truckRegionFullNameGenerator;
 
     Truck truck;
     RegionDo gyeonggi;
@@ -125,7 +128,7 @@ public class TruckRegionRepositoryTests {
 
     @Test
     void When_GetTruckRegionName(){
-       List<String> result =  truckRegionRepository.findRegionNamesByTruckId(truck.getId());
+       List<String> result =  truckRegionFullNameGenerator.findRegionNamesByTruckId(truck.getId());
        for(String region : result){
            System.out.println("region : "+ region);
        }

@@ -1,17 +1,18 @@
 package com.barowoori.foodpinbackend.event.command.domain.model;
 
-import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Entity
-@Table(name = "event_photos")
+@Table(name = "event_dates")
 @Getter
-public class EventPhoto {
+public class EventDate {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
@@ -20,25 +21,27 @@ public class EventPhoto {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "event_date")
+    private LocalDate date;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "files_id")
-    private File file;
+    @Column(name = "start_time")
+    private LocalTime startTime;
 
-    @Column(name = "updated_by")
-    private String updatedBy;
+    @Column(name = "end_time")
+    private LocalTime endTime;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "events_id")
     private Event event;
 
-    protected EventPhoto() {
+    protected EventDate(){
     }
 
     @Builder
-    public EventPhoto(File file, String updatedBy, Event event) {
-        this.file = file;
-        this.updatedBy = updatedBy;
+    public EventDate(LocalDate date, LocalTime startTime, LocalTime endTime, Event event) {
+        this.date = date;
+        this.startTime = startTime;
+        this.endTime = endTime;
         this.event = event;
     }
 }

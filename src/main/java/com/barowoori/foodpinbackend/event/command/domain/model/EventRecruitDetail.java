@@ -1,6 +1,5 @@
 package com.barowoori.foodpinbackend.event.command.domain.model;
 
-import com.barowoori.foodpinbackend.category.command.domain.model.Category;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -30,6 +29,15 @@ public class EventRecruitDetail {
     @Column(name = "recruit_count")
     private Integer recruitCount;
 
+    @Column(name = "generator_requirement")
+    private Boolean generatorRequirement; //발전기 필요여부
+
+    @Column(name = "electricity_support_availability") //전기 지원 여부
+    private Boolean electricitySupportAvailability;
+
+    @Column(name = "entry_fee")// 입점비
+    private Integer entryFee;
+
     @Column(name = "applicant_count")
     private Integer applicantCount;
 
@@ -43,12 +51,27 @@ public class EventRecruitDetail {
     protected EventRecruitDetail(){}
 
     @Builder
-    public EventRecruitDetail(LocalDate recruitStartDate, LocalDate recruitEndDate, Integer recruitCount, Integer applicantCount, Integer selectedCount, Event event) {
+    public EventRecruitDetail(LocalDate recruitStartDate, LocalDate recruitEndDate, Integer recruitCount,
+                              Boolean generatorRequirement, Boolean electricitySupportAvailability, Integer entryFee,
+                              Integer applicantCount, Integer selectedCount, Event event) {
         this.recruitStartDate = recruitStartDate;
         this.recruitEndDate = recruitEndDate;
         this.recruitCount = recruitCount;
         this.applicantCount = applicantCount;
         this.selectedCount = selectedCount;
         this.event = event;
+        this.generatorRequirement = generatorRequirement;
+        this.electricitySupportAvailability = electricitySupportAvailability;
+        this.entryFee = entryFee;
+    }
+
+    public void update(LocalDate recruitStartDate, LocalDate recruitEndDate, Integer recruitCount,
+                       Boolean generatorRequirement, Boolean electricitySupportAvailability, Integer entryFee){
+        this.recruitStartDate = recruitStartDate;
+        this.recruitEndDate = recruitEndDate;
+        this.recruitCount = recruitCount;
+        this.generatorRequirement = generatorRequirement;
+        this.electricitySupportAvailability = electricitySupportAvailability;
+        this.entryFee = entryFee;
     }
 }

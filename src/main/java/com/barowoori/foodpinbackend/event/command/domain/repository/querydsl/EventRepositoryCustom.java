@@ -14,4 +14,5 @@ public interface EventRepositoryCustom {
     Page<Event> findEventListByFilter(String searchTerm, Map<RegionType, List<String>> regionIds,
                                       LocalDate startDate, LocalDate endDate,
                                       List<String> categoryCodes, Pageable pageable);
+    Event findEventDetail(String eventId);
 }

@@ -70,6 +70,9 @@ public class Event {
     @OneToMany(mappedBy = "event")
     private List<EventCategory> categories = new ArrayList<>();
 
+    @OneToMany(mappedBy = "event")
+    private List<EventDocument> documents = new ArrayList<>();
+
     protected Event() {
     }
 
@@ -106,5 +109,9 @@ public class Event {
 
     public void initEventView(EventView eventView){
         this.view = eventView;
+    }
+
+    public Boolean isCreator(String memberId){
+        return this.createdBy.equals(memberId);
     }
 }

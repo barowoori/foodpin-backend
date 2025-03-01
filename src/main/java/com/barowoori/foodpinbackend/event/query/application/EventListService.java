@@ -44,4 +44,17 @@ public class EventListService {
 
         return events.map(event -> EventList.of(event, regionNames.get(event.getId()), imageManager));
     }
+
+    @Transactional(readOnly = true)
+    public Page<EventList> findLikeEventList(String memberId, String searchTerm, List<String> regionCodes,
+                                             LocalDate startDate, LocalDate endDate,
+                                             List<String> categoryCodes, Pageable pageable) {
+        Map<RegionType, List<String>> regionIds = regionDoRepository.findRegionIdsByFilter(regionCodes);
+        Page<Event> events = eventRepository.findLikeEventListByFilter(memberId, searchTerm, regionIds, startDate, endDate, categoryCodes, pageable);
+        List<String> eventIds = events.map(Event::getId).stream().toList();
+        Map<String, List<String>> regionNames = eventRegionFullNameGenerator.findRegionNamesByEventIds(eventIds);
+
+        return events.map(event -> EventList.of(event, regionNames.get(event.getId()), imageManager));
+    }
+
 }

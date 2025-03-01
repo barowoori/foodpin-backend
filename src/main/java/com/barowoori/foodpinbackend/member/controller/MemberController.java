@@ -155,10 +155,9 @@ public class MemberController {
             @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PutMapping(value = "/v1/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<CommonResponse<String>> updateProfile(@Valid @RequestPart(name = "updateProfileRqDto") RequestMember.UpdateProfileRqDto updateProfileRqDto,
-                                                                @RequestPart(name = "image", required = false) MultipartFile image) {
-        memberService.updateProfile(updateProfileRqDto, image);
+    @PutMapping(value = "/v1/profile")
+    public ResponseEntity<CommonResponse<String>> updateProfile(@Valid @RequestBody RequestMember.UpdateProfileRqDto updateProfileRqDto) {
+        memberService.updateProfile(updateProfileRqDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Profile updated successfully.")
                 .build();

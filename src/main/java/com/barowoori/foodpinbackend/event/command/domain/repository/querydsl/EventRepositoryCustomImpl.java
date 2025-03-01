@@ -34,6 +34,7 @@ import static com.barowoori.foodpinbackend.event.command.domain.model.QEventRecr
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventRegion.eventRegion;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventView.eventView;
 import static com.barowoori.foodpinbackend.file.command.domain.model.QFile.file;
+import static com.barowoori.foodpinbackend.member.command.domain.model.QEventLike.eventLike;
 
 public class EventRepositoryCustomImpl implements EventRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
@@ -42,7 +43,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
         this.jpaQueryFactory = jpaQueryFactory;
     }
 
-    public Event findEventDetail(String eventId){
+    public Event findEventDetail(String eventId) {
         return jpaQueryFactory.selectFrom(event)
                 .leftJoin(event.regions, eventRegion)
                 .leftJoin(event.eventDates, eventDate)
@@ -56,7 +57,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .where(event.id.eq(eventId).and(event.isDeleted.isFalse()))
                 .fetchOne();
     }
-
+    @Override
     public Page<Event> findEventListByFilter(String searchTerm, Map<RegionType, List<String>> regionIds,
                                              LocalDate startDate, LocalDate endDate,
                                              List<String> categoryCodes, Pageable pageable) {
@@ -85,6 +86,57 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .fetch();
 
         Long total = jpaQueryFactory.select(event.count()).from(event)
+                .leftJoin(event.regions, eventRegion)
+                .leftJoin(event.eventDates, eventDate)
+                .leftJoin(event.categories, eventCategory)
+                .leftJoin(eventCategory.category, category)
+                .leftJoin(event.recruitDetail, eventRecruitDetail)
+                .where(
+                        event.isDeleted.isFalse()
+                                .and(
+                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, event, eventDate, category)
+                                                .or(regionFilterCondition(eventRegion, RegionType.REGION_DO, regionIds.get(RegionType.REGION_DO)))
+                                                .or(regionFilterCondition(eventRegion, RegionType.REGION_SI, regionIds.get(RegionType.REGION_SI)))
+                                                .or(regionFilterCondition(eventRegion, RegionType.REGION_GU, regionIds.get(RegionType.REGION_GU)))
+                                                .or(regionFilterCondition(eventRegion, RegionType.REGION_GUN, regionIds.get(RegionType.REGION_GUN)))
+                                )
+                )
+                .fetchOne();
+
+        return new PageImpl<>(events, pageable, total);
+    }
+
+    @Override
+    public Page<Event> findLikeEventListByFilter(String memberId, String searchTerm, Map<RegionType, List<String>> regionIds,
+                                                 LocalDate startDate, LocalDate endDate,
+                                                 List<String> categoryCodes, Pageable pageable) {
+        List<Event> events = jpaQueryFactory.selectFrom(event)
+                .innerJoin(eventLike).on(eventLike.event.eq(event).and(eventLike.member.id.eq(memberId)))
+                .leftJoin(event.regions, eventRegion)
+                .leftJoin(event.eventDates, eventDate)
+                .leftJoin(event.categories, eventCategory)
+                .leftJoin(eventCategory.category, category)
+                .leftJoin(event.recruitDetail, eventRecruitDetail)
+                .leftJoin(event.view, eventView)
+                .leftJoin(event.photos, eventPhoto)
+                .leftJoin(eventPhoto.file, file)
+                .where(
+                        event.isDeleted.isFalse()
+                                .and(
+                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, event, eventDate, category)
+                                                .or(regionFilterCondition(eventRegion, RegionType.REGION_DO, regionIds.get(RegionType.REGION_DO)))
+                                                .or(regionFilterCondition(eventRegion, RegionType.REGION_SI, regionIds.get(RegionType.REGION_SI)))
+                                                .or(regionFilterCondition(eventRegion, RegionType.REGION_GU, regionIds.get(RegionType.REGION_GU)))
+                                                .or(regionFilterCondition(eventRegion, RegionType.REGION_GUN, regionIds.get(RegionType.REGION_GUN)))
+                                )
+                )
+                .orderBy(getOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        Long total = jpaQueryFactory.select(event.count()).from(event)
+                .innerJoin(eventLike).on(eventLike.event.eq(event).and(eventLike.member.id.eq(memberId)))
                 .leftJoin(event.regions, eventRegion)
                 .leftJoin(event.eventDates, eventDate)
                 .leftJoin(event.categories, eventCategory)

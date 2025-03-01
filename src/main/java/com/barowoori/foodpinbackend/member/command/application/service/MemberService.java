@@ -2,6 +2,8 @@ package com.barowoori.foodpinbackend.member.command.application.service;
 
 import com.barowoori.foodpinbackend.common.exception.CustomException;
 import com.barowoori.foodpinbackend.common.security.JwtTokenProvider;
+import com.barowoori.foodpinbackend.file.command.domain.model.File;
+import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepository;
 import com.barowoori.foodpinbackend.member.command.application.dto.RequestMember;
 import com.barowoori.foodpinbackend.member.command.application.dto.ResponseMember;
 import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
@@ -32,6 +34,7 @@ public class MemberService {
     private final ImageManager imageManager;
     private final TruckLikeRepository truckLikeRepository;
     private final TruckRepository truckRepository;
+    private final FileRepository fileRepository;
 
     private Member getMember() {
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -83,7 +86,7 @@ public class MemberService {
     @Transactional
     public ResponseMember.GetInfoDto getInfo() {
         Member member = getMember();
-        return ResponseMember.GetInfoDto.toDto(member);
+        return ResponseMember.GetInfoDto.toDto(member, imageManager);
     }
 
     @Transactional
@@ -112,9 +115,15 @@ public class MemberService {
     }
 
     @Transactional
-    public void updateProfile(RequestMember.UpdateProfileRqDto updateProfileRqDto, MultipartFile image) {
+    public void updateProfile(RequestMember.UpdateProfileRqDto updateProfileRqDto) {
         Member member = getMember();
-        member.updateProfile(imageManager, updateProfileRqDto.getNickname(), updateProfileRqDto.getOriginImageUrl(), image);
+        if (updateProfileRqDto.getImage() == null) {
+            member.updateProfile(updateProfileRqDto.getNickname(), null);
+        } else {
+            File file = fileRepository.findById(updateProfileRqDto.getImage())
+                    .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_PROFILE_NOT_FOUND));
+            member.updateProfile(updateProfileRqDto.getNickname(), file);
+        }
         memberRepository.save(member);
     }
 

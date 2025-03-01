@@ -47,7 +47,7 @@ public class RequestMember {
         @Schema(description = "닉네임")
         @NotEmpty(message = "닉네임이 비었습니다")
         private String nickname;
-        @Schema(description = "기존 이미지 경로")
-        private String originImageUrl;
+        @Schema(description = "파일 아이디")
+        private String image;
     }
 }

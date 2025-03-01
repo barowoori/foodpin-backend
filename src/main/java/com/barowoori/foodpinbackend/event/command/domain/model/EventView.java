@@ -19,11 +19,16 @@ public class EventView {
     @JoinColumn(name = "events_id")
     private Event event;
 
-    protected EventView(){}
+    protected EventView() {
+    }
 
     @Builder
     public EventView(Integer views, Event event) {
         this.views = views;
         this.event = event;
+    }
+
+    public void addViews() {
+        this.views = this.views + 1;
     }
 }

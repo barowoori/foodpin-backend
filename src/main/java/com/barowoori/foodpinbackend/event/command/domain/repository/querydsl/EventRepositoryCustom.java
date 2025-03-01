@@ -2,7 +2,6 @@ package com.barowoori.foodpinbackend.event.command.domain.repository.querydsl;
 
 import com.barowoori.foodpinbackend.event.command.domain.model.Event;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
-import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -15,4 +14,7 @@ public interface EventRepositoryCustom {
                                       LocalDate startDate, LocalDate endDate,
                                       List<String> categoryCodes, Pageable pageable);
     Event findEventDetail(String eventId);
+    Page<Event> findLikeEventListByFilter(String memberId, String searchTerm, Map<RegionType, List<String>> regionIds,
+                                          LocalDate startDate, LocalDate endDate,
+                                          List<String> categoryCodes, Pageable pageable);
 }

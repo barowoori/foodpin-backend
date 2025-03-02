@@ -9,9 +9,9 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "event_applications")
+@Table(name = "event_trucks")
 @Getter
-public class EventApplication {
+public class EventTruck {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
@@ -20,21 +20,17 @@ public class EventApplication {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-
-    @ManyToOne
-    @JoinColumn(name = "event_dates_id")
-    private EventDate eventDate;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "events_id")
+    private Event event;
 
     @ManyToOne
     @JoinColumn(name = "trucks_id")
     private Truck truck;
 
-
-    protected EventApplication(){}
-
     @Builder
-    public EventApplication(EventDate eventDate, Truck truck) {
-        this.eventDate = eventDate;
+    public EventTruck(Event event, Truck truck) {
+        this.event = event;
         this.truck = truck;
     }
 }

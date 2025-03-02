@@ -1,6 +1,8 @@
 package com.barowoori.foodpinbackend.member.domain;
 
 import com.barowoori.foodpinbackend.common.exception.CustomException;
+import com.barowoori.foodpinbackend.file.command.domain.model.File;
+import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepository;
 import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
 import com.barowoori.foodpinbackend.member.command.domain.model.MemberType;
@@ -38,6 +40,8 @@ public class MemberTests {
     @Autowired
     private GenerateNicknameService generateNicknameService;
 
+    @Autowired
+    private FileRepository fileRepository;
     @Mock
     private ImageManager imageManager;
 
@@ -114,10 +118,16 @@ public class MemberTests {
     @DisplayName("회원 프로필 변경 테스트")
     class UpdateProfileSuccess {
         private Member member;
+        private File file;
 
         @BeforeEach
         void setUp() throws IOException {
             MockitoAnnotations.openMocks(this);
+
+            file = File.builder()
+                    .path("123121")
+                    .build();
+            file = fileRepository.save(file);
 
             String fileName = "test-file.jpg";
             byte[] fileContent = "test-content".getBytes();
@@ -126,13 +136,12 @@ public class MemberTests {
             when(multipartFile.getOriginalFilename()).thenReturn(fileName);
             when(multipartFile.getBytes()).thenReturn(fileContent);
             when(multipartFile.getInputStream()).thenReturn(fileInputStream);
-
             Member memberBuilder = Member.builder()
                     .email("email")
                     .phone("01012341234")
                     .nickname("nickname")
                     .socialLoginInfo(new SocialLoginInfo(SocialLoginType.KAKAO, "id123"))
-                    .image("originImageUrl")
+                    .image(file)
                     .build();
             member = memberRepository.save(memberBuilder);
 
@@ -148,66 +157,13 @@ public class MemberTests {
             String originNickname = member.getNickname();
             assertEquals("nickname", originNickname);
 
-            member.updateProfile(imageManager, member.getNickname() + "1", "originImageUrl", null);
+            member.updateProfile(member.getNickname() + "1", file);
 
             String updatedNickname = member.getNickname();
             assertEquals(originNickname + "1", updatedNickname);
         }
 
-        @Test
-        @Transactional
-        @DisplayName("새 파일이 없고 기존 이미지 url을 전달할 경우 이미지는 변경되지 않는다")
-        void WhenNotExistNewFileAndExistOriginImageUrl() {
-            String originImage = member.getImage();
-            assertEquals("originImageUrl", originImage);
-
-            member.updateProfile(imageManager, member.getNickname(), "originImageUrl", null);
-
-            String updatedImage = member.getImage();
-            assertEquals(originImage, updatedImage);
-        }
-
-        @Test
-        @Transactional
-        @DisplayName("새 파일이 있으면 이미지는 변경된다")
-        void WhenExistNewFileAndNotExistOriginImageUrl() {
-            String originImage = member.getImage();
-            assertEquals("originImageUrl", originImage);
-
-            member.updateProfile(imageManager, member.getNickname(), null, multipartFile);
-
-            String updatedImage = member.getImage();
-            assertEquals("updatedImageUrl", updatedImage);
-            assertNotEquals(originImage, updatedImage);
-        }
-
-        @Test
-        @Transactional
-        @DisplayName("새 파일이 있으면 기존 이미지 url을 보내도 이미지는 변경된다")
-        void WhenExistNewFileAndExistOriginImageUrl() {
-            String originImage = member.getImage();
-            assertEquals("originImageUrl", originImage);
-
-            member.updateProfile(imageManager, member.getNickname(), "originImageUrl", multipartFile);
-
-            String updatedImage = member.getImage();
-            assertEquals("updatedImageUrl", updatedImage);
-            assertNotEquals(originImage, updatedImage);
-        }
-
-        @Test
-        @Transactional
-        @DisplayName("새 파일과 기존 이미지 url이 없을 경우 이미지는 null로 저장된다")
-        void WhenNotExistNewFileAndNotExistOriginImageUrl() {
-            String originImage = member.getImage();
-            assertEquals("originImageUrl", originImage);
-
-            member.updateProfile(imageManager, member.getNickname(), null, null);
-
-            assertNull(member.getImage());
-        }
     }
-
     @Nested
     @DisplayName("회원 핸드폰 번호 변경 테스트")
     class UpdatePhone {
@@ -220,7 +176,6 @@ public class MemberTests {
                     .phone("01012341234")
                     .nickname("nickname")
                     .socialLoginInfo(new SocialLoginInfo(SocialLoginType.KAKAO, "id123"))
-                    .image("originImageUrl")
                     .build();
             member = memberRepository.save(memberBuilder);
         }
@@ -260,7 +215,6 @@ public class MemberTests {
                     .phone("01012341234")
                     .nickname("nickname")
                     .socialLoginInfo(new SocialLoginInfo(SocialLoginType.KAKAO, "id123"))
-                    .image("originImageUrl")
                     .refreshToken("originToken")
                     .build();
             member = memberRepository.save(memberBuilder);

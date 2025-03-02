@@ -5,9 +5,9 @@ import com.barowoori.foodpinbackend.category.command.domain.repository.CategoryR
 import com.barowoori.foodpinbackend.common.exception.CustomException;
 import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepository;
+import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
-import com.barowoori.foodpinbackend.member.command.domain.model.TruckLike;
 import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionDoRepository;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionInfo;
@@ -42,6 +42,7 @@ public class TruckService {
     private final TruckManagerRepository truckManagerRepository;
     private final FileRepository fileRepository;
     private final RegionDoRepository regionDoRepository;
+    private final ImageManager imageManager;
 
     private String getMemberId() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
@@ -81,7 +82,7 @@ public class TruckService {
         // 트럭 카테고리 생성
         createTruckDto.getTruckCategoryDtoSet().forEach(truckCategoryDto -> {
             Category category = categoryRepository.findByCode(truckCategoryDto.getCategoryCode());
-            if(category == null){
+            if (category == null) {
                 throw new CustomException(TruckErrorCode.CATEGORY_NOT_FOUND);
             }
             TruckCategory truckCategory = truckCategoryDto.toEntity(truck, category);
@@ -195,7 +196,7 @@ public class TruckService {
         truckCategoryList.forEach(truckCategoryRepository::delete);
         updateTruckMenuDto.getTruckCategoryDtoSet().forEach(truckCategoryDto -> {
             Category category = categoryRepository.findByCode(truckCategoryDto.getCategoryCode());
-            if(category == null){
+            if (category == null) {
                 throw new CustomException(TruckErrorCode.CATEGORY_NOT_FOUND);
             }
             TruckCategory truckCategory = truckCategoryDto.toEntity(truck, category);
@@ -259,7 +260,8 @@ public class TruckService {
     }
 
     @Transactional(readOnly = true)
-    public Page<TruckManagerSummary> getTruckManagerList(String truckId, Pageable pageable){
-        return truckManagerRepository.findTruckManagerPages(truckId, getMemberId(), pageable);
+    public Page<TruckManagerSummary> getTruckManagerList(String truckId, Pageable pageable) {
+        Page<TruckManagerSummary> truckManagerSummaries = truckManagerRepository.findTruckManagerPages(truckId, getMemberId(), pageable);
+        return truckManagerSummaries.map(truckManagerSummary -> truckManagerSummary.convertToPreSignedUrl(imageManager));
     }
 }

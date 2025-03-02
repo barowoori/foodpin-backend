@@ -10,9 +10,9 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
+import static com.barowoori.foodpinbackend.file.command.domain.model.QFile.file;
 import static com.barowoori.foodpinbackend.member.command.domain.model.QMember.member;
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckManager.truckManager;
-import static com.querydsl.jpa.JPAExpressions.select;
 
 public class TruckManagerRepositoryCustomImpl implements TruckManagerRepositoryCustom{
     private final JPAQueryFactory jpaQueryFactory;
@@ -27,11 +27,12 @@ public class TruckManagerRepositoryCustomImpl implements TruckManagerRepositoryC
                     truckManager.id.as("truckManagerId"),
                     member.nickname,
                     member.phone,
-                    member.image,
+                    file.path.as("image"),
                     truckManager.role.as("role")
                 ))
                 .from(truckManager)
                 .innerJoin(truckManager.member, member)
+                .leftJoin(member.image, file)
                 .where(truckManager.truck.id.eq(truckId))
                 .orderBy(new CaseBuilder()
                         .when(truckManager.member.id.eq(memberId)).then(0)

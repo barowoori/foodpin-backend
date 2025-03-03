@@ -27,8 +27,8 @@ public class EventRegion {
     @Column(name = "region_id", nullable = false)
     private String regionId;
 
-    @ManyToOne
-    @JoinColumn(name = "event_id", nullable = false)
+    @OneToOne
+    @JoinColumn(name = "events_id")
     private Event event;
 
     protected EventRegion(){}

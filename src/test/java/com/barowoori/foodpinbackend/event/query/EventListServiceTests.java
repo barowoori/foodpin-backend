@@ -13,9 +13,6 @@ import com.barowoori.foodpinbackend.region.command.domain.repository.RegionDoRep
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionGuRepository;
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionGunRepository;
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionSiRepository;
-import com.barowoori.foodpinbackend.truck.command.domain.model.TruckCategory;
-import com.barowoori.foodpinbackend.truck.command.domain.model.TruckRegion;
-import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -79,7 +76,6 @@ public class EventListServiceTests {
         event = eventRepository.save(event);
 
         EventRecruitDetail eventRecruitDetail = EventRecruitDetail.builder()
-                .recruitStartDate(LocalDate.of(2025, 2, 27))
                 .recruitEndDate(LocalDate.of(2025, 3, 3))
                 .recruitCount(4)
                 .applicantCount(100)
@@ -104,7 +100,6 @@ public class EventListServiceTests {
         event1 = eventRepository.save(event1);
 
         EventRecruitDetail eventRecruitDetail1 = EventRecruitDetail.builder()
-                .recruitStartDate(LocalDate.of(2025, 2, 27))
                 .recruitEndDate(LocalDate.of(2025, 3, 3))
                 .recruitCount(4)
                 .applicantCount(0)

@@ -45,7 +45,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
 
     public Event findEventDetail(String eventId) {
         return jpaQueryFactory.selectFrom(event)
-                .leftJoin(event.regions, eventRegion)
+                .leftJoin(event.eventRegion, eventRegion)
                 .leftJoin(event.eventDates, eventDate)
                 .leftJoin(event.categories, eventCategory)
                 .leftJoin(eventCategory.category, category)
@@ -62,7 +62,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                                              LocalDate startDate, LocalDate endDate,
                                              List<String> categoryCodes, Pageable pageable) {
         List<Event> events = jpaQueryFactory.selectFrom(event)
-                .leftJoin(event.regions, eventRegion)
+                .leftJoin(event.eventRegion, eventRegion)
                 .leftJoin(event.eventDates, eventDate)
                 .leftJoin(event.categories, eventCategory)
                 .leftJoin(eventCategory.category, category)
@@ -86,7 +86,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .fetch();
 
         Long total = jpaQueryFactory.select(event.count()).from(event)
-                .leftJoin(event.regions, eventRegion)
+                .leftJoin(event.eventRegion, eventRegion)
                 .leftJoin(event.eventDates, eventDate)
                 .leftJoin(event.categories, eventCategory)
                 .leftJoin(eventCategory.category, category)
@@ -112,7 +112,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                                                  List<String> categoryCodes, Pageable pageable) {
         List<Event> events = jpaQueryFactory.selectFrom(event)
                 .innerJoin(eventLike).on(eventLike.event.eq(event).and(eventLike.member.id.eq(memberId)))
-                .leftJoin(event.regions, eventRegion)
+                .leftJoin(event.eventRegion, eventRegion)
                 .leftJoin(event.eventDates, eventDate)
                 .leftJoin(event.categories, eventCategory)
                 .leftJoin(eventCategory.category, category)
@@ -137,7 +137,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
 
         Long total = jpaQueryFactory.select(event.count()).from(event)
                 .innerJoin(eventLike).on(eventLike.event.eq(event).and(eventLike.member.id.eq(memberId)))
-                .leftJoin(event.regions, eventRegion)
+                .leftJoin(event.eventRegion, eventRegion)
                 .leftJoin(event.eventDates, eventDate)
                 .leftJoin(event.categories, eventCategory)
                 .leftJoin(eventCategory.category, category)

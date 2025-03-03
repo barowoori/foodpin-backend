@@ -5,4 +5,5 @@ import com.barowoori.foodpinbackend.event.command.domain.repository.querydsl.Eve
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface EventNoticeRepository extends JpaRepository<EventNotice, String>, EventNoticeRepositoryCustom {
+
 }

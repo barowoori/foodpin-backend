@@ -6,6 +6,8 @@ import lombok.Getter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "event_notices")
@@ -31,6 +33,9 @@ public class EventNotice {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "events_id")
     private Event event;
+
+    @OneToMany(mappedBy = "eventNotice", fetch = FetchType.LAZY)
+    private List<EventNoticeView> views = new ArrayList<>();
 
     @Builder
     public EventNotice(String title, String context, Boolean isDeleted, Event event) {

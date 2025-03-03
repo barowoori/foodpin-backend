@@ -58,11 +58,12 @@ public class Event {
     @OneToOne(mappedBy = "event")
     private EventRecruitDetail recruitDetail;
 
+    @OneToOne(mappedBy = "event")
+    private EventRegion eventRegion;
+
     @OneToMany(mappedBy = "event")
     private List<EventPhoto> photos = new ArrayList<>();
 
-    @OneToMany(mappedBy = "event")
-    private List<EventRegion> regions = new ArrayList<>();
 
     @OneToMany(mappedBy = "event")
     private List<EventDate> eventDates = new ArrayList<>();

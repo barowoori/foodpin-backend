@@ -24,9 +24,11 @@ public class EventTruck {
     @JoinColumn(name = "events_id")
     private Event event;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trucks_id")
     private Truck truck;
+
+    protected EventTruck(){}
 
     @Builder
     public EventTruck(Event event, Truck truck) {

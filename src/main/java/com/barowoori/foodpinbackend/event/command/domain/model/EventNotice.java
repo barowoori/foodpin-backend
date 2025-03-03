@@ -37,6 +37,8 @@ public class EventNotice {
     @OneToMany(mappedBy = "eventNotice", fetch = FetchType.LAZY)
     private List<EventNoticeView> views = new ArrayList<>();
 
+    protected EventNotice(){}
+
     @Builder
     public EventNotice(String title, String context, Boolean isDeleted, Event event) {
         this.title = title;

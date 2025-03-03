@@ -6,4 +6,5 @@ import org.springframework.data.domain.Pageable;
 
 public interface EventNoticeRepositoryCustom {
     Page<EventNotice> findEventNoticeListByEventId(String eventId, Pageable pageable);
+    EventNotice findEventNoticeForCreator(String eventNoticeId);
 }

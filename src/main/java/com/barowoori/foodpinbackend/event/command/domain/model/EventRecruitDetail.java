@@ -20,9 +20,6 @@ public class EventRecruitDetail {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "recruit_start_date")
-    private LocalDate recruitStartDate;
-
     @Column(name = "recruit_end_date")
     private LocalDate recruitEndDate;
 
@@ -51,10 +48,9 @@ public class EventRecruitDetail {
     protected EventRecruitDetail(){}
 
     @Builder
-    public EventRecruitDetail(LocalDate recruitStartDate, LocalDate recruitEndDate, Integer recruitCount,
+    public EventRecruitDetail(LocalDate recruitEndDate, Integer recruitCount,
                               Boolean generatorRequirement, Boolean electricitySupportAvailability, Integer entryFee,
                               Integer applicantCount, Integer selectedCount, Event event) {
-        this.recruitStartDate = recruitStartDate;
         this.recruitEndDate = recruitEndDate;
         this.recruitCount = recruitCount;
         this.applicantCount = applicantCount;
@@ -65,9 +61,8 @@ public class EventRecruitDetail {
         this.entryFee = entryFee;
     }
 
-    public void update(LocalDate recruitStartDate, LocalDate recruitEndDate, Integer recruitCount,
+    public void update(LocalDate recruitEndDate, Integer recruitCount,
                        Boolean generatorRequirement, Boolean electricitySupportAvailability, Integer entryFee){
-        this.recruitStartDate = recruitStartDate;
         this.recruitEndDate = recruitEndDate;
         this.recruitCount = recruitCount;
         this.generatorRequirement = generatorRequirement;

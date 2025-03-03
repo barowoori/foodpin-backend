@@ -82,7 +82,6 @@ public class EventDetailServiceTests {
         event = eventRepository.save(event);
 
         EventRecruitDetail eventRecruitDetail = EventRecruitDetail.builder()
-                .recruitStartDate(LocalDate.of(2025, 2, 27))
                 .recruitEndDate(LocalDate.of(2025, 3, 3))
                 .recruitCount(4)
                 .applicantCount(100)

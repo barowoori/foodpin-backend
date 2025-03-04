@@ -39,7 +39,7 @@ public class EventNoticeRepositoryCustomImpl implements EventNoticeRepositoryCus
     @Override
     public EventNotice findEventNoticeForCreator(String eventNoticeId) {
         return jpaQueryFactory.selectFrom(eventNotice)
-                .leftJoin(eventNotice.views, eventNoticeView)
+                .leftJoin(eventNotice.views, eventNoticeView).fetchJoin()
                 .leftJoin(eventNoticeView.eventTruck, eventTruck)
                 .leftJoin(eventTruck.truck, truck)
                 .where(eventNotice.id.eq(eventNoticeId))

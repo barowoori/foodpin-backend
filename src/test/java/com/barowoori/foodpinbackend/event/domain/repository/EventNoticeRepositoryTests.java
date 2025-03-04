@@ -110,19 +110,21 @@ public class EventNoticeRepositoryTests {
         EventNotice eventNotice;
 
         @BeforeEach
+        @Transactional
         void setUp() {
             Truck truck = Truck.builder()
                     .name("바로우리")
                     .isDeleted(Boolean.FALSE)
                     .build();
             truck = truckRepository.save(truck);
+
             EventTruck eventTruck = EventTruck.builder()
                     .event(event)
                     .truck(truck)
                     .build();
             eventTruck = eventTruckRepository.save(eventTruck);
 
-            eventNotice = createEventNotice(event, "제목 ", "내용", Boolean.FALSE);
+            eventNotice = createEventNotice(event, "제목", "내용", Boolean.FALSE);
 
             EventNoticeView eventNoticeView = EventNoticeView.builder()
                     .eventNotice(eventNotice)
@@ -131,15 +133,11 @@ public class EventNoticeRepositoryTests {
             eventNoticeView = eventNoticeViewRepository.save(eventNoticeView);
         }
 
-//        @Test
-//        @Transactional
-//        @DisplayName("행사 공지사항을 행사 생성자가 조회할 때는 읽은 사람도 조회되어야 한다")
-//        void When_ReadCreator_Then_ContainsViews() {
-//            EventNotice result = eventNoticeRepository.findEventNoticeForCreator(eventNotice.getId());
-//            System.out.println(result.getContext());
-//            System.out.println(result.getViews());
-//            assertTrue(!result.getViews().isEmpty());
-//        }
-
+        @Test
+        @DisplayName("행사 공지사항을 행사 생성자가 조회할 때는 읽은 사람도 조회되어야 한다")
+        void When_ReadCreator_Then_ContainsViews() {
+            EventNotice result = eventNoticeRepository.findEventNoticeForCreator(eventNotice.getId());
+            assertTrue(!result.getViews().isEmpty());
+        }
     }
 }

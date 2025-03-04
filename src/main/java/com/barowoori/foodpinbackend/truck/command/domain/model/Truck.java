@@ -56,6 +56,9 @@ public class Truck {
     @OneToMany(mappedBy = "truck")
     private List<TruckPhoto> photos = new ArrayList<>();
 
+    @OneToMany(mappedBy = "truck")
+    private List<TruckDocument> documents = new ArrayList<>();
+
     protected Truck() {
     }
 

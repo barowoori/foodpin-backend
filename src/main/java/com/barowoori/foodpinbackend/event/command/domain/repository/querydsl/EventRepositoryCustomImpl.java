@@ -66,7 +66,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .leftJoin(event.eventDates, eventDate)
                 .leftJoin(event.categories, eventCategory)
                 .leftJoin(eventCategory.category, category)
-                .leftJoin(event.recruitDetail, eventRecruitDetail)
+                .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .leftJoin(event.view, eventView)
                 .leftJoin(event.photos, eventPhoto)
                 .leftJoin(eventPhoto.file, file)
@@ -90,7 +90,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .leftJoin(event.eventDates, eventDate)
                 .leftJoin(event.categories, eventCategory)
                 .leftJoin(eventCategory.category, category)
-                .leftJoin(event.recruitDetail, eventRecruitDetail)
+                .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .where(
                         event.isDeleted.isFalse()
                                 .and(
@@ -116,7 +116,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .leftJoin(event.eventDates, eventDate)
                 .leftJoin(event.categories, eventCategory)
                 .leftJoin(eventCategory.category, category)
-                .leftJoin(event.recruitDetail, eventRecruitDetail)
+                .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .leftJoin(event.view, eventView)
                 .leftJoin(event.photos, eventPhoto)
                 .leftJoin(eventPhoto.file, file)
@@ -141,7 +141,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .leftJoin(event.eventDates, eventDate)
                 .leftJoin(event.categories, eventCategory)
                 .leftJoin(eventCategory.category, category)
-                .leftJoin(event.recruitDetail, eventRecruitDetail)
+                .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .where(
                         event.isDeleted.isFalse()
                                 .and(

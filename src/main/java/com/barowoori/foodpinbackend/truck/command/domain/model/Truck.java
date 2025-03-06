@@ -1,5 +1,6 @@
 package com.barowoori.foodpinbackend.truck.command.domain.model;
 
+import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -91,5 +92,9 @@ public class Truck {
 
     public void delete(){
         this.isDeleted = true;
+    }
+
+    public Boolean approval(){
+       return this.documents.stream().anyMatch(doc -> doc.getType().equals(DocumentType.BUSINESS_REGISTRATION));
     }
 }

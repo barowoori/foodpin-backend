@@ -58,7 +58,7 @@ public class TruckService {
         String memberId = getMemberId();
 
         // 트럭 생성
-        Truck truck = createTruckDto.getTruckInfoDto().toEntity();
+        Truck truck = createTruckDto.getTruckInfoDto().toEntity(memberId);
         truckRepository.save(truck);
         // 트럭 사진 생성
         for (String fileId : createTruckDto.getTruckInfoDto().getFileIdList()) {
@@ -71,11 +71,7 @@ public class TruckService {
         // 트럭 지역 생성
         createTruckDto.getTruckRegionDtoSet().forEach(truckRegionDto -> {
             RegionInfo regionInfo = regionDoRepository.findByCode(truckRegionDto.getRegionCode());
-            TruckRegion truckRegion = TruckRegion.builder()
-                    .truck(truck)
-                    .regionType(regionInfo.getRegionType())
-                    .regionId(regionInfo.getRegionId())
-                    .build();
+            TruckRegion truckRegion = truckRegionDto.toEntity(truck, regionInfo);
             truckRegionRepository.save(truckRegion);
         });
 

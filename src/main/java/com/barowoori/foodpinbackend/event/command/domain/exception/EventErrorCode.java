@@ -6,7 +6,9 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public enum EventErrorCode implements ErrorCode {
-    NOT_FOUND_EVENT(HttpStatus.BAD_REQUEST, 40000, "NOT_FOUND_EVENT");
+    NOT_FOUND_EVENT(HttpStatus.NOT_FOUND, 40000, "NOT_FOUND_EVENT"),
+    EVENT_PHOTO_NOT_FOUND(HttpStatus.NOT_FOUND, 40001, "EVENT_PHOTO_NOT_FOUND");
+
 
     private final HttpStatus httpStatus;
     private final Integer code;

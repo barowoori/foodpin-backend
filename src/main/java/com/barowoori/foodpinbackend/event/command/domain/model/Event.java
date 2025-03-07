@@ -3,6 +3,7 @@ package com.barowoori.foodpinbackend.event.command.domain.model;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
@@ -49,6 +50,7 @@ public class Event {
     @Column(name = "status_comment")
     private String statusComment;
 
+    @ColumnDefault("0")
     @Column(name = "is_deleted")
     private Boolean isDeleted;
 
@@ -79,17 +81,15 @@ public class Event {
 
     @Builder
 
-    public Event(String createdBy, String name, String description, String guidelines, Boolean isDeleted,
-                 EventDocumentSubmissionTarget documentSubmissionTarget, String submissionEmail, EventStatus status, String statusComment) {
+    public Event(String createdBy, String name, String description, String guidelines,
+                 EventDocumentSubmissionTarget documentSubmissionTarget, String submissionEmail, EventStatus status) {
         this.createdBy = createdBy;
         this.name = name;
         this.description = description;
         this.guidelines = guidelines;
-        this.isDeleted = isDeleted;
         this.documentSubmissionTarget = documentSubmissionTarget;
         this.submissionEmail = submissionEmail;
         this.status = status;
-        this.statusComment = statusComment;
     }
 
     public void updateName(String name) {
@@ -104,12 +104,24 @@ public class Event {
         this.guidelines = guidelines;
     }
 
+    public void updateSubmissionEmail(String submissionEmail){
+        this.submissionEmail = submissionEmail;
+    }
+
+    public void updateDocumentSubmissionTarget(EventDocumentSubmissionTarget documentSubmissionTarget){
+        this.documentSubmissionTarget = documentSubmissionTarget;
+    }
+
     public void initEventRecruitDetail(EventRecruitDetail eventRecruitDetail){
         this.recruitDetail = eventRecruitDetail;
     }
 
     public void initEventView(EventView eventView){
         this.view = eventView;
+    }
+
+    public void initEventRegion(EventRegion eventRegion){
+        this.eventRegion = eventRegion;
     }
 
     public Boolean isCreator(String memberId){

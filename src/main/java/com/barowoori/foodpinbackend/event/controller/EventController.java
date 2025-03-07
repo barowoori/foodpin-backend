@@ -2,13 +2,18 @@ package com.barowoori.foodpinbackend.event.controller;
 
 
 import com.barowoori.foodpinbackend.common.dto.CommonResponse;
+import com.barowoori.foodpinbackend.common.exception.ErrorResponse;
 import com.barowoori.foodpinbackend.event.command.application.dto.RequestEvent;
 import com.barowoori.foodpinbackend.event.command.application.service.EventService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +24,15 @@ import org.springframework.web.bind.annotation.*;
 public class EventController {
     private final EventService eventService;
 
+    @Operation(summary = "행사 생성", description = "사진의 경우 파일 저장 api로 업로드 후 반환된 파일 id 리스트로 전달")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "행사 사진 파일을 못 찾을 경우[40001]," +
+                    "지역을 못 찾을 경우[40002], 카테고리를 못 찾을 경우[40003],",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @PostMapping(value = "/v1")
     public ResponseEntity<CommonResponse<String>> createEvent(@Valid @RequestBody RequestEvent.CreateEventDto createEventDto) {
         eventService.createEvent(createEventDto);

@@ -39,4 +39,9 @@ public class EventRegion {
         this.regionId = regionId;
         this.event = event;
     }
+
+    public void updateRegion(RegionType regionType, String regionId){
+        this.regionType = regionType;
+        this.regionId = regionId;
+    }
 }

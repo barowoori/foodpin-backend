@@ -61,6 +61,8 @@ public class EventService {
         event.initEventView(eventView);
 
         RegionInfo regionInfo = regionDoRepository.findByCode(createEventDto.getEventRegionDto().getRegionCode());
+        if (regionInfo == null)
+            throw new CustomException(EventErrorCode.EVENT_REGION_NOT_FOUND);
         EventRegion eventRegion = createEventDto.getEventRegionDto().toEntity(event, regionInfo);
         eventRegionRepository.save(eventRegion);
         event.initEventRegion(eventRegion);
@@ -76,6 +78,8 @@ public class EventService {
 
         createEventDto.getEventCategoryDtoList().forEach(eventCategoryDto -> {
             Category category = categoryRepository.findByCode(eventCategoryDto.getCategoryCode());
+            if (category == null)
+                throw new CustomException(EventErrorCode.EVENT_CATEGORY_NOT_FOUND);
             EventCategory eventCategory = eventCategoryDto.toEntity(event, category);
             eventCategoryRepository.save(eventCategory);
         });
@@ -94,7 +98,6 @@ public class EventService {
         Event event = getEvent(eventId);
 
         event.updateName(updateEventInfoDto.getName());
-//        eventRepository.save(event);
 
         List<EventPhoto> photoList = eventPhotoRepository.findAllByEvent(event);
         photoList.forEach(eventPhotoRepository::delete);
@@ -111,15 +114,15 @@ public class EventService {
             EventDate eventDate = eventDateDto.toEntity(event);
             eventDateRepository.save(eventDate);
         });
+
         event.initEventRegion(null);
         EventRegion eventRegion = eventRegionRepository.findByEvent(event);
-        eventRegionRepository.delete(eventRegion);
         RegionInfo regionInfo = regionDoRepository.findByCode(updateEventInfoDto.getEventRegionDto().getRegionCode());
-        EventRegion updatedEventRegion = updateEventInfoDto.getEventRegionDto().toEntity(event, regionInfo);
-        updatedEventRegion = eventRegionRepository.save(updatedEventRegion);
-        event.initEventRegion(updatedEventRegion);
+        eventRegion.updateRegion(regionInfo.getRegionType(), regionInfo.getRegionId());
+        eventRegionRepository.save(eventRegion);
+        event.initEventRegion(eventRegion);
 
-//        eventRepository.save(event);
+        eventRepository.save(event);
     }
 
     @Transactional

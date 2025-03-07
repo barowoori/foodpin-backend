@@ -54,8 +54,8 @@ public class TruckController {
                     "트럭 서류 사진 파일을 못 찾을 경우[30003], 멤버를 못 찾을 경우[20004]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PostMapping(value = "/v1", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<CommonResponse<String>> createTruck(@Valid @RequestPart(value = "createTruckDto") RequestTruck.CreateTruckDto createTruckDto) {
+    @PostMapping(value = "/v1")
+    public ResponseEntity<CommonResponse<String>> createTruck(@Valid @RequestBody RequestTruck.CreateTruckDto createTruckDto) {
         truckService.createTruck(createTruckDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Truck created successfully.")

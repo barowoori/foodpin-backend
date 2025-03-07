@@ -208,6 +208,8 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
                 .leftJoin(truck.documents, truckDocument)
                 .where(truck.isDeleted.isFalse())
                 .orderBy(truck.name.asc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
                 .fetch();
 
         Long total =  jpaQueryFactory.select(truck.count()).from(truck)
@@ -215,7 +217,6 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
                 .leftJoin(truck.menus, truckMenu)
                 .leftJoin(truck.documents, truckDocument)
                 .where(truck.isDeleted.isFalse())
-                .orderBy(truck.name.asc())
                 .fetchOne();
 
         return new PageImpl<>(trucks, pageable, total);

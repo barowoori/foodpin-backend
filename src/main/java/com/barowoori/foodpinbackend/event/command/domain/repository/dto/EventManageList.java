@@ -1,7 +1,6 @@
 package com.barowoori.foodpinbackend.event.command.domain.repository.dto;
 
-import com.barowoori.foodpinbackend.category.command.domain.model.Category;
-import com.barowoori.foodpinbackend.event.command.domain.model.*;
+import com.barowoori.foodpinbackend.event.command.domain.model.Event;
 import com.barowoori.foodpinbackend.event.command.domain.service.EventDateCalculator;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import lombok.Builder;
@@ -12,20 +11,19 @@ import java.util.List;
 
 @Getter
 @Builder
-public class EventList {
+public class EventManageList {
     private String id;
     private String photo;
     private String name;
     private LocalDate recruitEndDate;
     private LocalDate startDate;
     private LocalDate endDate;
-    private List<String> regions;
-    private List<String> categories;
-    private RecruitInfo recruitInfo;
+    private String region;
     private Integer views;
+    private RecruitInfo recruitInfo;
 
-    public static EventList of(Event event, List<String> regions, ImageManager imageManager) {
-        return EventList.builder()
+    public static EventManageList of(Event event, List<String> regions, ImageManager imageManager) {
+        return EventManageList.builder()
                 .id(event.getId())
                 .photo(event.getPhotos().stream()
                         .map(truckPhoto -> imageManager.getPreSignUrl(truckPhoto.getFile().getPath()))
@@ -34,10 +32,10 @@ public class EventList {
                 .recruitEndDate(event.getRecruitDetail().getRecruitEndDate())
                 .startDate(EventDateCalculator.getMinDate(event))
                 .endDate(EventDateCalculator.getMaxDate(event))
-                .regions(regions)
-                .categories(event.getCategories().stream().map(EventCategory::getCategory).map(Category::getName).toList())
+                .region(regions.getFirst())
                 .recruitInfo(RecruitInfo.of(event, event.getRecruitDetail()))
                 .views(event.getView().getViews())
                 .build();
     }
+
 }

@@ -4,5 +4,5 @@ import lombok.Getter;
 
 @Getter
 public enum EventStatus {
-    IN_PROGRESS, CLOSED, CANCELED
+    RECRUITING, SELECTING, IN_PROGRESS, COMPLETED, RECRUITMENT_CANCELLED
 }

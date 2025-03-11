@@ -17,4 +17,6 @@ public interface EventRepositoryCustom {
     Page<Event> findLikeEventListByFilter(String memberId, String searchTerm, Map<RegionType, List<String>> regionIds,
                                           LocalDate startDate, LocalDate endDate,
                                           List<String> categoryCodes, Pageable pageable);
+    Page<Event> findProgressEventManageList(String memberId, String status, Pageable pageable);
+    Page<Event> findCompletedEventManageList(String memberId, String status, Pageable pageable);
 }

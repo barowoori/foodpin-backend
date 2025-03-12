@@ -20,6 +20,9 @@ public class RequestMember {
         @Schema(description = "핸드폰 번호", example = "01012345678")
         @NotEmpty(message = "핸드폰 번호가 비었습니다")
         private String phone;
+        @Schema(description = "이메일")
+        @NotEmpty(message = "이메일이 비었습니다")
+        private String email;
         @Schema(description = "닉네임", example = "용감한 호랑이#1856")
         @NotEmpty(message = "닉네임이 비었습니다")
         private String nickname;
@@ -27,6 +30,7 @@ public class RequestMember {
         public Member toEntity(){
             return Member.builder()
                     .phone(this.phone)
+                    .email(this.email)
                     .socialLoginInfo(this.socialInfoDto.toEntity())
                     .nickname(this.nickname)
                     .build();

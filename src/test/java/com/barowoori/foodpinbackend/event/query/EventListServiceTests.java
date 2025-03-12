@@ -67,6 +67,7 @@ public class EventListServiceTests {
 
 
     @BeforeEach
+    @Transactional
     void setUp() {
         event = Event.builder()
                 .createdBy("user")
@@ -131,6 +132,7 @@ public class EventListServiceTests {
         Event deletedEvent;
 
         @BeforeEach
+        @Transactional
         void setUp() {
             Category category = Category.builder()
                     .name("중식")
@@ -150,6 +152,15 @@ public class EventListServiceTests {
                     .status(EventStatus.IN_PROGRESS)
                     .build();
             deletedEvent = eventRepository.save(deletedEvent);
+
+            EventRecruitDetail eventRecruitDetail1 = EventRecruitDetail.builder()
+                    .recruitEndDate(LocalDate.of(2025, 3, 3))
+                    .recruitCount(4)
+                    .applicantCount(0)
+                    .event(deletedEvent)
+                    .build();
+            eventRecruitDetail1 = eventRecruitDetailRepository.save(eventRecruitDetail1);
+            deletedEvent.initEventRecruitDetail(eventRecruitDetail1);
 
             EventCategory eventCategory = EventCategory.builder()
                     .category(category)
@@ -208,6 +219,7 @@ public class EventListServiceTests {
     }
 
     @Nested
+    @Transactional
     @DisplayName("정렬 테스트")
     class OrderBy {
         @Test

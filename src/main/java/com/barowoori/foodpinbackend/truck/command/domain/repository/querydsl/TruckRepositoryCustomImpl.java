@@ -20,6 +20,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruck.truck;
+import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckDocument.truckDocument;
+import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckManager.truckManager;
+import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckMenu.truckMenu;
+
 public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
 
@@ -194,5 +199,26 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
         });
 
         return orders;
+    }
+    @Override
+    public Page<Truck> findApplicableTrucks(String memberId, Pageable pageable) {
+        List<Truck> trucks = jpaQueryFactory.selectFrom(truck)
+                .innerJoin(truckManager).on(truckManager.truck.eq(truck).and(truckManager.member.id.eq(memberId)))
+                .leftJoin(truck.menus, truckMenu)
+                .leftJoin(truck.documents, truckDocument)
+                .where(truck.isDeleted.isFalse())
+                .orderBy(truck.name.asc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        Long total =  jpaQueryFactory.select(truck.count()).from(truck)
+                .innerJoin(truckManager).on(truckManager.truck.eq(truck).and(truckManager.member.id.eq(memberId)))
+                .leftJoin(truck.menus, truckMenu)
+                .leftJoin(truck.documents, truckDocument)
+                .where(truck.isDeleted.isFalse())
+                .fetchOne();
+
+        return new PageImpl<>(trucks, pageable, total);
     }
 }

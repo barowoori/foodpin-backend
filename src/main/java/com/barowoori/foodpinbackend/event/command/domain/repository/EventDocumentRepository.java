@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface EventDocumentRepository extends JpaRepository<EventDocument, String> {
     List<EventDocument> findAllByEvent(Event event);
+    List<EventDocument> findByEventId(String eventId);
 }

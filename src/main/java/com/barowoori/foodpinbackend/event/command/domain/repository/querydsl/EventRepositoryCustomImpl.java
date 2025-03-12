@@ -2,6 +2,7 @@ package com.barowoori.foodpinbackend.event.command.domain.repository.querydsl;
 
 import com.barowoori.foodpinbackend.category.command.domain.model.QCategory;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
+import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventManageList;
 import com.barowoori.foodpinbackend.file.command.domain.model.QFile;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
 import com.barowoori.foodpinbackend.truck.command.domain.model.QTruck;
@@ -12,6 +13,7 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.data.domain.Page;
@@ -32,6 +34,7 @@ import static com.barowoori.foodpinbackend.event.command.domain.model.QEventDocu
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventPhoto.eventPhoto;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventRecruitDetail.eventRecruitDetail;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventRegion.eventRegion;
+import static com.barowoori.foodpinbackend.event.command.domain.model.QEventTruck.eventTruck;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventView.eventView;
 import static com.barowoori.foodpinbackend.file.command.domain.model.QFile.file;
 import static com.barowoori.foodpinbackend.member.command.domain.model.QEventLike.eventLike;
@@ -57,6 +60,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .where(event.id.eq(eventId).and(event.isDeleted.isFalse()))
                 .fetchOne();
     }
+
     @Override
     public Page<Event> findEventListByFilter(String searchTerm, Map<RegionType, List<String>> regionIds,
                                              LocalDate startDate, LocalDate endDate,
@@ -66,7 +70,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .leftJoin(event.eventDates, eventDate)
                 .leftJoin(event.categories, eventCategory)
                 .leftJoin(eventCategory.category, category)
-                .leftJoin(event.recruitDetail, eventRecruitDetail)
+                .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .leftJoin(event.view, eventView)
                 .leftJoin(event.photos, eventPhoto)
                 .leftJoin(eventPhoto.file, file)
@@ -90,7 +94,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .leftJoin(event.eventDates, eventDate)
                 .leftJoin(event.categories, eventCategory)
                 .leftJoin(eventCategory.category, category)
-                .leftJoin(event.recruitDetail, eventRecruitDetail)
+                .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .where(
                         event.isDeleted.isFalse()
                                 .and(
@@ -116,7 +120,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .leftJoin(event.eventDates, eventDate)
                 .leftJoin(event.categories, eventCategory)
                 .leftJoin(eventCategory.category, category)
-                .leftJoin(event.recruitDetail, eventRecruitDetail)
+                .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .leftJoin(event.view, eventView)
                 .leftJoin(event.photos, eventPhoto)
                 .leftJoin(eventPhoto.file, file)
@@ -141,7 +145,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .leftJoin(event.eventDates, eventDate)
                 .leftJoin(event.categories, eventCategory)
                 .leftJoin(eventCategory.category, category)
-                .leftJoin(event.recruitDetail, eventRecruitDetail)
+                .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .where(
                         event.isDeleted.isFalse()
                                 .and(
@@ -215,5 +219,90 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
         });
 
         return orders;
+    }
+    @Override
+    public Page<Event> findProgressEventManageList(String memberId, String status, Pageable pageable) {
+        List<Event> events = jpaQueryFactory.selectFrom(event)
+                .leftJoin(event.eventRegion, eventRegion)
+                .leftJoin(event.eventDates, eventDate)
+                .leftJoin(event.categories, eventCategory)
+                .leftJoin(eventCategory.category, category)
+                .innerJoin(event.recruitDetail, eventRecruitDetail)
+                .leftJoin(event.view, eventView)
+                .leftJoin(event.photos, eventPhoto)
+                .leftJoin(eventPhoto.file, file)
+                .where(
+                        event.isDeleted.isFalse()
+                                .and(event.createdBy.eq(memberId))
+                                .and(event.status.in(EventStatus.RECRUITING, EventStatus.SELECTING, EventStatus.IN_PROGRESS))
+                                .and(createFilterBuilder(status))
+                )
+                .orderBy(
+                        new CaseBuilder()
+                                .when(event.status.eq(EventStatus.SELECTING)).then(1)
+                                .when(event.status.eq(EventStatus.RECRUITING)).then(2)
+                                .otherwise(3)
+                                .asc()
+                )
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        Long total = jpaQueryFactory.select(event.count()).from(event)
+                .where(
+                        event.isDeleted.isFalse()
+                                .and(event.createdBy.eq(memberId))
+                                .and(event.status.in(EventStatus.RECRUITING, EventStatus.SELECTING, EventStatus.IN_PROGRESS))
+                                .and(createFilterBuilder(status))
+                )
+                .fetchOne();
+
+        return new PageImpl<>(events, pageable, total);
+    }
+
+    @Override
+    public Page<Event> findCompletedEventManageList(String memberId, String status, Pageable pageable) {
+        List<Event> events = jpaQueryFactory.selectFrom(event)
+                .leftJoin(event.eventRegion, eventRegion)
+                .leftJoin(event.eventDates, eventDate)
+                .leftJoin(event.categories, eventCategory)
+                .leftJoin(eventCategory.category, category)
+                .innerJoin(event.recruitDetail, eventRecruitDetail)
+                .leftJoin(event.view, eventView)
+                .leftJoin(event.photos, eventPhoto)
+                .leftJoin(eventPhoto.file, file)
+                .where(
+                        event.isDeleted.isFalse()
+                                .and(event.createdBy.eq(memberId))
+                                .and(event.status.in(EventStatus.COMPLETED, EventStatus.RECRUITMENT_CANCELLED))
+                                .and(createFilterBuilder(status))
+                )
+                .orderBy(
+                        event.createdAt.desc()
+                )
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        Long total = jpaQueryFactory.select(event.count()).from(event)
+                .where(
+                        event.isDeleted.isFalse()
+                                .and(event.createdBy.eq(memberId))
+                                .and(event.status.in(EventStatus.COMPLETED, EventStatus.RECRUITMENT_CANCELLED))
+                                .and(createFilterBuilder(status))
+                )
+                .fetchOne();
+
+        return new PageImpl<>(events, pageable, total);
+    }
+
+
+    public BooleanBuilder createFilterBuilder(String status) {
+        BooleanBuilder filterBuilder = new BooleanBuilder();
+        if (status.equals("ALL")) {
+            return filterBuilder;
+        }
+        filterBuilder.and(event.status.eq(EventStatus.valueOf(status)));
+        return filterBuilder;
     }
 }

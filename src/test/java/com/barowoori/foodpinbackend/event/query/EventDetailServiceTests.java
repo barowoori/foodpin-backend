@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -65,6 +66,7 @@ public class EventDetailServiceTests {
     RegionSi anyang;
 
     @BeforeEach
+    @Transactional
     void setUp() {
         member = Member.builder()
                 .email("email")
@@ -108,6 +110,7 @@ public class EventDetailServiceTests {
     }
 
     @Test
+    @Transactional
     @DisplayName("좋아요를 눌렀을 때 true를 반환해야 한다")
     void When_EventLike_Then_ReturnTrue() {
         EventLike eventLike = EventLike.builder()

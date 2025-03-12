@@ -143,6 +143,25 @@ public class MemberController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "번호 수정")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "번호가 비어있을 경우[20001]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PutMapping(value = "/v1/phone/{phone}")
+    public ResponseEntity<CommonResponse<String>> updatePhone(@Valid @PathVariable("phone") String phone) {
+        memberService.updatePhone(phone);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Phone updated successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
     @Operation(summary = "프로필(사진, 닉네임) 수정", description = "닉네임은 필수 입력" +
             "\n\n기존 이미지 경로, 새 이미지 파일 둘 다 입력 없는 경우 프로필 이미지 삭제" +
             "\n\n기존 이미지 경로 입력 유무와는 상관없이 새 이미지 파일이 들어오는 경우 새 파일로 프로필 이미지 변경")

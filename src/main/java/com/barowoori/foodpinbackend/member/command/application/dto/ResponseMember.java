@@ -45,7 +45,7 @@ public class ResponseMember {
     public static class GetInfoDto{
         @Schema(description = "소셜 로그인 정보")
         private CommonMember.SocialInfoDto socialInfoDto;
-        @Schema(description = "핸드폰번호")
+        @Schema(description = "휴대폰 번호")
         private String phone;
         @Schema(description = "이메일")
         private String email;

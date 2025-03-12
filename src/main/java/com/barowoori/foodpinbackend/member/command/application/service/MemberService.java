@@ -115,6 +115,15 @@ public class MemberService {
     }
 
     @Transactional
+    public void updatePhone(String phone){
+        Member member = getMember();
+        if (phone != null && !phone.isEmpty()){
+            member.updatePhone(phone);
+        } else throw new CustomException(MemberErrorCode.MEMBER_PHONE_EMPTY);
+        memberRepository.save(member);
+    }
+
+    @Transactional
     public void updateProfile(RequestMember.UpdateProfileRqDto updateProfileRqDto) {
         Member member = getMember();
         if (updateProfileRqDto.getImage() == null) {

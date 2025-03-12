@@ -29,7 +29,7 @@ public class EventManageList {
                         .map(truckPhoto -> imageManager.getPreSignUrl(truckPhoto.getFile().getPath()))
                         .findFirst().orElse(null))
                 .name(event.getName())
-                .recruitEndDate(event.getRecruitDetail().getRecruitEndDate())
+                .recruitEndDate(event.getRecruitDetail().getRecruitEndDateTime().toLocalDate())
                 .startDate(EventDateCalculator.getMinDate(event))
                 .endDate(EventDateCalculator.getMaxDate(event))
                 .region(regions.getFirst())

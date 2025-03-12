@@ -3,6 +3,7 @@ package com.barowoori.foodpinbackend.event.command.domain.model;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
@@ -20,8 +21,8 @@ public class EventRecruitDetail {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "recruit_end_date")
-    private LocalDate recruitEndDate;
+    @Column(name = "recruit_end_date_time")
+    private LocalDateTime recruitEndDateTime;
 
     @Column(name = "recruit_count")
     private Integer recruitCount;
@@ -35,9 +36,11 @@ public class EventRecruitDetail {
     @Column(name = "entry_fee")// 입점비
     private Integer entryFee;
 
+    @ColumnDefault("0")
     @Column(name = "applicant_count")
     private Integer applicantCount;
 
+    @ColumnDefault("0")
     @Column(name = "selected_count")
     private Integer selectedCount;
 
@@ -48,22 +51,21 @@ public class EventRecruitDetail {
     protected EventRecruitDetail(){}
 
     @Builder
-    public EventRecruitDetail(LocalDate recruitEndDate, Integer recruitCount,
+    public EventRecruitDetail(LocalDateTime recruitEndDateTime, Integer recruitCount, Integer applicantCount,
                               Boolean generatorRequirement, Boolean electricitySupportAvailability, Integer entryFee,
-                              Integer applicantCount, Integer selectedCount, Event event) {
-        this.recruitEndDate = recruitEndDate;
+                              Event event) {
+        this.recruitEndDateTime = recruitEndDateTime;
         this.recruitCount = recruitCount;
         this.applicantCount = applicantCount;
-        this.selectedCount = selectedCount;
         this.event = event;
         this.generatorRequirement = generatorRequirement;
         this.electricitySupportAvailability = electricitySupportAvailability;
         this.entryFee = entryFee;
     }
 
-    public void update(LocalDate recruitEndDate, Integer recruitCount,
+    public void update(LocalDateTime recruitEndDateTime, Integer recruitCount,
                        Boolean generatorRequirement, Boolean electricitySupportAvailability, Integer entryFee){
-        this.recruitEndDate = recruitEndDate;
+        this.recruitEndDateTime = recruitEndDateTime;
         this.recruitCount = recruitCount;
         this.generatorRequirement = generatorRequirement;
         this.electricitySupportAvailability = electricitySupportAvailability;

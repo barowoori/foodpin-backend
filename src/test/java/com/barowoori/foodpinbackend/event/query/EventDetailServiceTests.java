@@ -26,6 +26,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -84,9 +85,8 @@ public class EventDetailServiceTests {
         event = eventRepository.save(event);
 
         EventRecruitDetail eventRecruitDetail = EventRecruitDetail.builder()
-                .recruitEndDate(LocalDate.of(2025, 3, 3))
+                .recruitEndDateTime(LocalDateTime.of(2025, 3, 3, 0, 0))
                 .recruitCount(4)
-                .applicantCount(100)
                 .event(event)
                 .build();
         eventRecruitDetail = eventRecruitDetailRepository.save(eventRecruitDetail);

@@ -3,6 +3,8 @@ package com.barowoori.foodpinbackend.truck.command.application.dto;
 import com.barowoori.foodpinbackend.category.command.domain.model.Category;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
+import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionCode;
+import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionInfo;
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -48,9 +50,10 @@ public class RequestTruck {
         @NotEmpty
         private List<String> fileIdList;
 
-        public Truck toEntity(){
+        public Truck toEntity(String creator){
             return Truck.builder()
                     .name(this.name)
+                    .updatedBy(creator)
                     .description(this.description)
                     .electricityUsage(this.electricityUsage)
                     .gasUsage(this.gasUsage)
@@ -66,6 +69,14 @@ public class RequestTruck {
         @Schema(description = "지역코드")
         @NotEmpty
         private String regionCode;
+
+        public TruckRegion toEntity(Truck truck, RegionInfo regionInfo) {
+            return TruckRegion.builder()
+                    .regionType(regionInfo.getRegionType())
+                    .regionId(regionInfo.getRegionId())
+                    .truck(truck)
+                    .build();
+        }
     }
 
     @Getter

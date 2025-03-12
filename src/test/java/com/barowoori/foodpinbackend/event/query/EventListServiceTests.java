@@ -27,6 +27,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -77,9 +78,8 @@ public class EventListServiceTests {
         event = eventRepository.save(event);
 
         EventRecruitDetail eventRecruitDetail = EventRecruitDetail.builder()
-                .recruitEndDate(LocalDate.of(2025, 3, 3))
+                .recruitEndDateTime(LocalDateTime.of(2025, 3, 3, 0, 0))
                 .recruitCount(4)
-                .applicantCount(100)
                 .event(event)
                 .build();
         eventRecruitDetail = eventRecruitDetailRepository.save(eventRecruitDetail);
@@ -101,9 +101,8 @@ public class EventListServiceTests {
         event1 = eventRepository.save(event1);
 
         EventRecruitDetail eventRecruitDetail1 = EventRecruitDetail.builder()
-                .recruitEndDate(LocalDate.of(2025, 3, 3))
+                .recruitEndDateTime(LocalDateTime.of(2025, 3, 3, 0, 0))
                 .recruitCount(4)
-                .applicantCount(0)
                 .event(event1)
                 .build();
         eventRecruitDetail1 = eventRecruitDetailRepository.save(eventRecruitDetail1);
@@ -155,7 +154,7 @@ public class EventListServiceTests {
             deletedEvent = eventRepository.save(deletedEvent);
 
             EventRecruitDetail eventRecruitDetail1 = EventRecruitDetail.builder()
-                    .recruitEndDate(LocalDate.of(2025, 3, 3))
+                    .recruitEndDateTime(LocalDateTime.of(2025, 3, 3, 0, 0))
                     .recruitCount(4)
                     .applicantCount(0)
                     .event(deletedEvent)

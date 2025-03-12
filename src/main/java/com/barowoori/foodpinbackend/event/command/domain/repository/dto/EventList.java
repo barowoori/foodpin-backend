@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 
 @Getter
@@ -16,7 +18,7 @@ public class EventList {
     private String id;
     private String photo;
     private String name;
-    private LocalDate recruitEndDate;
+    private LocalDateTime recruitEndDateTime;
     private LocalDate startDate;
     private LocalDate endDate;
     private List<String> regions;
@@ -31,7 +33,7 @@ public class EventList {
                         .map(truckPhoto -> imageManager.getPreSignUrl(truckPhoto.getFile().getPath()))
                         .findFirst().orElse(null))
                 .name(event.getName())
-                .recruitEndDate(event.getRecruitDetail().getRecruitEndDate())
+                .recruitEndDateTime(event.getRecruitDetail().getRecruitEndDateTime())
                 .startDate(EventDateCalculator.getMinDate(event))
                 .endDate(EventDateCalculator.getMaxDate(event))
                 .regions(regions)

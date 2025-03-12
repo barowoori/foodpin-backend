@@ -3,6 +3,7 @@ package com.barowoori.foodpinbackend.event.command.domain.model;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
+import org.hibernate.annotations.ColumnDefault;
 
 @Entity
 @Table(name = "event_views")
@@ -12,6 +13,7 @@ public class EventView {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    @ColumnDefault("0")
     @Column(name = "views")
     private Integer views;
 

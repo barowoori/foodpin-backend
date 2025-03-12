@@ -128,4 +128,8 @@ public class Event {
     public Boolean isCreator(String memberId){
         return this.createdBy.equals(memberId);
     }
+
+    public void delete(){
+        this.isDeleted = true;
+    }
 }

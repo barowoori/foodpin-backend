@@ -210,9 +210,23 @@ public class MemberController {
     public ResponseEntity<CommonResponse<String>> likeTruck(@Valid @PathVariable(name = "truckId") String truckId) {
         memberService.likeTruck(truckId);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
-                .data("successfully")
+                .data("Truck liked successfully")
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "행사 좋아요/취소", description = "좋아요가 이미 있을 경우 좋아요 취소, 없을 경우 좋아요 등록")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004], 해당 행사 정보가 없을 경우[40005]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PutMapping("/v1/events/{eventId}/like")
+    public ResponseEntity<CommonResponse<String>> likeEvent(@Valid @PathVariable(name = "eventId") String eventId) {
+        memberService.likeEvent(eventId);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Event liked successfully")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
 }

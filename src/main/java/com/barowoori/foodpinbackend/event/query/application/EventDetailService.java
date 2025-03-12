@@ -1,5 +1,7 @@
 package com.barowoori.foodpinbackend.event.query.application;
 
+import com.barowoori.foodpinbackend.common.exception.CustomException;
+import com.barowoori.foodpinbackend.event.command.domain.exception.EventErrorCode;
 import com.barowoori.foodpinbackend.event.command.domain.model.Event;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventDetail;
@@ -30,6 +32,9 @@ public class EventDetailService {
     @Transactional
     public EventDetail getEventDetail(String memberId, String eventId) {
         Event event = eventRepository.findEventDetail(eventId);
+        if (event == null || event.getIsDeleted()){
+            throw new CustomException(EventErrorCode.NOT_FOUND_EVENT);
+        }
         List<RegionCode> regionNames = eventRegionFullNameGenerator.findRegionCodesByEventId(eventId);
         EventLike eventLike = eventLikeRepository.findByMemberIdAndEventId(memberId, eventId);
         event.getView().addViews();

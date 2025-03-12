@@ -9,6 +9,8 @@ import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.event.command.domain.repository.*;
 import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepository;
+import com.barowoori.foodpinbackend.member.command.domain.model.EventLike;
+import com.barowoori.foodpinbackend.member.command.domain.repository.EventLikeRepository;
 import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionDoRepository;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionInfo;
@@ -33,6 +35,7 @@ public class EventService {
     private final EventCategoryRepository eventCategoryRepository;
     private final EventDocumentRepository eventDocumentRepository;
     private final EventViewRepository eventViewRepository;
+    private final EventLikeRepository eventLikeRepository;
 
     private String getMemberId() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
@@ -174,5 +177,18 @@ public class EventService {
         event.updateSubmissionEmail(updateEventDocumentDto.getSubmissionEmail());
         event.updateDocumentSubmissionTarget(updateEventDocumentDto.getDocumentSubmissionTarget());
         eventRepository.save(event);
+    }
+
+    @Transactional
+    public void deleteEvent(String eventId){
+        String memberId = getMemberId();
+        Event event = getEvent(eventId);
+        if (event.isCreator(memberId)){
+            event.delete();
+            EventLike eventLike = eventLikeRepository.findByMemberIdAndEventId(memberId, eventId);
+            if (eventLike != null)
+                eventLikeRepository.delete(eventLike);
+        }
+        else throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
     }
 }

@@ -118,6 +118,8 @@ public class EventService {
         event.initEventRegion(null);
         EventRegion eventRegion = eventRegionRepository.findByEvent(event);
         RegionInfo regionInfo = regionDoRepository.findByCode(updateEventInfoDto.getEventRegionDto().getRegionCode());
+        if (regionInfo == null)
+            throw new CustomException(EventErrorCode.EVENT_REGION_NOT_FOUND);
         eventRegion.updateRegion(regionInfo.getRegionType(), regionInfo.getRegionId());
         eventRegionRepository.save(eventRegion);
         event.initEventRegion(eventRegion);
@@ -130,6 +132,8 @@ public class EventService {
         Event event = getEvent(eventId);
 
         EventRecruitDetail eventRecruitDetail = eventRecruitDetailRepository.findByEvent(event);
+        if (eventRecruitDetail == null)
+            throw new CustomException(EventErrorCode.EVENT_RECRUIT_DETAIL_NOT_FOUND);
         eventRecruitDetailRepository.delete(eventRecruitDetail);
         EventRecruitDetail updatedEventRecruitDetail = updateEventRecruitDto.getEventRecruitDto().toEntity(event);
         eventRecruitDetailRepository.save(updatedEventRecruitDetail);
@@ -146,6 +150,8 @@ public class EventService {
         eventCategoryList.forEach(eventCategoryRepository::delete);
         updateEventDetailDto.getEventCategoryDtoList().forEach(eventCategoryDto -> {
             Category category = categoryRepository.findByCode(eventCategoryDto.getCategoryCode());
+            if (category == null)
+                throw new CustomException(EventErrorCode.EVENT_CATEGORY_NOT_FOUND);
             EventCategory eventCategory = eventCategoryDto.toEntity(event, category);
             eventCategoryRepository.save(eventCategory);
         });
@@ -159,7 +165,8 @@ public class EventService {
         Event event = getEvent(eventId);
 
         List<EventDocument> eventDocumentList = eventDocumentRepository.findAllByEvent(event);
-        eventDocumentList.forEach(eventDocumentRepository::delete);
+        if (eventDocumentList != null)
+            eventDocumentList.forEach(eventDocumentRepository::delete);
         updateEventDocumentDto.getEventDocumentDtoList().forEach(eventDocumentDto -> {
             EventDocument eventDocument = eventDocumentDto.toEntity(event);
             eventDocumentRepository.save(eventDocument);

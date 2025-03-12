@@ -30,7 +30,7 @@ public class EventController {
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "행사 사진 파일을 못 찾을 경우[40001]," +
-                    "지역을 못 찾을 경우[40002], 카테고리를 못 찾을 경우[40003],",
+                    "지역을 못 찾을 경우[40002], 카테고리를 못 찾을 경우[40003]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping(value = "/v1")
@@ -42,6 +42,15 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "행사 기본 정보 수정")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "행사를 못 찾을 경우[40000]" +
+                    "행사 사진 파일을 못 찾을 경우[40001], 지역을 못 찾을 경우[40002]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @PutMapping(value = "/v1/{eventId}/info")
     public ResponseEntity<CommonResponse<String>> updateEventInfo(@Valid @PathVariable("eventId") String eventId,
                                                                   @RequestBody RequestEvent.UpdateEventInfoDto updateEventInfoDto) {
@@ -52,6 +61,14 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "행사 모집 정보 수정")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "행사 모집 정보를 못 찾을 경우[40004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @PutMapping(value = "/v1/{eventId}/recruit")
     public ResponseEntity<CommonResponse<String>> updateEventRecruit(@Valid @PathVariable("eventId") String eventId,
                                                                      @RequestBody RequestEvent.UpdateEventRecruitDto updateEventRecruitDto) {
@@ -62,6 +79,14 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "행사 상세 정보 수정")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "지역을 못 찾을 경우[40002]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @PutMapping(value = "/v1/{eventId}/detail")
     public ResponseEntity<CommonResponse<String>> updateEventDetail(@Valid @PathVariable("eventId") String eventId,
                                                                     @RequestBody RequestEvent.UpdateEventDetailDto updateEventDetailDto) {
@@ -72,6 +97,12 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "행사 서류 정보 수정")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @PutMapping(value = "/v1/{eventId}/document")
     public ResponseEntity<CommonResponse<String>> updateEventDocument(@Valid @PathVariable("eventId") String eventId,
                                                                       @RequestBody RequestEvent.UpdateEventDocumentDto updateEventDocumentDto) {

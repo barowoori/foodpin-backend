@@ -103,13 +103,15 @@ public class TruckService {
         // 트럭 문서 생성 및 사진 저장
         // 사진 한 장만 들어감, 클라이언트에서 여러 개 보내면 개수만큼 TruckDocument 엔티티가 만들어짐
         // -> TruckDocument 생성자에서 path 제거 후, 여러 장 저장하려면 List<TruckDocumentPhoto> 생성 필요할 듯
-        for (RequestTruck.TruckDocumentDto truckDocumentDto : createTruckDto.getTruckDocumentDtoSet()) {
-            if (!truckDocumentDto.getFileIdList().isEmpty()) {
-                for (String fileId : truckDocumentDto.getFileIdList()) {
-                    File file = fileRepository.findById(fileId)
-                            .orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_DOCUMENT_PHOTO_NOT_FOUND));
-                    TruckDocument truckDocument = truckDocumentDto.toEntity(memberId, file.getPath(), truck);
-                    truckDocumentRepository.save(truckDocument);
+        if (!Objects.equals(createTruckDto.getTruckDocumentDtoSet(), null) && !createTruckDto.getTruckDocumentDtoSet().isEmpty()) {
+            for (RequestTruck.TruckDocumentDto truckDocumentDto : createTruckDto.getTruckDocumentDtoSet()) {
+                if (!truckDocumentDto.getFileIdList().isEmpty()) {
+                    for (String fileId : truckDocumentDto.getFileIdList()) {
+                        File file = fileRepository.findById(fileId)
+                                .orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_DOCUMENT_PHOTO_NOT_FOUND));
+                        TruckDocument truckDocument = truckDocumentDto.toEntity(memberId, file.getPath(), truck);
+                        truckDocumentRepository.save(truckDocument);
+                    }
                 }
             }
         }

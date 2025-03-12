@@ -164,7 +164,7 @@ public class EventService {
     public void updateEventDocument(String eventId, RequestEvent.UpdateEventDocumentDto updateEventDocumentDto){
         Event event = getEvent(eventId);
 
-        List<EventDocument> eventDocumentList = eventDocumentRepository.findAllByEvent(event);
+        List<EventDocument> eventDocumentList = eventDocumentRepository.findByEventId(eventId);
         if (eventDocumentList != null)
             eventDocumentList.forEach(eventDocumentRepository::delete);
         updateEventDocumentDto.getEventDocumentDtoList().forEach(eventDocumentDto -> {

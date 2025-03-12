@@ -81,12 +81,13 @@ public class Event {
 
     @Builder
 
-    public Event(String createdBy, String name, String description, String guidelines,
+    public Event(String createdBy, String name, String description, String guidelines, Boolean isDeleted,
                  EventDocumentSubmissionTarget documentSubmissionTarget, String submissionEmail, EventStatus status) {
         this.createdBy = createdBy;
         this.name = name;
         this.description = description;
         this.guidelines = guidelines;
+        this.isDeleted = isDeleted;
         this.documentSubmissionTarget = documentSubmissionTarget;
         this.submissionEmail = submissionEmail;
         this.status = status;

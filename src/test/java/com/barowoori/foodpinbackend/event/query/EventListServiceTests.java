@@ -154,7 +154,7 @@ public class EventListServiceTests {
             deletedEvent = eventRepository.save(deletedEvent);
 
             EventRecruitDetail eventRecruitDetail1 = EventRecruitDetail.builder()
-                    .recruitEndDate(LocalDate.of(2025, 3, 3))
+                    .recruitEndDateTime(LocalDateTime.of(2025, 3, 3, 0, 0))
                     .recruitCount(4)
                     .applicantCount(0)
                     .event(deletedEvent)

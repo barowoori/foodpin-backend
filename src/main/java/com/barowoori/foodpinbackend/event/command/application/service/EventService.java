@@ -183,12 +183,14 @@ public class EventService {
     public void deleteEvent(String eventId){
         String memberId = getMemberId();
         Event event = getEvent(eventId);
+        if (!event.isCreator(memberId)){
+            throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
+        }
         if (event.isCreator(memberId)){
             event.delete();
-            EventLike eventLike = eventLikeRepository.findByMemberIdAndEventId(memberId, eventId);
-            if (eventLike != null)
-                eventLikeRepository.delete(eventLike);
+            List<EventLike> eventLikeList = eventLikeRepository.findByEventId(eventId);
+            if (eventLikeList != null)
+                eventLikeList.forEach(eventLikeRepository::delete);
         }
-        else throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
     }
 }

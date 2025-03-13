@@ -2,15 +2,16 @@ package com.barowoori.foodpinbackend.member.command.application.service;
 
 import com.barowoori.foodpinbackend.common.exception.CustomException;
 import com.barowoori.foodpinbackend.common.security.JwtTokenProvider;
+import com.barowoori.foodpinbackend.event.command.domain.exception.EventErrorCode;
+import com.barowoori.foodpinbackend.event.command.domain.model.Event;
+import com.barowoori.foodpinbackend.event.command.domain.repository.EventRepository;
 import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepository;
 import com.barowoori.foodpinbackend.member.command.application.dto.RequestMember;
 import com.barowoori.foodpinbackend.member.command.application.dto.ResponseMember;
 import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
-import com.barowoori.foodpinbackend.member.command.domain.model.Member;
-import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginInfo;
-import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginType;
-import com.barowoori.foodpinbackend.member.command.domain.model.TruckLike;
+import com.barowoori.foodpinbackend.member.command.domain.model.*;
+import com.barowoori.foodpinbackend.member.command.domain.repository.EventLikeRepository;
 import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
 import com.barowoori.foodpinbackend.member.command.domain.repository.TruckLikeRepository;
 import com.barowoori.foodpinbackend.member.command.domain.service.GenerateNicknameService;
@@ -35,6 +36,8 @@ public class MemberService {
     private final TruckLikeRepository truckLikeRepository;
     private final TruckRepository truckRepository;
     private final FileRepository fileRepository;
+    private final EventRepository eventRepository;
+    private final EventLikeRepository eventLikeRepository;
 
     private Member getMember() {
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -165,6 +168,22 @@ public class MemberService {
             truckLikeRepository.save(truckLike);
         } else {
             truckLikeRepository.delete(truckLike);
+        }
+    }
+
+    @Transactional
+    public void likeEvent(String eventId) {
+        Member member = getMember();
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> new CustomException(EventErrorCode.NOT_FOUND_EVENT));
+        EventLike eventLike = eventLikeRepository.findByMemberIdAndEventId(member.getId(), eventId);
+        if (eventLike == null) {
+            eventLike = EventLike.builder()
+                    .event(event)
+                    .member(member)
+                    .build();
+            eventLikeRepository.save(eventLike);
+        } else {
+            eventLikeRepository.delete(eventLike);
         }
     }
 }

@@ -28,7 +28,7 @@ public class EventList {
         return EventList.builder()
                 .id(event.getId())
                 .photo(event.getPhotos().stream()
-                        .map(truckPhoto -> imageManager.getPreSignUrl(truckPhoto.getFile().getPath()))
+                        .map(eventPhoto -> imageManager.getPreSignUrl(eventPhoto.getFile().getPath()))
                         .findFirst().orElse(null))
                 .name(event.getName())
                 .recruitEndDate(event.getRecruitDetail().getRecruitEndDate())

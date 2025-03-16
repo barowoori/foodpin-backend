@@ -3,6 +3,8 @@ package com.barowoori.foodpinbackend.event.command.domain.repository.querydsl;
 
 import com.barowoori.foodpinbackend.event.command.domain.model.EventApplication;
 import com.barowoori.foodpinbackend.event.command.domain.model.EventApplicationStatus;
+import com.barowoori.foodpinbackend.event.command.domain.model.EventStatus;
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -73,5 +75,27 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
                 .fetchOne();
 
         return new PageImpl<>(eventApplications, pageable, total);
+    }
+
+//    public Page<EventApplication> findAppliedApplications(String status, String truckId, Pageable pageable){
+//        List<EventApplication> eventApplications = jpaQueryFactory.selectFrom(eventApplication)
+//                .innerJoin(eventApplication.truck, truck)
+//                .leftJoin(eventApplication.dates, eventApplicationDate)
+//                .where(truck.id.eq(truckId)
+//                        .and(eventApplication.status.eq(EventApplicationStatus.REJECTED)))
+//                .orderBy(eventApplication.createdAt.desc())
+//                .offset(pageable.getOffset())
+//                .limit(pageable.getPageSize())
+//                .fetch();
+//
+//        Long total =
+//    }
+
+    private BooleanBuilder createStatusBuilder(String status){
+        BooleanBuilder filterBuilder = new BooleanBuilder();
+        if (status.equals("ALL")) {
+            return filterBuilder;
+        }
+        return filterBuilder;
     }
 }

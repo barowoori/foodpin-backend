@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 
 public class EventApplicationList {
@@ -46,7 +47,9 @@ public class EventApplicationList {
                     .id(eventApplication.getId())
                     .truck(TruckInfo.of(eventApplication.getTruck(), imageManager))
                     .dates(eventApplication.getDates().stream()
-                            .map(EventApplicationDate::getEventDate).map(EventDate::getDate).toList())
+                            .map(EventApplicationDate::getEventDate)
+                            .sorted(Comparator.comparing(EventDate::getDate))
+                            .map(EventDate::getDate).toList())
                     .isRead(eventApplication.getIsRead())
                     .build();
 

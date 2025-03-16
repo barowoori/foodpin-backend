@@ -82,8 +82,7 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
         Long total = jpaQueryFactory.select(truck.count()).from(truck)
                 .leftJoin(truckRegion).on(truckRegion.truck.eq(truck))
                 .leftJoin(truckCategory).on(truckCategory.truck.eq(truck))
-                .leftJoin(category).on(truckCategory.category.eq(category))
-                .leftJoin(truckDocument).on(truckDocument.truck.eq(truck))
+                .leftJoin(truckCategory.category, category)
                 .leftJoin(truckMenu).on(truckMenu.truck.eq(truck))
                 .where(
                         truck.isDeleted.isFalse()

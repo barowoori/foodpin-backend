@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -26,6 +27,10 @@ public class Event {
 
     @Column(name = "created_by", nullable = false)
     private String createdBy;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @Column(name = "name")
     private String name;

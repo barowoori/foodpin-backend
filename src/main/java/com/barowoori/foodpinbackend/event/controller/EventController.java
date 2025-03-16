@@ -7,8 +7,10 @@ import com.barowoori.foodpinbackend.event.command.application.dto.RequestEvent;
 import com.barowoori.foodpinbackend.event.command.application.service.EventService;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventDetail;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventList;
+import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventManageList;
 import com.barowoori.foodpinbackend.event.query.application.EventDetailService;
 import com.barowoori.foodpinbackend.event.query.application.EventListService;
+import com.barowoori.foodpinbackend.event.query.application.EventManageListService;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckDetail;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckList;
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,6 +42,7 @@ public class EventController {
     private final EventService eventService;
     private final EventDetailService eventDetailService;
     private final EventListService eventListService;
+    private final EventManageListService eventManageListService;
 
     @Operation(summary = "행사 생성", description = "사진의 경우 파일 저장 api로 업로드 후 반환된 파일 id 리스트로 전달")
     @ApiResponses(value = {
@@ -207,4 +210,42 @@ public class EventController {
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
+
+    @Operation(summary = "진행중인 공고 목록 조회", description = "status(상태) : ALL(전체), RECRUITING(모집중), SELECTING(선정중), IN_PROGRESS(진행중)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/progress/status/{status}")
+    public ResponseEntity<CommonResponse<Page<EventManageList>>> getProgressEventManageList(@PathVariable(value = "status") String status,
+                                                                            @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        Page<EventManageList> eventLists = eventManageListService.findProgressEventManageList(memberId, status, pageable);
+        CommonResponse<Page<EventManageList>> commonResponse = CommonResponse.<Page<EventManageList>>builder()
+                .data(eventLists)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "지난 공고 목록 조회", description = "status(상태) : ALL(전체), COMPLETED(종료), RECRUITMENT_CANCELLED(모집취소)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/completed/status/{status}")
+    public ResponseEntity<CommonResponse<Page<EventManageList>>> getCompletedEventManageList(@PathVariable(value = "status") String status,
+                                                                                            @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        Page<EventManageList> eventLists = eventManageListService.findCompletedEventManageList(memberId, status, pageable);
+        CommonResponse<Page<EventManageList>> commonResponse = CommonResponse.<Page<EventManageList>>builder()
+                .data(eventLists)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+
 }

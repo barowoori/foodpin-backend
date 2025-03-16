@@ -220,6 +220,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
 
         return orders;
     }
+
     @Override
     public Page<Event> findProgressEventManageList(String memberId, String status, Pageable pageable) {
         List<Event> events = jpaQueryFactory.selectFrom(event)
@@ -234,16 +235,9 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .where(
                         event.isDeleted.isFalse()
                                 .and(event.createdBy.eq(memberId))
-                                .and(event.status.in(EventStatus.RECRUITING, EventStatus.SELECTING, EventStatus.IN_PROGRESS))
-                                .and(createFilterBuilder(status))
+                                .and(createProgressFilterBuilder(status))
                 )
-                .orderBy(
-                        new CaseBuilder()
-                                .when(event.status.eq(EventStatus.SELECTING)).then(1)
-                                .when(event.status.eq(EventStatus.RECRUITING)).then(2)
-                                .otherwise(3)
-                                .asc()
-                )
+                .orderBy(event.createdAt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -252,8 +246,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .where(
                         event.isDeleted.isFalse()
                                 .and(event.createdBy.eq(memberId))
-                                .and(event.status.in(EventStatus.RECRUITING, EventStatus.SELECTING, EventStatus.IN_PROGRESS))
-                                .and(createFilterBuilder(status))
+                                .and(createProgressFilterBuilder(status))
                 )
                 .fetchOne();
 
@@ -274,12 +267,9 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .where(
                         event.isDeleted.isFalse()
                                 .and(event.createdBy.eq(memberId))
-                                .and(event.status.in(EventStatus.COMPLETED, EventStatus.RECRUITMENT_CANCELLED))
-                                .and(createFilterBuilder(status))
+                                .and(createCompletedFilterBuilder(status))
                 )
-                .orderBy(
-                        event.createdAt.desc()
-                )
+                .orderBy(event.updatedAt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -288,21 +278,31 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .where(
                         event.isDeleted.isFalse()
                                 .and(event.createdBy.eq(memberId))
-                                .and(event.status.in(EventStatus.COMPLETED, EventStatus.RECRUITMENT_CANCELLED))
-                                .and(createFilterBuilder(status))
+                                .and(createCompletedFilterBuilder(status))
                 )
                 .fetchOne();
 
         return new PageImpl<>(events, pageable, total);
     }
 
-
-    public BooleanBuilder createFilterBuilder(String status) {
+    public BooleanBuilder createProgressFilterBuilder(String status) {
         BooleanBuilder filterBuilder = new BooleanBuilder();
         if (status.equals("ALL")) {
-            return filterBuilder;
+            filterBuilder
+                    .and(event.status.in(EventStatus.RECRUITING, EventStatus.SELECTING, EventStatus.IN_PROGRESS));
+        }else {
+            filterBuilder.and(event.status.eq(EventStatus.valueOf(status)));
         }
-        filterBuilder.and(event.status.eq(EventStatus.valueOf(status)));
+        return filterBuilder;
+    }
+
+    public BooleanBuilder createCompletedFilterBuilder(String status) {
+        BooleanBuilder filterBuilder = new BooleanBuilder();
+        if (status.equals("ALL")) {
+            filterBuilder.and(event.status.in(EventStatus.COMPLETED, EventStatus.RECRUITMENT_CANCELLED));
+        }else {
+            filterBuilder.and(event.status.eq(EventStatus.valueOf(status)));
+        }
         return filterBuilder;
     }
 }

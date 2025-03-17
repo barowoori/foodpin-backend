@@ -89,7 +89,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        Long total = jpaQueryFactory.select(event.count()).from(event)
+        Long total = jpaQueryFactory.select(event.countDistinct()).from(event)
                 .leftJoin(event.eventRegion, eventRegion)
                 .leftJoin(event.eventDates, eventDate)
                 .leftJoin(event.categories, eventCategory)
@@ -139,7 +139,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        Long total = jpaQueryFactory.select(event.count()).from(event)
+        Long total = jpaQueryFactory.select(event.countDistinct()).from(event)
                 .innerJoin(eventLike).on(eventLike.event.eq(event).and(eventLike.member.id.eq(memberId)))
                 .leftJoin(event.eventRegion, eventRegion)
                 .leftJoin(event.eventDates, eventDate)
@@ -242,7 +242,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        Long total = jpaQueryFactory.select(event.count()).from(event)
+        Long total = jpaQueryFactory.select(event.countDistinct()).from(event)
                 .where(
                         event.isDeleted.isFalse()
                                 .and(event.createdBy.eq(memberId))
@@ -274,7 +274,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        Long total = jpaQueryFactory.select(event.count()).from(event)
+        Long total = jpaQueryFactory.select(event.countDistinct()).from(event)
                 .where(
                         event.isDeleted.isFalse()
                                 .and(event.createdBy.eq(memberId))

@@ -3,6 +3,7 @@ package com.barowoori.foodpinbackend.event.command.domain.repository.dto;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -13,6 +14,7 @@ import java.util.List;
 public class EventApplicationList {
     @Getter
     @Builder
+    @Schema(name = "EventApplicationList.TruckInfo")
     public static class TruckInfo {
         private String id;
         private String name;
@@ -38,7 +40,6 @@ public class EventApplicationList {
     public static class EventPendingApplication {
         private String id;
         private TruckInfo truck;
-        //TODO 날짜인지 기간인지 확인
         private List<LocalDate> dates;
         private Boolean isRead;
 
@@ -61,7 +62,6 @@ public class EventApplicationList {
     public static class EventSelectedApplication {
         private String id;
         private TruckInfo truck;
-        //TODO 날짜인지 기간인지 확인
         private List<LocalDate> dates;
         private EventTruckStatus status;
 
@@ -81,7 +81,6 @@ public class EventApplicationList {
     public static class EventRejectedApplication {
         private String id;
         private TruckInfo truck;
-        //TODO 날짜인지 기간인지 확인
         private List<LocalDate> dates;
 
         public static EventRejectedApplication of(EventApplication eventApplication, ImageManager imageManager) {

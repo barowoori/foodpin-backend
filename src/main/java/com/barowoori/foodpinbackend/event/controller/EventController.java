@@ -5,9 +5,11 @@ import com.barowoori.foodpinbackend.common.dto.CommonResponse;
 import com.barowoori.foodpinbackend.common.exception.ErrorResponse;
 import com.barowoori.foodpinbackend.event.command.application.dto.RequestEvent;
 import com.barowoori.foodpinbackend.event.command.application.service.EventService;
+import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventApplicationList;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventDetail;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventList;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventManageList;
+import com.barowoori.foodpinbackend.event.query.application.EventApplicationListService;
 import com.barowoori.foodpinbackend.event.query.application.EventDetailService;
 import com.barowoori.foodpinbackend.event.query.application.EventListService;
 import com.barowoori.foodpinbackend.event.query.application.EventManageListService;
@@ -43,6 +45,7 @@ public class EventController {
     private final EventDetailService eventDetailService;
     private final EventListService eventListService;
     private final EventManageListService eventManageListService;
+    private final EventApplicationListService eventApplicationListService;
 
     @Operation(summary = "행사 생성", description = "사진의 경우 파일 저장 api로 업로드 후 반환된 파일 id 리스트로 전달")
     @ApiResponses(value = {
@@ -219,7 +222,7 @@ public class EventController {
     })
     @GetMapping(value = "/v1/progress/status/{status}")
     public ResponseEntity<CommonResponse<Page<EventManageList>>> getProgressEventManageList(@PathVariable(value = "status") String status,
-                                                                            @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+                                                                                            @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Page<EventManageList> eventLists = eventManageListService.findProgressEventManageList(memberId, status, pageable);
@@ -237,7 +240,7 @@ public class EventController {
     })
     @GetMapping(value = "/v1/completed/status/{status}")
     public ResponseEntity<CommonResponse<Page<EventManageList>>> getCompletedEventManageList(@PathVariable(value = "status") String status,
-                                                                                            @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+                                                                                             @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Page<EventManageList> eventLists = eventManageListService.findCompletedEventManageList(memberId, status, pageable);
@@ -247,5 +250,56 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "지원자 대기 목록 조회", description = "")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/applications/pending")
+    public ResponseEntity<CommonResponse<Page<EventApplicationList.EventPendingApplication>>> getPendingEventApplicationList(@ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        Page<EventApplicationList.EventPendingApplication> eventLists = eventApplicationListService.findPendingEventApplications(memberId, pageable);
+        CommonResponse<Page<EventApplicationList.EventPendingApplication>> commonResponse = CommonResponse.<Page<EventApplicationList.EventPendingApplication>>builder()
+                .data(eventLists)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "지원자 선정 목록 조회", description = "status : ALL(전체), PENDING(답변대기중), CONFIRMED(참여확정), REJECTED(참여불가)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/applications/selected/status/{status}")
+    public ResponseEntity<CommonResponse<Page<EventApplicationList.EventSelectedApplication>>> getSelectedEventApplicationList(@PathVariable(value = "status") String status,
+                                                                                                                               @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        Page<EventApplicationList.EventSelectedApplication> eventLists = eventApplicationListService.findSelectedEventApplications(memberId, status, pageable);
+        CommonResponse<Page<EventApplicationList.EventSelectedApplication>> commonResponse = CommonResponse.<Page<EventApplicationList.EventSelectedApplication>>builder()
+                .data(eventLists)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "지원자 탈락 목록 조회", description = "")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/applications/rejected")
+    public ResponseEntity<CommonResponse<Page<EventApplicationList.EventRejectedApplication>>> getRejectedEventApplicationList(@ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        Page<EventApplicationList.EventRejectedApplication> eventLists = eventApplicationListService.findRejectedEventApplications(memberId, pageable);
+        CommonResponse<Page<EventApplicationList.EventRejectedApplication>> commonResponse = CommonResponse.<Page<EventApplicationList.EventRejectedApplication>>builder()
+                .data(eventLists)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
 
 }

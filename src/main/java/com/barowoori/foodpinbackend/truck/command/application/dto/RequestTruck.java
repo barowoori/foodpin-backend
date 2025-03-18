@@ -2,8 +2,6 @@ package com.barowoori.foodpinbackend.truck.command.application.dto;
 
 import com.barowoori.foodpinbackend.category.command.domain.model.Category;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
-import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
-import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionCode;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionInfo;
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -36,6 +34,7 @@ public class RequestTruck {
         @NotEmpty
         private String name;
         @Schema(description = "트럭 설명")
+        @NotEmpty
         private String description;
         @Schema(description = "전기 사용 여부")
         @NotEmpty
@@ -82,6 +81,7 @@ public class RequestTruck {
     @Getter
     public static class TruckCategoryDto{
         @Schema(description = "트럭 카테고리 코드")
+        @NotEmpty
         private String categoryCode;
 
         public TruckCategory toEntity(Truck truck, Category category){
@@ -100,6 +100,7 @@ public class RequestTruck {
         @Schema(description = "메뉴 설명")
         private String description;
         @Schema(description = "메뉴 가격")
+        @NotEmpty
         private Integer price;
         @Schema(description = "메뉴 사진 파일 id 리스트")
         private List<String> fileIdList;
@@ -123,10 +124,9 @@ public class RequestTruck {
         @NotEmpty
         private Boolean approval;
         @Schema(description = "트럭 서류 사진 파일 id 리스트")
-        @NotEmpty
         private List<String> fileIdList;
 
-        public TruckDocument toEntity(String updatedBy, String path, Truck truck){
+        public TruckDocument toEntity(String updatedBy, Truck truck){
             return TruckDocument.builder()
                     .updatedBy(updatedBy)
                     .type(this.type)
@@ -143,6 +143,7 @@ public class RequestTruck {
         @NotEmpty
         private String name;
         @Schema(description = "트럭 설명")
+        @NotEmpty
         private String description;
         @Schema(description = "트럭 사진 파일 id 리스트")
         @NotEmpty
@@ -171,4 +172,10 @@ public class RequestTruck {
         @NotEmpty
         private List<TruckMenuDto> truckMenuDtoList;
     }
+
+//    @Getter
+//    public static class SetTruckDocumentDto{
+//        @NotEmpty
+//        private List<TruckDocumentDto> truckDocumentDtoList;
+//    }
 }

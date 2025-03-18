@@ -4,6 +4,7 @@ import com.barowoori.foodpinbackend.category.command.domain.model.Category;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionInfo;
+import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
@@ -134,6 +135,9 @@ public class RequestEvent {
         }
     }
 
+    //TODO EventCategoryDto, EventDocumentDto 유지 여부 의문
+    // 어차피 컬럼 하나씩만 받는데 dto를 쓰는 게 맞는 지 모르겠습니다
+    // 각 dto마다 toEntity 따로 사용 가능하고 리스트가 아닌 컬럼에다 example을 적어줄 수 있다는 장점이 있긴 한데 이게 과연 프론트한테도 괜찮은 구조일지 잘 모르겠습니다
     @Getter
     public static class EventCategoryDto{
         @Schema(description = "카테고리 코드", example = "C01")
@@ -203,5 +207,30 @@ public class RequestEvent {
         @Schema(description = "서류 제출 대상(지원자 전체 / 선정자만)")
         @NotEmpty
         private EventDocumentSubmissionTarget documentSubmissionTarget;
+    }
+
+    @Builder
+    @Data
+    @Getter
+    public static class ApplyEventDto{
+        @Schema(description = "지원할 행사 id")
+        @NotEmpty
+        private String eventId;
+        @Schema(description = "지원할 트럭 id")
+        @NotEmpty
+        private String truckId;
+        @Schema(description = "지원할 날짜(EventDate) id 리스트")
+        @NotEmpty
+        private List<String> eventDateIdList;
+
+        //TODO EventApplication 기본값 설정 코드 정상 작동 시 아래서 status, isRead 설정 제거
+        public EventApplication toEntity(Truck truck, Event event){
+            return EventApplication.builder()
+                    .truck(truck)
+                    .event(event)
+                    .status(EventApplicationStatus.PENDING)
+                    .isRead(Boolean.FALSE)
+                    .build();
+        }
     }
 }

@@ -43,7 +43,7 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        Long total = jpaQueryFactory.select(eventApplication.count())
+        Long total = jpaQueryFactory.select(eventApplication.countDistinct())
                 .from(eventApplication)
                 .where(eventApplication.event.id.eq(eventId)
                         .and(eventApplication.status.eq(EventApplicationStatus.PENDING)))
@@ -68,7 +68,7 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        Long total = jpaQueryFactory.select(eventApplication.count())
+        Long total = jpaQueryFactory.select(eventApplication.countDistinct())
                 .from(eventApplication)
                 .where(eventApplication.event.id.eq(eventId)
                         .and(eventApplication.status.eq(EventApplicationStatus.REJECTED)))

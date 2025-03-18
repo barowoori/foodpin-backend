@@ -20,10 +20,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static com.barowoori.foodpinbackend.category.command.domain.model.QCategory.category;
+import static com.barowoori.foodpinbackend.file.command.domain.model.QFile.file;
+import static com.barowoori.foodpinbackend.member.command.domain.model.QTruckLike.truckLike;
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruck.truck;
+import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckCategory.truckCategory;
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckDocument.truckDocument;
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckManager.truckManager;
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckMenu.truckMenu;
+import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckPhoto.truckPhoto;
+import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckRegion.truckRegion;
 
 public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
@@ -35,7 +41,7 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
     @Override
     public Truck getTruckWithPhotoById(String id) {
         QTruck truck = QTruck.truck;
-        QTruckPhoto photo = QTruckPhoto.truckPhoto;
+        QTruckPhoto photo = truckPhoto;
         QFile file = QFile.file;
         return jpaQueryFactory.selectFrom(truck)
                 .where(truck.id.eq(id))
@@ -46,23 +52,14 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
 
     @Override
     public Page<Truck> findTruckListByFilter(String searchTerm, List<String> categoryCodes, Map<RegionType, List<String>> regionIds, Pageable pageable) {
-        QTruck truck = QTruck.truck;
-        QTruckRegion truckRegion = QTruckRegion.truckRegion;
-        QTruckCategory truckCategory = QTruckCategory.truckCategory;
-        QCategory category = QCategory.category;
-        QTruckMenu truckMenu = QTruckMenu.truckMenu;
-        QTruckDocument truckDocument = QTruckDocument.truckDocument;
-        QTruckPhoto photo = QTruckPhoto.truckPhoto;
-        QFile file = QFile.file;
-
         List<Truck> trucks = jpaQueryFactory.selectFrom(truck)
                 .leftJoin(truckRegion).on(truckRegion.truck.eq(truck))
                 .leftJoin(truckCategory).on(truckCategory.truck.eq(truck))
                 .leftJoin(truckCategory.category, category)
                 .leftJoin(truckMenu).on(truckMenu.truck.eq(truck))
-                .leftJoin(truck.photos, photo).fetchJoin()
+                .leftJoin(truck.photos, truckPhoto).fetchJoin()
                 .leftJoin
-                        (photo.file, file)
+                        (truckPhoto.file, file)
                 .where(
                         truck.isDeleted.isFalse()
                                 .and(
@@ -79,7 +76,7 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
                 .fetch();
 
 
-        Long total = jpaQueryFactory.select(truck.count()).from(truck)
+        Long total = jpaQueryFactory.select(truck.countDistinct()).from(truck)
                 .leftJoin(truckRegion).on(truckRegion.truck.eq(truck))
                 .leftJoin(truckCategory).on(truckCategory.truck.eq(truck))
                 .leftJoin(truckCategory.category, category)
@@ -101,24 +98,14 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
 
     @Override
     public Page<Truck> findLikeTruckListByFilter(String memberId, String searchTerm, List<String> categoryCodes, Map<RegionType, List<String>> regionIds, Pageable pageable) {
-        QTruck truck = QTruck.truck;
-        QTruckRegion truckRegion = QTruckRegion.truckRegion;
-        QTruckCategory truckCategory = QTruckCategory.truckCategory;
-        QCategory category = QCategory.category;
-        QTruckMenu truckMenu = QTruckMenu.truckMenu;
-        QTruckDocument truckDocument = QTruckDocument.truckDocument;
-        QTruckPhoto photo = QTruckPhoto.truckPhoto;
-        QFile file = QFile.file;
-        QTruckLike truckLike = QTruckLike.truckLike;
-
         List<Truck> trucks = jpaQueryFactory.selectFrom(truck)
                 .innerJoin(truckLike).on(truckLike.truck.eq(truck).and(truckLike.member.id.eq(memberId)))
                 .leftJoin(truckRegion).on(truckRegion.truck.eq(truck))
                 .leftJoin(truckCategory).on(truckCategory.truck.eq(truck))
                 .leftJoin(truckCategory.category, category)
                 .leftJoin(truckMenu).on(truckMenu.truck.eq(truck))
-                .leftJoin(truck.photos, photo).fetchJoin()
-                .leftJoin(photo.file, file)
+                .leftJoin(truck.photos, truckPhoto).fetchJoin()
+                .leftJoin(truckPhoto.file, file)
                 .where(
                         truck.isDeleted.isFalse()
                                 .and(
@@ -135,7 +122,7 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
                 .fetch();
 
 
-        Long total = jpaQueryFactory.select(truck.count()).from(truck)
+        Long total = jpaQueryFactory.select(truck.countDistinct()).from(truck)
                 .innerJoin(truckLike).on(truckLike.truck.eq(truck).and(truckLike.member.id.eq(memberId)))
                 .leftJoin(truckRegion).on(truckRegion.truck.eq(truck))
                 .leftJoin(truckCategory).on(truckCategory.truck.eq(truck))
@@ -211,7 +198,7 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        Long total =  jpaQueryFactory.select(truck.count()).from(truck)
+        Long total =  jpaQueryFactory.select(truck.countDistinct()).from(truck)
                 .innerJoin(truckManager).on(truckManager.truck.eq(truck).and(truckManager.member.id.eq(memberId)))
                 .leftJoin(truck.menus, truckMenu)
                 .leftJoin(truck.documents, truckDocument)

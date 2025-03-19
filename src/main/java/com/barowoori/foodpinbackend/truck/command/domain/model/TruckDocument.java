@@ -8,6 +8,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "truck_documents")
@@ -41,6 +43,9 @@ public class TruckDocument {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trucks_id")
     private Truck truck;
+
+    @OneToMany(mappedBy = "truckDocument")
+    private List<TruckDocumentPhoto> photos = new ArrayList<>();
 
     protected TruckDocument() {
     }

@@ -27,6 +27,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.NotEmpty;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -150,8 +151,8 @@ public class EventController {
     })
     @PutMapping(value = "/v1/{eventId}/recruit")
     public ResponseEntity<CommonResponse<String>> updateEventRecruit(@Valid @PathVariable("eventId") String eventId,
-                                                                     @RequestBody RequestEvent.UpdateEventRecruitDto updateEventRecruitDto) {
-        eventService.updateEventRecruit(eventId, updateEventRecruitDto);
+                                                                     @RequestBody RequestEvent.EventRecruitDto eventRecruitDto) {
+        eventService.updateEventRecruit(eventId, eventRecruitDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Event recruit info updated successfully.")
                 .build();

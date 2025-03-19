@@ -3,6 +3,9 @@ package com.barowoori.foodpinbackend.truck.command.application.service;
 import com.barowoori.foodpinbackend.category.command.domain.model.Category;
 import com.barowoori.foodpinbackend.category.command.domain.repository.CategoryRepository;
 import com.barowoori.foodpinbackend.common.exception.CustomException;
+import com.barowoori.foodpinbackend.document.command.domain.model.BusinessRegistration;
+import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
+import com.barowoori.foodpinbackend.document.command.domain.repository.BusinessRegistrationRepository;
 import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepository;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
@@ -43,6 +46,8 @@ public class TruckService {
     private final FileRepository fileRepository;
     private final RegionDoRepository regionDoRepository;
     private final ImageManager imageManager;
+    private final TruckDocumentPhotoRepository truckDocumentPhotoRepository;
+    private final BusinessRegistrationRepository businessRegistrationRepository;
 
     private String getMemberId() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
@@ -69,19 +74,26 @@ public class TruckService {
         }
 
         // 트럭 지역 생성
-        createTruckDto.getTruckRegionDtoSet().forEach(truckRegionDto -> {
-            RegionInfo regionInfo = regionDoRepository.findByCode(truckRegionDto.getRegionCode());
-            TruckRegion truckRegion = truckRegionDto.toEntity(truck, regionInfo);
+        createTruckDto.getTruckRegionCodeSet().forEach( truckRegionCode -> {
+            RegionInfo regionInfo = regionDoRepository.findByCode(truckRegionCode);
+            TruckRegion truckRegion = TruckRegion.builder()
+                    .regionType(regionInfo.getRegionType())
+                    .regionId(regionInfo.getRegionId())
+                    .truck(truck)
+                    .build();
             truckRegionRepository.save(truckRegion);
         });
 
         // 트럭 카테고리 생성
-        createTruckDto.getTruckCategoryDtoSet().forEach(truckCategoryDto -> {
-            Category category = categoryRepository.findByCode(truckCategoryDto.getCategoryCode());
+        createTruckDto.getTruckCategoryCodeSet().forEach(truckCategoryCode -> {
+            Category category = categoryRepository.findByCode(truckCategoryCode);
             if (category == null) {
                 throw new CustomException(TruckErrorCode.CATEGORY_NOT_FOUND);
             }
-            TruckCategory truckCategory = truckCategoryDto.toEntity(truck, category);
+            TruckCategory truckCategory = TruckCategory.builder()
+                    .truck(truck)
+                    .category(category)
+                    .build();
             truckCategoryRepository.save(truckCategory);
         });
 
@@ -100,21 +112,14 @@ public class TruckService {
             }
         }
 
-        //TODO 트럭 문서 생성 및 사진 저장 검토 필요해보입니다(기획서, 디자인안 참고)
-        // 사업자등록증은 사진이 없고, 그 외 서류들은 사진만 있는 것이 맞는 지, 맞다면 현 구조 그대로 유지해도 괜찮은 지가 궁금합니다
-        // 그리고 현재 상태 TruckDocument에 사진을 어떻게 저장해야 할 지, documentId는 어떤 것인지 잘 모르겠습니다..
-        // 일단 지금 코드 구조 이해를 잘 못 하고 있는 것 같아서 바로 밑에 서비스 로직 완성이나 서류 변경/등록 api 생성은 보류했습니다
         if (!Objects.equals(createTruckDto.getTruckDocumentDtoSet(), null) && !createTruckDto.getTruckDocumentDtoSet().isEmpty()) {
             for (RequestTruck.TruckDocumentDto truckDocumentDto : createTruckDto.getTruckDocumentDtoSet()) {
-                TruckDocument truckDocument = truckDocumentDto.toEntity(memberId, truck);
-                truckDocumentRepository.save(truckDocument);
-                if (!Objects.equals(truckDocumentDto.getFileIdList(), null) && !truckDocumentDto.getFileIdList().isEmpty()) {
-                    for (String fileId : truckDocumentDto.getFileIdList()) {
-                        File file = fileRepository.findById(fileId)
-                                .orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_DOCUMENT_PHOTO_NOT_FOUND));
-                        //저장할 곳이 없음
-                    }
-                }
+                if (truckDocumentDto.getType().equals(DocumentType.BUSINESS_REGISTRATION) && !Objects.equals(truckDocumentDto.getCreateBusinessRegistrationDto(), null)){
+                    BusinessRegistration businessRegistration = truckDocumentDto.getCreateBusinessRegistrationDto().toEntity(memberId);
+                    businessRegistration = businessRegistrationRepository.save(businessRegistration);
+                    TruckDocument truckDocument = truckDocumentDto.toEntity(memberId, businessRegistration.getId(), truck);
+                    truckDocumentRepository.save(truckDocument);
+                } else throw new CustomException(TruckErrorCode.BUSINESS_INFO_MISSED);
             }
         }
 
@@ -156,7 +161,6 @@ public class TruckService {
         truck.update(updateTruckInfoDto.getName(), memberId, updateTruckInfoDto.getDescription(), truck.getElectricityUsage(), truck.getGasUsage(), truck.getSelfGenerationAvailability());
         truckRepository.save(truck);
 
-        // truckPhoto id가 아닌 file id로 수정 돌아감
         List<TruckPhoto> photoList = truckPhotoRepository.findByTruckOrderByCreateAt(truck);
         photoList.forEach(truckPhotoRepository::delete);
         for (String fileId : updateTruckInfoDto.getFileIdList()) {
@@ -176,8 +180,8 @@ public class TruckService {
 
         List<TruckRegion> truckRegionList = truckRegionRepository.findAllByTruck(truck);
         truckRegionList.forEach(truckRegionRepository::delete);
-        updateTruckOperationDto.getTruckRegionDtoSet().forEach(truckRegionDto -> {
-            RegionInfo regionInfo = regionDoRepository.findByCode(truckRegionDto.getRegionCode());
+        updateTruckOperationDto.getTruckRegionCodeSet().forEach(truckRegionCode -> {
+            RegionInfo regionInfo = regionDoRepository.findByCode(truckRegionCode);
             TruckRegion truckRegion = TruckRegion.builder()
                     .truck(truck)
                     .regionType(regionInfo.getRegionType())
@@ -194,12 +198,15 @@ public class TruckService {
 
         List<TruckCategory> truckCategoryList = truckCategoryRepository.findAllByTruck(truck);
         truckCategoryList.forEach(truckCategoryRepository::delete);
-        updateTruckMenuDto.getTruckCategoryDtoSet().forEach(truckCategoryDto -> {
-            Category category = categoryRepository.findByCode(truckCategoryDto.getCategoryCode());
+        updateTruckMenuDto.getTruckCategoryCodeSet().forEach(truckCategoryCode -> {
+            Category category = categoryRepository.findByCode(truckCategoryCode);
             if (category == null) {
                 throw new CustomException(TruckErrorCode.CATEGORY_NOT_FOUND);
             }
-            TruckCategory truckCategory = truckCategoryDto.toEntity(truck, category);
+            TruckCategory truckCategory = TruckCategory.builder()
+                    .truck(truck)
+                    .category(category)
+                    .build();
             truckCategoryRepository.save(truckCategory);
         });
 
@@ -225,9 +232,58 @@ public class TruckService {
         }
     }
 
-    //TODO 트럭 문서 쪽(생성) 정리되는대로 바로 생성
-//    @Transactional
-//    public void setTruckDocument()
+    @Transactional
+    public void setTruckDocument(String truckId, RequestTruck.TruckDocumentDto truckDocumentDto){
+        String memberId = getMemberId();
+        Truck truck = getTruck(truckId);
+
+        if (truckDocumentDto.getType().equals(DocumentType.BUSINESS_REGISTRATION)){
+            if (!Objects.equals(truckDocumentDto.getCreateBusinessRegistrationDto(), null)) {
+
+                TruckDocument originalTruckDocument = truckDocumentRepository.findByTruckIdAndType(truckId, truckDocumentDto.getType());
+                if (originalTruckDocument == null) {
+                    BusinessRegistration businessRegistration = truckDocumentDto.getCreateBusinessRegistrationDto().toEntity(memberId);
+                    businessRegistration = businessRegistrationRepository.save(businessRegistration);
+                    TruckDocument truckDocument = truckDocumentDto.toEntity(memberId, businessRegistration.getId(), truck);
+                    truckDocumentRepository.save(truckDocument);
+                } else {
+                    BusinessRegistration businessRegistration = truckDocumentRepository.getBusinessRegistrationDocumentByTruckId(truckId);
+                    businessRegistration.update(memberId, truckDocumentDto.getCreateBusinessRegistrationDto().getBusinessNumber(), truckDocumentDto.getCreateBusinessRegistrationDto().getBusinessName(),
+                            truckDocumentDto.getCreateBusinessRegistrationDto().getRepresentativeName(), truckDocumentDto.getCreateBusinessRegistrationDto().getOpeningDate());
+                    businessRegistrationRepository.save(businessRegistration);
+                    originalTruckDocument.update(LocalDateTime.now(), memberId, truckDocumentDto.getApproval());
+                    truckDocumentRepository.save(originalTruckDocument);
+                }
+            }  else throw new CustomException(TruckErrorCode.BUSINESS_INFO_MISSED);
+        } else if (!Objects.equals(truckDocumentDto.getFileIdList(), null) && !truckDocumentDto.getFileIdList().isEmpty()) {
+
+            TruckDocument originalTruckDocument = truckDocumentRepository.findByTruckIdAndType(truckId, truckDocumentDto.getType());
+            if (originalTruckDocument == null) {
+                TruckDocument truckDocument = truckDocumentDto.toEntity(memberId, truck);
+                truckDocumentRepository.save(truckDocument);
+
+                for (String fileId : truckDocumentDto.getFileIdList()) {
+                    File file = fileRepository.findById(fileId)
+                            .orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_DOCUMENT_PHOTO_NOT_FOUND));
+                    TruckDocumentPhoto truckDocumentPhoto = TruckDocumentPhoto.builder().file(file).updatedBy(memberId).truckDocument(truckDocument).build();
+                    truckDocumentPhotoRepository.save(truckDocumentPhoto);
+                }
+            } else {
+                List<TruckDocumentPhoto> truckDocumentPhotoList = truckDocumentPhotoRepository.findByTruckDocumentId(originalTruckDocument.getId());
+                truckDocumentPhotoList.forEach(truckDocumentPhotoRepository::delete);
+
+                for (String fileId : truckDocumentDto.getFileIdList()) {
+                    File file = fileRepository.findById(fileId)
+                            .orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_DOCUMENT_PHOTO_NOT_FOUND));
+                    TruckDocumentPhoto truckDocumentPhoto = TruckDocumentPhoto.builder().file(file).updatedBy(memberId).truckDocument(originalTruckDocument).build();
+                    truckDocumentPhotoRepository.save(truckDocumentPhoto);
+                }
+                originalTruckDocument.update(LocalDateTime.now(), memberId, truckDocumentDto.getApproval());
+                truckDocumentRepository.save(originalTruckDocument);
+            }
+        }
+        else throw new CustomException(TruckErrorCode.DOCUMENT_PHOTO_MISSED);
+    }
 
     @Transactional
     public void changeOwner(String managerId, String truckId) {

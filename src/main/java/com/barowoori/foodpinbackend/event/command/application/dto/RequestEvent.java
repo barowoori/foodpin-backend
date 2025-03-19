@@ -31,7 +31,7 @@ public class RequestEvent {
         private List<EventDateDto> eventDateDtoList;
         @NotEmpty
         private List<EventCategoryDto> eventCategoryDtoList;
-        @NotEmpty
+        @Schema(description = "제출 서류 종류 리스트, 만약 없음이면 null로 보내주시면 됩니다.")
         private List<EventDocumentDto> eventDocumentDtoList;
     }
 

@@ -1,8 +1,7 @@
 package com.barowoori.foodpinbackend.truck.command.application.dto;
 
-import com.barowoori.foodpinbackend.category.command.domain.model.Category;
+import com.barowoori.foodpinbackend.document.command.application.dto.RequestDocument;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
-import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionInfo;
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -17,12 +16,15 @@ public class RequestTruck {
     @Builder
     @Data
     public static class CreateTruckDto{
+        @Schema(description = "트럭 기본 정보")
         @NotEmpty
         private TruckInfoDto truckInfoDto;
+        @Schema(description = "트럭 지역 코드 Set")
         @NotEmpty
-        private Set<TruckRegionDto> truckRegionDtoSet;
+        private Set<String> truckRegionCodeSet;
+        @Schema(description = "트럭 카테고리 코드 Set")
         @NotEmpty
-        private Set<TruckCategoryDto> truckCategoryDtoSet;
+        private Set<String> truckCategoryCodeSet;
         @NotEmpty
         private List<TruckMenuDto> truckMenuDtoList;
         private Set<TruckDocumentDto> truckDocumentDtoSet;
@@ -64,35 +66,6 @@ public class RequestTruck {
     }
 
     @Getter
-    public static class TruckRegionDto{
-        @Schema(description = "지역코드")
-        @NotEmpty
-        private String regionCode;
-
-        public TruckRegion toEntity(Truck truck, RegionInfo regionInfo) {
-            return TruckRegion.builder()
-                    .regionType(regionInfo.getRegionType())
-                    .regionId(regionInfo.getRegionId())
-                    .truck(truck)
-                    .build();
-        }
-    }
-
-    @Getter
-    public static class TruckCategoryDto{
-        @Schema(description = "트럭 카테고리 코드")
-        @NotEmpty
-        private String categoryCode;
-
-        public TruckCategory toEntity(Truck truck, Category category){
-            return TruckCategory.builder()
-                    .truck(truck)
-                    .category(category)
-                    .build();
-        }
-    }
-
-    @Getter
     public static class TruckMenuDto{
         @Schema(description = "메뉴 이름")
         @NotEmpty
@@ -120,17 +93,28 @@ public class RequestTruck {
         @Schema(description = "트럭 서류 타입")
         @NotEmpty
         private DocumentType type;
+        @Schema(description = "사업자 정보 dto, 사업자 등록증인 경우에만 보내주면 됩니다.")
+        private RequestDocument.CreateBusinessRegistrationDto createBusinessRegistrationDto;
         @Schema(description = "트럭 서류 검증 여부")
         @NotEmpty
         private Boolean approval;
         @Schema(description = "트럭 서류 사진 파일 id 리스트")
         private List<String> fileIdList;
 
-        public TruckDocument toEntity(String updatedBy, Truck truck){
+        public TruckDocument toEntity(String updatedBy, String documentId, Truck truck){
             return TruckDocument.builder()
                     .updatedBy(updatedBy)
                     .type(this.type)
-                    .documentId("documentId")
+                    .documentId(documentId)
+                    .approval(this.approval)
+                    .truck(truck)
+                    .build();
+        }
+
+        public TruckDocument toEntity(String updatedBy, Truck truck) {
+            return TruckDocument.builder()
+                    .updatedBy(updatedBy)
+                    .type(this.type)
                     .approval(this.approval)
                     .truck(truck)
                     .build();
@@ -138,6 +122,7 @@ public class RequestTruck {
     }
 
     @Getter
+    @Data
     public static class UpdateTruckInfoDto{
         @Schema(description = "트럭 이름")
         @NotEmpty
@@ -161,21 +146,18 @@ public class RequestTruck {
         @Schema(description = "자가 발전 가능 여부")
         @NotEmpty
         private Boolean selfGenerationAvailability;
+        @Schema(description = "트럭 지역 코드 Set")
         @NotEmpty
-        private Set<TruckRegionDto> truckRegionDtoSet;
+        private Set<String> truckRegionCodeSet;
     }
 
     @Getter
     public static class UpdateTruckMenuDto{
+        @Schema(description = "트럭 카테고리 코드 Set")
         @NotEmpty
-        private Set<TruckCategoryDto> truckCategoryDtoSet;
+        private Set<String> truckCategoryCodeSet;
         @NotEmpty
         private List<TruckMenuDto> truckMenuDtoList;
     }
-
-//    @Getter
-//    public static class SetTruckDocumentDto{
-//        @NotEmpty
-//        private List<TruckDocumentDto> truckDocumentDtoList;
-//    }
 }
+

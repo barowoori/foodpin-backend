@@ -4,6 +4,7 @@ import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "truck_document_photos")
 @Getter
+@NoArgsConstructor
 public class TruckDocumentPhoto {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

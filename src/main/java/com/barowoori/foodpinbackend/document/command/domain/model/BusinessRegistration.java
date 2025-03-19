@@ -39,6 +39,7 @@ public class BusinessRegistration {
 
     @Builder
     public BusinessRegistration(String updatedBy, String businessNumber, String businessName, String representativeName, LocalDate openingDate) {
+        this.updatedBy = updatedBy;
         this.businessNumber = businessNumber;
         this.businessName = businessName;
         this.representativeName = representativeName;
@@ -46,6 +47,7 @@ public class BusinessRegistration {
     }
 
     public void update(String updatedBy, String businessNumber, String businessName, String representativeName, LocalDate openingDate){
+        this.updatedBy = updatedBy;
         this.businessNumber = businessNumber;
         this.businessName = businessName;
         this.representativeName = representativeName;

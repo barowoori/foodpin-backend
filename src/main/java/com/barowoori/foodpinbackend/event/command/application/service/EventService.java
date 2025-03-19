@@ -103,10 +103,12 @@ public class EventService {
             eventCategoryRepository.save(eventCategory);
         });
 
-        createEventDto.getEventDocumentDtoList().forEach(eventDocumentDto -> {
-            EventDocument eventDocument = eventDocumentDto.toEntity(event);
-            eventDocumentRepository.save(eventDocument);
-        });
+        if (!Objects.equals(createEventDto.getEventDocumentDtoList(),null) && !createEventDto.getEventDocumentDtoList().isEmpty()) {
+            createEventDto.getEventDocumentDtoList().forEach(eventDocumentDto -> {
+                EventDocument eventDocument = eventDocumentDto.toEntity(event);
+                eventDocumentRepository.save(eventDocument);
+            });
+        }
 
         eventRepository.save(event);
     }

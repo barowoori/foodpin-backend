@@ -59,4 +59,10 @@ public class TruckDocument {
         this.approval = approval;
         this.truck = truck;
     }
+
+    public void update(LocalDateTime updatedAt, String updatedBy, Boolean approval) {
+        this.updatedAt = updatedAt;
+        this.updatedBy = updatedBy;
+        this.approval = approval;
+    }
 }

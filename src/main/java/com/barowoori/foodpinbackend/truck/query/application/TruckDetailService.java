@@ -57,6 +57,6 @@ public class TruckDetailService {
         List<RegionCode> regionNames = truckRegionFullNameGenerator.findRegionCodesByTruckId(truckId);
         List<Category> categories = truckCategoryRepository.findCategoriesByTruckId(truckId);
         truck.addViews();
-        return TruckDetail.of(truckManager, truck, documentManager.getTypes(), regionNames, categories, truckMenus, truckLike != null, imageManager);
+        return TruckDetail.of(truckManager, truck, documentManager, regionNames, categories, truckMenus, truckLike != null, imageManager);
     }
 }

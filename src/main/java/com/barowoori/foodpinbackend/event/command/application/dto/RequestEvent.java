@@ -23,16 +23,18 @@ public class RequestEvent {
     public static class CreateEventDto{
         @NotEmpty
         private EventInfoDto eventInfoDto;
+        @Schema(description = "행사 지역 코드", example = "GU85")
         @NotEmpty
-        private EventRegionDto eventRegionDto;
+        private String regionCode;
         @NotEmpty
         private EventRecruitDto eventRecruitDto;
         @NotEmpty
         private List<EventDateDto> eventDateDtoList;
         @NotEmpty
-        private List<EventCategoryDto> eventCategoryDtoList;
-        @Schema(description = "제출 서류 종류 리스트, 만약 없음이면 null로 보내주시면 됩니다.")
-        private List<EventDocumentDto> eventDocumentDtoList;
+        @Schema(description = "카테고리 코드 리스트")
+        private List<String> eventCategoryCodeList;
+        @Schema(description = "제출 서류 종류 리스트, 만약 없음이면 null")
+        private List<DocumentType> eventDocumentTypeList;
     }
 
     @Getter
@@ -64,21 +66,6 @@ public class RequestEvent {
                     .documentSubmissionTarget(this.documentSubmissionTarget)
                     .submissionEmail(this.submissionEmail)
                     .status(EventStatus.IN_PROGRESS)
-                    .build();
-        }
-    }
-
-    @Getter
-    public static class EventRegionDto{
-        @Schema(description = "행사 지역 코드", example = "GU85")
-        @NotEmpty
-        private String regionCode;
-
-        public EventRegion toEntity(Event event, RegionInfo regionInfo){
-            return EventRegion.builder()
-                    .regionType(regionInfo.getRegionType())
-                    .regionId(regionInfo.getRegionId())
-                    .event(event)
                     .build();
         }
     }
@@ -135,37 +122,6 @@ public class RequestEvent {
         }
     }
 
-    //TODO EventCategoryDto, EventDocumentDto 유지 여부 의문
-    // 어차피 컬럼 하나씩만 받는데 dto를 쓰는 게 맞는 지 모르겠습니다
-    // 각 dto마다 toEntity 따로 사용 가능하고 리스트가 아닌 컬럼에다 example을 적어줄 수 있다는 장점이 있긴 한데 이게 과연 프론트한테도 괜찮은 구조일지 잘 모르겠습니다
-    @Getter
-    public static class EventCategoryDto{
-        @Schema(description = "카테고리 코드", example = "C01")
-        @NotEmpty
-        private String categoryCode;
-
-        public EventCategory toEntity(Event event, Category category){
-            return EventCategory.builder()
-                    .event(event)
-                    .category(category)
-                    .build();
-        }
-    }
-
-    @Getter
-    public static class EventDocumentDto{
-        @Schema(description = "서류 종류")
-        @NotEmpty
-        private DocumentType type;
-
-        public EventDocument toEntity(Event event){
-            return EventDocument.builder()
-                    .event(event)
-                    .type(this.type)
-                    .build();
-        }
-    }
-
     @Getter
     public static class UpdateEventInfoDto{
         @Schema(description = "행사 이름")
@@ -175,20 +131,16 @@ public class RequestEvent {
         private List<String> fileIdList;
         @NotEmpty
         private List<EventDateDto> eventDateDtoList;
+        @Schema(description = "행사 지역 코드", example = "GU85")
         @NotEmpty
-        private EventRegionDto eventRegionDto;
-    }
-
-    @Getter
-    public static class UpdateEventRecruitDto{
-        @NotEmpty
-        EventRecruitDto eventRecruitDto;
+        private String regionCode;
     }
 
     @Getter
     public static class UpdateEventDetailDto{
         @NotEmpty
-        private List<EventCategoryDto> eventCategoryDtoList;
+        @Schema(description = "카테고리 코드 리스트")
+        private List<String> eventCategoryCodeList;
         @Schema(description = "행사 상세 정보")
         @NotEmpty
         private String description;
@@ -199,8 +151,8 @@ public class RequestEvent {
 
     @Getter
     public static class UpdateEventDocumentDto{
-        @NotEmpty
-        private List<EventDocumentDto> eventDocumentDtoList;
+        @Schema(description = "제출 서류 종류 리스트, 만약 없음이면 null")
+        private List<DocumentType> eventDocumentTypeList;
         @Schema(description = "서류 제출 이메일")
         @NotEmpty
         private String submissionEmail;

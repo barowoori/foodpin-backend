@@ -93,7 +93,7 @@ public class RequestTruck {
         @Schema(description = "트럭 서류 타입")
         @NotEmpty
         private DocumentType type;
-        @Schema(description = "사업자 정보 dto, 사업자 등록증인 경우에만 보내주면 됩니다.")
+        @Schema(description = "사업자 정보 dto, 사업자 등록증인 경우 필수")
         private RequestDocument.CreateBusinessRegistrationDto createBusinessRegistrationDto;
         @Schema(description = "트럭 서류 검증 여부")
         @NotEmpty

@@ -219,7 +219,8 @@ public class TruckController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
-    @Operation(summary = "트럭 서류 수정/신규 등록", description = "요청으로 보낸 서류 타입이 기존에 존재하면 수정, 없으면 신규 등록")
+    @Operation(summary = "트럭 서류 수정/신규 등록", description = "요청으로 보낸 서류 타입이 기존에 존재하면 수정, 없으면 신규 등록" +
+            "\n\n사업자 등록증의 경우 사업자 정보 createBusinessRegistrationDto를, 그 외 서류의 경우 사진 파일 id 리스트를 같이 보내야 함")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "400", description = "사업자 등록 정보가 누락됐을 경우[30008]" +

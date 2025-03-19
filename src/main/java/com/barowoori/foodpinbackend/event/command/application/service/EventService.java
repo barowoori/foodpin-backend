@@ -79,10 +79,10 @@ public class EventService {
         eventViewRepository.save(eventView);
         event.initEventView(eventView);
 
-        RegionInfo regionInfo = regionDoRepository.findByCode(createEventDto.getEventRegionDto().getRegionCode());
+        RegionInfo regionInfo = regionDoRepository.findByCode(createEventDto.getRegionCode());
         if (regionInfo == null)
             throw new CustomException(EventErrorCode.EVENT_REGION_NOT_FOUND);
-        EventRegion eventRegion = createEventDto.getEventRegionDto().toEntity(event, regionInfo);
+        EventRegion eventRegion = EventRegion.builder().regionType(regionInfo.getRegionType()).regionId(regionInfo.getRegionId()).event(event).build();
         eventRegionRepository.save(eventRegion);
         event.initEventRegion(eventRegion);
 
@@ -95,17 +95,17 @@ public class EventService {
             eventDateRepository.save(eventDate);
         });
 
-        createEventDto.getEventCategoryDtoList().forEach(eventCategoryDto -> {
-            Category category = categoryRepository.findByCode(eventCategoryDto.getCategoryCode());
+        createEventDto.getEventCategoryCodeList().forEach(eventCategoryCode -> {
+            Category category = categoryRepository.findByCode(eventCategoryCode);
             if (category == null)
                 throw new CustomException(EventErrorCode.EVENT_CATEGORY_NOT_FOUND);
-            EventCategory eventCategory = eventCategoryDto.toEntity(event, category);
+            EventCategory eventCategory = EventCategory.builder().event(event).category(category).build();
             eventCategoryRepository.save(eventCategory);
         });
 
-        if (!Objects.equals(createEventDto.getEventDocumentDtoList(),null) && !createEventDto.getEventDocumentDtoList().isEmpty()) {
-            createEventDto.getEventDocumentDtoList().forEach(eventDocumentDto -> {
-                EventDocument eventDocument = eventDocumentDto.toEntity(event);
+        if (!Objects.equals(createEventDto.getEventDocumentTypeList(),null) && !createEventDto.getEventDocumentTypeList().isEmpty()) {
+            createEventDto.getEventDocumentTypeList().forEach( documentType -> {
+                EventDocument eventDocument = EventDocument.builder().event(event).type(documentType).build();
                 eventDocumentRepository.save(eventDocument);
             });
         }
@@ -140,7 +140,7 @@ public class EventService {
 
         event.initEventRegion(null);
         EventRegion eventRegion = eventRegionRepository.findByEvent(event);
-        RegionInfo regionInfo = regionDoRepository.findByCode(updateEventInfoDto.getEventRegionDto().getRegionCode());
+        RegionInfo regionInfo = regionDoRepository.findByCode(updateEventInfoDto.getRegionCode());
         if (regionInfo == null)
             throw new CustomException(EventErrorCode.EVENT_REGION_NOT_FOUND);
         eventRegion.updateRegion(regionInfo.getRegionType(), regionInfo.getRegionId());
@@ -151,14 +151,14 @@ public class EventService {
     }
 
     @Transactional
-    public void updateEventRecruit(String eventId, RequestEvent.UpdateEventRecruitDto updateEventRecruitDto){
+    public void updateEventRecruit(String eventId, RequestEvent.EventRecruitDto eventRecruitDto){
         Event event = getEvent(eventId);
 
         EventRecruitDetail eventRecruitDetail = eventRecruitDetailRepository.findByEvent(event);
         if (eventRecruitDetail == null)
             throw new CustomException(EventErrorCode.EVENT_RECRUIT_DETAIL_NOT_FOUND);
         eventRecruitDetailRepository.delete(eventRecruitDetail);
-        EventRecruitDetail updatedEventRecruitDetail = updateEventRecruitDto.getEventRecruitDto().toEntity(event);
+        EventRecruitDetail updatedEventRecruitDetail = eventRecruitDto.toEntity(event);
         eventRecruitDetailRepository.save(updatedEventRecruitDetail);
         event.initEventRecruitDetail(updatedEventRecruitDetail);
 
@@ -171,11 +171,11 @@ public class EventService {
 
         List<EventCategory> eventCategoryList = eventCategoryRepository.findAllByEvent(event);
         eventCategoryList.forEach(eventCategoryRepository::delete);
-        updateEventDetailDto.getEventCategoryDtoList().forEach(eventCategoryDto -> {
-            Category category = categoryRepository.findByCode(eventCategoryDto.getCategoryCode());
+        updateEventDetailDto.getEventCategoryCodeList().forEach(eventCategoryCode -> {
+            Category category = categoryRepository.findByCode(eventCategoryCode);
             if (category == null)
                 throw new CustomException(EventErrorCode.EVENT_CATEGORY_NOT_FOUND);
-            EventCategory eventCategory = eventCategoryDto.toEntity(event, category);
+            EventCategory eventCategory = EventCategory.builder().event(event).category(category).build();
             eventCategoryRepository.save(eventCategory);
         });
         event.updateDescription(updateEventDetailDto.getDescription());
@@ -190,8 +190,8 @@ public class EventService {
         List<EventDocument> eventDocumentList = eventDocumentRepository.findByEventId(eventId);
         if (eventDocumentList != null)
             eventDocumentList.forEach(eventDocumentRepository::delete);
-        updateEventDocumentDto.getEventDocumentDtoList().forEach(eventDocumentDto -> {
-            EventDocument eventDocument = eventDocumentDto.toEntity(event);
+        updateEventDocumentDto.getEventDocumentTypeList().forEach(documentType -> {
+            EventDocument eventDocument = EventDocument.builder().event(event).type(documentType).build();
             eventDocumentRepository.save(eventDocument);
         });
         event.updateSubmissionEmail(updateEventDocumentDto.getSubmissionEmail());

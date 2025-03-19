@@ -8,6 +8,7 @@ import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Getter
@@ -17,17 +18,19 @@ public class TruckDetail {
     private Boolean isAvailableDelete;
     private TruckInfo truck;
     private List<DocumentType> documents;
+    private List<TruckDocumentInfo> documentInfos;
     private List<RegionCode> regions;
     private List<CategoryInfo> categories;
     private List<MenuInfo> menus;
     private Boolean isLike;
 
-    public static TruckDetail of(TruckManager truckManager, Truck truck, List<DocumentType> documents, List<RegionCode> regions, List<Category> categories, List<TruckMenu> truckMenus, Boolean isLike, ImageManager imageManager) {
+    public static TruckDetail of(TruckManager truckManager, Truck truck, TruckDocumentManager truckDocumentManager, List<RegionCode> regions, List<Category> categories, List<TruckMenu> truckMenus, Boolean isLike, ImageManager imageManager) {
         return TruckDetail.builder()
                 .isAvailableUpdate(checkAvailableUpdate(truckManager))
                 .isAvailableDelete(checkAvailableDelete(truckManager))
                 .truck(TruckInfo.of(truck, imageManager))
-                .documents(documents)
+                .documents(truckDocumentManager.getTypes())
+                .documentInfos(truckDocumentManager.getDocuments().stream().map(TruckDocumentInfo::of).toList())
                 .regions(regions)
                 .categories(categories.stream().map(CategoryInfo::of).toList())
                 .menus(truckMenus.stream().map(truckMenu -> MenuInfo.of(truckMenu, imageManager)).toList())
@@ -137,4 +140,17 @@ public class TruckDetail {
         }
     }
 
+    @Getter
+    @Builder
+    public static class TruckDocumentInfo{
+        private DocumentType type;
+        private LocalDate date;
+
+        public static TruckDocumentInfo of(TruckDocument truckDocument){
+            return TruckDocumentInfo.builder()
+                    .type(truckDocument.getType())
+                    .date(truckDocument.getUpdatedAt().toLocalDate())
+                    .build();
+        }
+    }
 }

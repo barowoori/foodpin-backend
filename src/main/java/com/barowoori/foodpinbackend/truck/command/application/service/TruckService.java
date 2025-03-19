@@ -90,7 +90,7 @@ public class TruckService {
             TruckMenu truckMenu = truckMenuDto.toEntity(truck);
             truckMenuRepository.save(truckMenu);
             // 트럭 메뉴 사진 생성
-            if (!truckMenuDto.getFileIdList().isEmpty()) {
+            if (!Objects.equals(truckMenuDto.getFileIdList(), null) && !truckMenuDto.getFileIdList().isEmpty()) {
                 for (String fileId : truckMenuDto.getFileIdList()) {
                     File file = fileRepository.findById(fileId)
                             .orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_MENU_PHOTO_NOT_FOUND));
@@ -100,17 +100,19 @@ public class TruckService {
             }
         }
 
-        // 트럭 문서 생성 및 사진 저장
-        // 사진 한 장만 들어감, 클라이언트에서 여러 개 보내면 개수만큼 TruckDocument 엔티티가 만들어짐
-        // -> TruckDocument 생성자에서 path 제거 후, 여러 장 저장하려면 List<TruckDocumentPhoto> 생성 필요할 듯
+        //TODO 트럭 문서 생성 및 사진 저장 검토 필요해보입니다(기획서, 디자인안 참고)
+        // 사업자등록증은 사진이 없고, 그 외 서류들은 사진만 있는 것이 맞는 지, 맞다면 현 구조 그대로 유지해도 괜찮은 지가 궁금합니다
+        // 그리고 현재 상태 TruckDocument에 사진을 어떻게 저장해야 할 지, documentId는 어떤 것인지 잘 모르겠습니다..
+        // 일단 지금 코드 구조 이해를 잘 못 하고 있는 것 같아서 바로 밑에 서비스 로직 완성이나 서류 변경/등록 api 생성은 보류했습니다
         if (!Objects.equals(createTruckDto.getTruckDocumentDtoSet(), null) && !createTruckDto.getTruckDocumentDtoSet().isEmpty()) {
             for (RequestTruck.TruckDocumentDto truckDocumentDto : createTruckDto.getTruckDocumentDtoSet()) {
-                if (!truckDocumentDto.getFileIdList().isEmpty()) {
+                TruckDocument truckDocument = truckDocumentDto.toEntity(memberId, truck);
+                truckDocumentRepository.save(truckDocument);
+                if (!Objects.equals(truckDocumentDto.getFileIdList(), null) && !truckDocumentDto.getFileIdList().isEmpty()) {
                     for (String fileId : truckDocumentDto.getFileIdList()) {
                         File file = fileRepository.findById(fileId)
                                 .orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_DOCUMENT_PHOTO_NOT_FOUND));
-                        TruckDocument truckDocument = truckDocumentDto.toEntity(memberId, file.getPath(), truck);
-                        truckDocumentRepository.save(truckDocument);
+                        //저장할 곳이 없음
                     }
                 }
             }
@@ -212,7 +214,7 @@ public class TruckService {
             TruckMenu truckMenu = truckMenuDto.toEntity(truck);
             truckMenuRepository.save(truckMenu);
 
-            if (!truckMenuDto.getFileIdList().isEmpty()) {
+            if (!Objects.equals(truckMenuDto.getFileIdList(), null) && !truckMenuDto.getFileIdList().isEmpty()) {
                 for (String fileId : truckMenuDto.getFileIdList()) {
                     File file = fileRepository.findById(fileId)
                             .orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_MENU_PHOTO_NOT_FOUND));
@@ -222,6 +224,10 @@ public class TruckService {
             }
         }
     }
+
+    //TODO 트럭 문서 쪽(생성) 정리되는대로 바로 생성
+//    @Transactional
+//    public void setTruckDocument()
 
     @Transactional
     public void changeOwner(String managerId, String truckId) {

@@ -214,6 +214,27 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "행사 지원")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "이미 신청한 행사일 경우[40007]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "행사를 못 찾을 경우[40000]" +
+                    "트럭을 못 찾을 경우[30000], 행사 날짜를 못 찾을 경우[40006]" +
+                    "트럭 운영자가 아닐 경우[30004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping(value = "/v1/applications")
+    public ResponseEntity<CommonResponse<String>> applyEvent(@RequestBody RequestEvent.ApplyEventDto applyEventDto) {
+        eventService.applyEvent(applyEventDto);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Event applied successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
     @Operation(summary = "진행중인 공고 목록 조회", description = "status(상태) : ALL(전체), RECRUITING(모집중), SELECTING(선정중), IN_PROGRESS(진행중)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),

@@ -10,10 +10,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Arrays;
 import java.util.List;
 
+import static com.barowoori.foodpinbackend.event.command.domain.model.QEvent.event;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventApplication.eventApplication;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventApplicationDate.eventApplicationDate;
+import static com.barowoori.foodpinbackend.event.command.domain.model.QEventPhoto.eventPhoto;
 import static com.barowoori.foodpinbackend.file.command.domain.model.QFile.file;
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruck.truck;
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckDocument.truckDocument;
@@ -77,24 +80,41 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
         return new PageImpl<>(eventApplications, pageable, total);
     }
 
-//    public Page<EventApplication> findAppliedApplications(String status, String truckId, Pageable pageable){
-//        List<EventApplication> eventApplications = jpaQueryFactory.selectFrom(eventApplication)
-//                .innerJoin(eventApplication.truck, truck)
-//                .leftJoin(eventApplication.dates, eventApplicationDate)
-//                .where(truck.id.eq(truckId)
-//                        .and(eventApplication.status.eq(EventApplicationStatus.REJECTED)))
-//                .orderBy(eventApplication.createdAt.desc())
-//                .offset(pageable.getOffset())
-//                .limit(pageable.getPageSize())
-//                .fetch();
-//
-//        Long total =
-//    }
+    public Page<EventApplication> findAppliedApplications(String status, String truckId, Pageable pageable) {
+        List<EventApplication> eventApplications = jpaQueryFactory.selectFrom(eventApplication)
+                .innerJoin(eventApplication.truck, truck)
+                .leftJoin(eventApplication.dates, eventApplicationDate)
+                .innerJoin(eventApplication.event, event)
+                .leftJoin(event.photos, eventPhoto)
+                .leftJoin(eventPhoto.file, file)
+                .where(truck.id.eq(truckId)
+                        .and(createStatusBuilder(status)))
+                .orderBy(eventApplication.createdAt.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
 
-    private BooleanBuilder createStatusBuilder(String status){
+        Long total = jpaQueryFactory.select(eventApplication.countDistinct()).from(eventApplication)
+                .innerJoin(eventApplication.truck, truck)
+                .leftJoin(eventApplication.dates, eventApplicationDate)
+                .innerJoin(eventApplication.event, event)
+                .where(truck.id.eq(truckId)
+                        .and(createStatusBuilder(status)))
+                .fetchOne();
+
+        return new PageImpl<>(eventApplications, pageable, total);
+    }
+
+    private BooleanBuilder createStatusBuilder(String status) {
         BooleanBuilder filterBuilder = new BooleanBuilder();
         if (status.equals("ALL")) {
             return filterBuilder;
+        }
+        if (Arrays.stream(EventApplicationStatus.values()).anyMatch(s -> s.toString().equals(status))) {
+            return filterBuilder.and(eventApplication.status.eq(EventApplicationStatus.valueOf(status)));
+        }
+        if (Arrays.stream(EventStatus.values()).anyMatch(s -> s.toString().equals(status))) {
+            return filterBuilder.and(event.status.eq(EventStatus.valueOf(status)));
         }
         return filterBuilder;
     }

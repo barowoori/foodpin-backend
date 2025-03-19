@@ -21,7 +21,7 @@ public class EventList {
     private LocalDateTime recruitEndDateTime;
     private LocalDate startDate;
     private LocalDate endDate;
-    private List<String> regions;
+    private String region;
     private List<String> categories;
     private RecruitInfo recruitInfo;
     private Integer views;
@@ -36,7 +36,7 @@ public class EventList {
                 .recruitEndDateTime(event.getRecruitDetail().getRecruitEndDateTime())
                 .startDate(EventDateCalculator.getMinDate(event))
                 .endDate(EventDateCalculator.getMaxDate(event))
-                .regions(regions)
+                .region(regions.isEmpty() ? null : regions.getFirst())
                 .categories(event.getCategories().stream().map(EventCategory::getCategory).map(Category::getName).toList())
                 .recruitInfo(RecruitInfo.of(event, event.getRecruitDetail()))
                 .views(event.getView().getViews())

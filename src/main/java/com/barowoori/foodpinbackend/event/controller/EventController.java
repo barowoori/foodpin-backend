@@ -5,14 +5,8 @@ import com.barowoori.foodpinbackend.common.dto.CommonResponse;
 import com.barowoori.foodpinbackend.common.exception.ErrorResponse;
 import com.barowoori.foodpinbackend.event.command.application.dto.RequestEvent;
 import com.barowoori.foodpinbackend.event.command.application.service.EventService;
-import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventApplicationList;
-import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventDetail;
-import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventList;
-import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventManageList;
-import com.barowoori.foodpinbackend.event.query.application.EventApplicationListService;
-import com.barowoori.foodpinbackend.event.query.application.EventDetailService;
-import com.barowoori.foodpinbackend.event.query.application.EventListService;
-import com.barowoori.foodpinbackend.event.query.application.EventManageListService;
+import com.barowoori.foodpinbackend.event.command.domain.repository.dto.*;
+import com.barowoori.foodpinbackend.event.query.application.*;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckDetail;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckList;
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,6 +40,7 @@ public class EventController {
     private final EventListService eventListService;
     private final EventManageListService eventManageListService;
     private final EventApplicationListService eventApplicationListService;
+    private final TruckEventApplicationListService truckEventApplicationListService;
 
     @Operation(summary = "행사 생성", description = "사진의 경우 파일 저장 api로 업로드 후 반환된 파일 id 리스트로 전달")
     @ApiResponses(value = {
@@ -297,6 +292,23 @@ public class EventController {
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Page<EventApplicationList.EventRejectedApplication> eventLists = eventApplicationListService.findRejectedEventApplications(memberId, pageable);
         CommonResponse<Page<EventApplicationList.EventRejectedApplication>> commonResponse = CommonResponse.<Page<EventApplicationList.EventRejectedApplication>>builder()
+                .data(eventLists)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "트럭 지원한 행사 목록 조회", description = "")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/trucks/{truckId}/applications/applied/status/{status}")
+    public ResponseEntity<CommonResponse<Page<TruckEventApplicationList.AppliedInfo>>> getTruckEventAppliedApplicationList(@PathVariable(value = "truckId") String truckId,
+                                                                                                                                   @PathVariable(value = "status") String status,
+                                                                                                                                   @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<TruckEventApplicationList.AppliedInfo> eventLists = truckEventApplicationListService.getTruckEventAppliedApplicationList(status, truckId, pageable);
+        CommonResponse<Page<TruckEventApplicationList.AppliedInfo>> commonResponse = CommonResponse.<Page<TruckEventApplicationList.AppliedInfo>>builder()
                 .data(eventLists)
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);

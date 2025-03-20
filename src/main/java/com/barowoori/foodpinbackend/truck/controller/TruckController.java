@@ -66,7 +66,8 @@ public class TruckController {
     @Operation(summary = "트럭 운영자 추가", description = "초대된 사람(새 운영자) 계정에서 실행, 초대된 트럭 id(초대코드) 입력")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
-            @ApiResponse(responseCode = "400", description = "매니저가 이미 등록되어 있는 경우[30006]",
+            @ApiResponse(responseCode = "400", description = "매니저가 이미 등록되어 있는 경우[30006]" +
+                    "초대 코드가 일치하지 않는 경우[30010]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
@@ -74,9 +75,9 @@ public class TruckController {
                     "트럭을 못 찾을 경우[30000]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PostMapping(value = "/v1/{truckId}/manager")
-    public ResponseEntity<CommonResponse<String>> addManager(@Valid @PathVariable("truckId") String truckId) {
-        truckService.addManager(truckId);
+    @PostMapping(value = "/v1/manager")
+    public ResponseEntity<CommonResponse<String>> addManager(@RequestBody RequestTruck.AddManagerDto addManagerDto) {
+        truckService.addManager(addManagerDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Truck manager added successfully.")
                 .build();

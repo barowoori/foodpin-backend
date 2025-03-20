@@ -159,5 +159,15 @@ public class RequestTruck {
         @NotEmpty
         private List<TruckMenuDto> truckMenuDtoList;
     }
+
+    @Getter
+    public static class AddManagerDto{
+        @Schema(description = "운영자 추가할 트럭 id")
+        @NotEmpty
+        private String truckId;
+        @Schema(description = "초대 코드")
+        @NotEmpty
+        private String code;
+    }
 }
 

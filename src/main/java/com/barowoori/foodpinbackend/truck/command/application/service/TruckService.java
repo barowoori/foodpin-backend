@@ -19,6 +19,7 @@ import com.barowoori.foodpinbackend.truck.command.domain.exception.TruckErrorCod
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.*;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckManagerSummary;
+import com.barowoori.foodpinbackend.truck.command.domain.service.TruckManagerInvitationGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,6 +49,7 @@ public class TruckService {
     private final ImageManager imageManager;
     private final TruckDocumentPhotoRepository truckDocumentPhotoRepository;
     private final BusinessRegistrationRepository businessRegistrationRepository;
+    private final TruckManagerInvitationGenerator truckManagerInvitationGenerator;
 
     private String getMemberId() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
@@ -136,13 +138,15 @@ public class TruckService {
     }
 
     @Transactional
-    public void addManager(String truckId) {
+    public void addManager(RequestTruck.AddManagerDto addManagerDto) {
         String memberId = getMemberId();
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
-        Truck truck = getTruck(truckId);
+        Truck truck = getTruck(addManagerDto.getTruckId());
+        if (!truckManagerInvitationGenerator.matchInvitationCode(truck, addManagerDto.getCode()))
+            throw new CustomException(TruckErrorCode.INCORRECT_INVITATION_CODE);
 
-        TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(truckId, memberId);
+        TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(addManagerDto.getTruckId(), memberId);
         if (truckManager == null) {
             TruckManager newTruckManager = TruckManager.builder()
                     .role(TruckManagerRole.MEMBER)

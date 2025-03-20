@@ -3,6 +3,7 @@ package com.barowoori.foodpinbackend.truck.controller;
 import com.barowoori.foodpinbackend.common.dto.CommonResponse;
 import com.barowoori.foodpinbackend.common.exception.ErrorResponse;
 import com.barowoori.foodpinbackend.truck.command.application.dto.RequestTruck;
+import com.barowoori.foodpinbackend.truck.command.application.dto.ResponseTruck;
 import com.barowoori.foodpinbackend.truck.command.application.service.TruckService;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckDetail;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckList;
@@ -80,6 +81,27 @@ public class TruckController {
         truckService.addManager(addManagerDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Truck manager added successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "트럭 운영자 초대 문구 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "매니저가 이미 등록되어 있는 경우[30006]" +
+                    "초대 코드가 일치하지 않는 경우[30010]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "멤버를 못 찾을 경우[20004]," +
+                    "트럭을 못 찾을 경우[30000]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/{truckId}/manager/invite-message")
+    public ResponseEntity<CommonResponse<ResponseTruck.GetTruckInviteMessageDto>> getManagerInviteMessage(@Valid @PathVariable("truckId") String truckId) {
+        ResponseTruck.GetTruckInviteMessageDto response = truckService.getManagerInviteMessage(truckId);
+        CommonResponse<ResponseTruck.GetTruckInviteMessageDto> commonResponse = CommonResponse.<ResponseTruck.GetTruckInviteMessageDto>builder()
+                .data(response)
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }

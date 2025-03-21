@@ -56,10 +56,9 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
                 .leftJoin(truckRegion).on(truckRegion.truck.eq(truck))
                 .leftJoin(truckCategory).on(truckCategory.truck.eq(truck))
                 .leftJoin(truckCategory.category, category)
-                .leftJoin(truckMenu).on(truckMenu.truck.eq(truck))
-                .leftJoin(truck.photos, truckPhoto).fetchJoin()
-                .leftJoin
-                        (truckPhoto.file, file)
+                .leftJoin(truck.menus, truckMenu)
+                .leftJoin(truck.photos, truckPhoto)
+                .leftJoin(truckPhoto.file, file)
                 .where(
                         truck.isDeleted.isFalse()
                                 .and(
@@ -80,7 +79,7 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
                 .leftJoin(truckRegion).on(truckRegion.truck.eq(truck))
                 .leftJoin(truckCategory).on(truckCategory.truck.eq(truck))
                 .leftJoin(truckCategory.category, category)
-                .leftJoin(truckMenu).on(truckMenu.truck.eq(truck))
+                .leftJoin(truck.menus, truckMenu)
                 .where(
                         truck.isDeleted.isFalse()
                                 .and(
@@ -105,7 +104,7 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
                 .leftJoin(truckCategory.category, category)
                 .leftJoin(truckMenu).on(truckMenu.truck.eq(truck))
                 .leftJoin(truck.photos, truckPhoto).fetchJoin()
-                .leftJoin(truckPhoto.file, file)
+                .leftJoin(truckPhoto.file, file).fetchJoin()
                 .where(
                         truck.isDeleted.isFalse()
                                 .and(

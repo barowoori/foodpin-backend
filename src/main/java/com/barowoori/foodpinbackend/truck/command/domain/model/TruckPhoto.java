@@ -20,7 +20,7 @@ public class TruckPhoto {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createAt;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne
     @JoinColumn(name = "files_id")
     private File file;
 

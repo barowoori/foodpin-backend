@@ -174,9 +174,9 @@ public class TruckController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping(value = "/v1/owned")
-    public ResponseEntity<CommonResponse<List<TruckDetail.TruckInfo>>> getOwnedTruck() {
-        List<TruckDetail.TruckInfo> truckInfoList = truckQueryService.getOwnedTruck();
-        CommonResponse<List<TruckDetail.TruckInfo>> commonResponse = CommonResponse.<List<TruckDetail.TruckInfo>>builder()
+    public ResponseEntity<CommonResponse<List<ResponseTruck.GetTruckNameDto>>> getOwnedTruck() {
+        List<ResponseTruck.GetTruckNameDto> truckInfoList = truckQueryService.getOwnedTruck();
+        CommonResponse<List<ResponseTruck.GetTruckNameDto>> commonResponse = CommonResponse.<List<ResponseTruck.GetTruckNameDto>>builder()
                 .data(truckInfoList)
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);

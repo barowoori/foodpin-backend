@@ -319,7 +319,7 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
-    @Operation(summary = "트럭 지원한 행사 목록 조회", description = "")
+    @Operation(summary = "트럭 지원한 행사 목록 조회", description = "status : ALL(전체), RECRUITING(모집중), RECRUITMENT_CLOSED(모집마감), RECRUITMENT_CANCELLED(모집취소), SELECTED(선정), REJECTED(미선정)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",

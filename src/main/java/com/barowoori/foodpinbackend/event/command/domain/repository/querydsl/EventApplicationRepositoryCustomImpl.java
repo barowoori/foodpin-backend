@@ -113,6 +113,9 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
         if (Arrays.stream(EventApplicationStatus.values()).anyMatch(s -> s.toString().equals(status))) {
             return filterBuilder.and(eventApplication.status.eq(EventApplicationStatus.valueOf(status)));
         }
+        if (status.equals(EventStatus.RECRUITMENT_CLOSED.toString())){
+            return filterBuilder.and(event.status.in(EventStatus.SELECTING, EventStatus.IN_PROGRESS));
+        }
         if (Arrays.stream(EventStatus.values()).anyMatch(s -> s.toString().equals(status))) {
             return filterBuilder.and(event.status.eq(EventStatus.valueOf(status)));
         }

@@ -2,6 +2,7 @@ package com.barowoori.foodpinbackend.truck.command.domain.repository.dto;
 
 import com.barowoori.foodpinbackend.category.command.domain.model.Category;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
+import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionCode;
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
@@ -73,7 +74,7 @@ public class TruckDetail {
                     .selfGenerationAvailability(truck.getSelfGenerationAvailability())
                     .photos(truck.getPhotos()
                             .stream()
-                            .map(truckPhoto -> Photo.ofTruckPhoto(truckPhoto, imageManager))
+                            .map(truckPhoto -> Photo.of(truckPhoto.getFile(), imageManager))
                             .toList())
                     .build();
         }
@@ -96,7 +97,7 @@ public class TruckDetail {
                     .description(truckMenu.getDescription())
                     .photos(truckMenu.getPhotos()
                             .stream()
-                            .map(truckMenuPhoto -> Photo.ofTruckMenuPhoto(truckMenuPhoto, imageManager))
+                            .map(truckMenuPhoto -> Photo.of(truckMenuPhoto.getFile(), imageManager))
                             .toList())
 
                     .build();
@@ -124,18 +125,10 @@ public class TruckDetail {
     public static class Photo {
         private String id;
         private String path;
-
-        public static Photo ofTruckPhoto(TruckPhoto truckPhoto, ImageManager imageManager) {
+        public static Photo of(File file, ImageManager imageManager) {
             return Photo.builder()
-                    .id(truckPhoto.getId())
-                    .path(truckPhoto.getFile().getPreSignUrl(imageManager))
-                    .build();
-        }
-
-        public static Photo ofTruckMenuPhoto(TruckMenuPhoto truckMenuPhoto, ImageManager imageManager) {
-            return Photo.builder()
-                    .id(truckMenuPhoto.getId())
-                    .path(truckMenuPhoto.getFile().getPreSignUrl(imageManager))
+                    .id(file.getId())
+                    .path(file.getPreSignUrl(imageManager))
                     .build();
         }
     }

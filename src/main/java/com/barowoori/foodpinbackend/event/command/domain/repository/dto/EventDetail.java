@@ -3,6 +3,7 @@ package com.barowoori.foodpinbackend.event.command.domain.repository.dto;
 import com.barowoori.foodpinbackend.category.command.domain.model.Category;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
+import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionCode;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckDetail;
@@ -41,7 +42,7 @@ public class EventDetail {
                 .id(event.getId())
                 .photos(event.getPhotos().stream()
                         .sorted(Comparator.comparing(EventPhoto::getCreatedAt))
-                        .map(eventPhoto -> Photo.of(eventPhoto, imageManager)).toList())
+                        .map(eventPhoto -> Photo.of(eventPhoto.getFile(), imageManager)).toList())
                 .recruitInfo(RecruitInfo.of(event, event.getRecruitDetail()))
                 .name(event.getName())
                 .regions(regions)
@@ -120,10 +121,10 @@ public class EventDetail {
         private String id;
         private String path;
 
-        public static Photo of(EventPhoto eventPhoto, ImageManager imageManager) {
+        public static Photo of(File file, ImageManager imageManager) {
             return Photo.builder()
-                    .id(eventPhoto.getId())
-                    .path(eventPhoto.getFile().getPreSignUrl(imageManager))
+                    .id(file.getId())
+                    .path(file.getPreSignUrl(imageManager))
                     .build();
         }
     }

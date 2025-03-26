@@ -24,9 +24,10 @@ public class TruckMenuRepositoryCustomImpl implements TruckMenuRepositoryCustom{
         QTruckMenuPhoto menuPhoto = QTruckMenuPhoto.truckMenuPhoto;
         QFile file = QFile.file;
 
-        return jpaQueryFactory.selectFrom(menu)
+        return jpaQueryFactory.selectDistinct(menu)
+                .from(menu)
                 .leftJoin(menu.photos, menuPhoto).fetchJoin()
-                .join(menuPhoto.file, file).fetchJoin()
+                .leftJoin(menuPhoto.file, file).fetchJoin()
                 .where(menu.truck.id.eq(truckId))
                 .orderBy(menu.createAt.asc())
                 .fetch();

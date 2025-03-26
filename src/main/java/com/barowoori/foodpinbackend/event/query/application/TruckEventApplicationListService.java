@@ -40,6 +40,10 @@ public class TruckEventApplicationListService {
         if (eventApplication.getStatus().equals(EventApplicationStatus.REJECTED)) {
             return EventApplicationStatus.REJECTED.toString();
         }
+        if (eventApplication.getEvent().getStatus().equals(EventStatus.SELECTING)
+                || eventApplication.getEvent().getStatus().equals(EventStatus.IN_PROGRESS)) {
+            return EventStatus.RECRUITMENT_CLOSED.toString();
+        }
         return eventApplication.getEvent().getStatus().toString();
     }
 }

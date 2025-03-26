@@ -54,7 +54,8 @@ public class Truck {
 
     @OneToMany(mappedBy = "truck")
     @BatchSize(size = 10)
-    private List<TruckMenu> menus = new ArrayList<>();
+    private List<TruckMenu>
+            menus = new ArrayList<>();
 
     @OneToMany(mappedBy = "truck")
     @BatchSize(size = 10)
@@ -62,6 +63,12 @@ public class Truck {
 
     @OneToMany(mappedBy = "truck")
     private List<TruckDocument> documents = new ArrayList<>();
+
+    @OneToMany(mappedBy = "truck")
+    private List<TruckCategory> categories = new ArrayList<>();
+
+    @OneToMany(mappedBy = "truck")
+    private List<TruckRegion> regions = new ArrayList<>();
 
     protected Truck() {
     }

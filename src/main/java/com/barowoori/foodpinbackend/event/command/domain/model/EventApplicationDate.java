@@ -27,6 +27,8 @@ public class EventApplicationDate {
     @JoinColumn(name = "event_applications_id")
     private EventApplication eventApplication;
 
+    protected EventApplicationDate(){}
+
     @Builder
     public EventApplicationDate(EventDate eventDate, EventApplication eventApplication) {
         this.eventDate = eventDate;

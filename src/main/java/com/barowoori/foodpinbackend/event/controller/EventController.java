@@ -42,6 +42,7 @@ public class EventController {
     private final EventManageListService eventManageListService;
     private final EventApplicationListService eventApplicationListService;
     private final TruckEventApplicationListService truckEventApplicationListService;
+    private final EventApplicableTruckListService eventApplicableTruckListService;
 
     @Operation(summary = "행사 생성", description = "사진의 경우 파일 저장 api로 업로드 후 반환된 파일 id 리스트로 전달")
     @ApiResponses(value = {
@@ -327,8 +328,8 @@ public class EventController {
     })
     @GetMapping(value = "/v1/trucks/{truckId}/applications/applied/status/{status}")
     public ResponseEntity<CommonResponse<Page<TruckEventApplicationList.AppliedInfo>>> getTruckEventAppliedApplicationList(@PathVariable(value = "truckId") String truckId,
-                                                                                                                                   @PathVariable(value = "status") String status,
-                                                                                                                                   @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+                                                                                                                           @PathVariable(value = "status") String status,
+                                                                                                                           @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<TruckEventApplicationList.AppliedInfo> eventLists = truckEventApplicationListService.getTruckEventAppliedApplicationList(status, truckId, pageable);
         CommonResponse<Page<TruckEventApplicationList.AppliedInfo>> commonResponse = CommonResponse.<Page<TruckEventApplicationList.AppliedInfo>>builder()
                 .data(eventLists)
@@ -344,12 +345,31 @@ public class EventController {
     })
     @GetMapping(value = "/v1/trucks/{truckId}/applications/selected/status/{status}")
     public ResponseEntity<CommonResponse<Page<TruckEventApplicationList.SelectedInfo>>> getTruckEventSelectedApplicationList(@PathVariable(value = "truckId") String truckId,
-                                                                                                                           @PathVariable(value = "status") String status,
-                                                                                                                           @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+                                                                                                                             @PathVariable(value = "status") String status,
+                                                                                                                             @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<TruckEventApplicationList.SelectedInfo> selectedApplicationList = truckEventApplicationListService.getTruckEventSelectedApplicationList(status, truckId, pageable);
         CommonResponse<Page<TruckEventApplicationList.SelectedInfo>> commonResponse = CommonResponse.<Page<TruckEventApplicationList.SelectedInfo>>builder()
                 .data(selectedApplicationList)
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
+
+
+    @Operation(summary = "행사 지원할 푸드트럭 목록 조회", description = "")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/{eventId}/applicable/trucks")
+    public ResponseEntity<CommonResponse<Page<EventApplicableTruckList>>> getApplicableTruckList(@PathVariable(value = "eventId") String eventId,
+                                                                                                 @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        Page<EventApplicableTruckList> eventApplicableTruckLists = eventApplicableTruckListService.findApplicableTrucks(eventId, memberId, pageable);
+        CommonResponse<Page<EventApplicableTruckList>> commonResponse = CommonResponse.<Page<EventApplicableTruckList>>builder()
+                .data(eventApplicableTruckLists)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
 }

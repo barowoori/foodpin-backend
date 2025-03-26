@@ -177,7 +177,8 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
     }
     @Override
     public Page<Truck> findApplicableTrucks(String memberId, Pageable pageable) {
-        List<Truck> trucks = jpaQueryFactory.selectFrom(truck)
+        List<Truck> trucks = jpaQueryFactory.selectDistinct(truck)
+                .from(truck)
                 .innerJoin(truckManager).on(truckManager.truck.eq(truck).and(truckManager.member.id.eq(memberId)))
                 .leftJoin(truck.menus, truckMenu)
                 .leftJoin(truck.documents, truckDocument)

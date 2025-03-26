@@ -81,7 +81,8 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
     }
 
     public Page<EventApplication> findAppliedApplications(String status, String truckId, Pageable pageable) {
-        List<EventApplication> eventApplications = jpaQueryFactory.selectFrom(eventApplication)
+        List<EventApplication> eventApplications = jpaQueryFactory.selectDistinct(eventApplication)
+                .from(eventApplication)
                 .innerJoin(eventApplication.truck, truck)
                 .leftJoin(eventApplication.dates, eventApplicationDate)
                 .innerJoin(eventApplication.event, event)

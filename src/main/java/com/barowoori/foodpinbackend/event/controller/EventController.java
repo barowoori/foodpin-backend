@@ -336,4 +336,20 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "트럭 선정된 행사 목록 조회", description = "status : ALL(전체), CONFIRMED(진행중) PENDING(답변대기중), REJECTED(참석불가), COMPLETED(종료됨)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/trucks/{truckId}/applications/selected/status/{status}")
+    public ResponseEntity<CommonResponse<Page<TruckEventApplicationList.SelectedInfo>>> getTruckEventSelectedApplicationList(@PathVariable(value = "truckId") String truckId,
+                                                                                                                           @PathVariable(value = "status") String status,
+                                                                                                                           @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<TruckEventApplicationList.SelectedInfo> selectedApplicationList = truckEventApplicationListService.getTruckEventSelectedApplicationList(status, truckId, pageable);
+        CommonResponse<Page<TruckEventApplicationList.SelectedInfo>> commonResponse = CommonResponse.<Page<TruckEventApplicationList.SelectedInfo>>builder()
+                .data(selectedApplicationList)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
 }

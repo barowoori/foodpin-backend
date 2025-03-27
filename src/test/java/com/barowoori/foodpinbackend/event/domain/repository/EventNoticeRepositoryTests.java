@@ -64,11 +64,11 @@ public class EventNoticeRepositoryTests {
         event = eventRepository.save(event);
     }
 
-    private EventNotice createEventNotice(Event event, String title, String context, Boolean isDeleted) {
+    private EventNotice createEventNotice(Event event, String title, String content, Boolean isDeleted) {
         EventNotice eventNotice = EventNotice.builder()
                 .event(event)
                 .title(title)
-                .context(context)
+                .content(content)
                 .isDeleted(isDeleted)
                 .build();
         return eventNoticeRepository.save(eventNotice);

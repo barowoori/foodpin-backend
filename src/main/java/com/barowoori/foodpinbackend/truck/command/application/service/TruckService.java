@@ -226,10 +226,12 @@ public class TruckService {
         List<TruckMenu> truckMenuList = truckMenuRepository.getMenuListWithPhotoByTruckId(truckId);
         truckMenuList.forEach(truckMenu -> {
             List<TruckMenuPhoto> truckMenuPhotoList = truckMenuPhotoRepository.findAllByTruckMenu(truckMenu);
-            truckMenuPhotoList.forEach(truckMenuPhotoRepository::delete);
+            if (truckMenuPhotoList != null) {
+                truckMenuPhotoList.forEach(truckMenuPhotoRepository::delete);
+            }
             truckMenuRepository.delete(truckMenu);
         });
-
+        truckMenuPhotoRepository.flush();
         for (RequestTruck.TruckMenuDto truckMenuDto : updateTruckMenuDto.getTruckMenuDtoList()) {
             TruckMenu truckMenu = truckMenuDto.toEntity(truck);
             truckMenuRepository.save(truckMenu);

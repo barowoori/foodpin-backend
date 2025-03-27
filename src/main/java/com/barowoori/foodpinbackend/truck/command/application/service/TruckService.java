@@ -15,6 +15,7 @@ import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepos
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionDoRepository;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionInfo;
 import com.barowoori.foodpinbackend.truck.command.application.dto.RequestTruck;
+import com.barowoori.foodpinbackend.truck.command.application.dto.ResponseTruck;
 import com.barowoori.foodpinbackend.truck.command.domain.exception.TruckErrorCode;
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.*;
@@ -156,6 +157,14 @@ public class TruckService {
                     .build();
             truckManagerRepository.save(newTruckManager);
         } else throw new CustomException(TruckErrorCode.TRUCK_MANAGER_EXISTS);
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseTruck.GetTruckInviteMessageDto getManagerInviteMessage(String truckId){
+        Truck truck = getTruck(truckId);
+        return ResponseTruck.GetTruckInviteMessageDto.builder()
+                .message(truckManagerInvitationGenerator.getMessage(truck))
+                .build();
     }
 
     @Transactional

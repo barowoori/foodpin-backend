@@ -1,5 +1,6 @@
 package com.barowoori.foodpinbackend.truck.command.domain.repository.querydsl;
 
+import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckManagerSummary;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.CaseBuilder;
@@ -12,6 +13,7 @@ import java.util.List;
 
 import static com.barowoori.foodpinbackend.file.command.domain.model.QFile.file;
 import static com.barowoori.foodpinbackend.member.command.domain.model.QMember.member;
+import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruck.truck;
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckManager.truckManager;
 
 public class TruckManagerRepositoryCustomImpl implements TruckManagerRepositoryCustom{
@@ -49,5 +51,18 @@ public class TruckManagerRepositoryCustomImpl implements TruckManagerRepositoryC
                 .fetchOne();
 
         return new PageImpl<>(truckManagers, pageable, total);
+    }
+
+    @Override
+    public List<Truck> findOwnedTrucks(String memberId){
+        return jpaQueryFactory.select(truck)
+                .from(truckManager)
+                .innerJoin(truckManager.truck, truck)
+                .innerJoin(truckManager.member, member)
+                .where(member.id.eq(memberId)
+                        .and(truck.isDeleted.isFalse()))
+                .orderBy(truck.createdAt.desc())
+                .fetch();
+
     }
 }

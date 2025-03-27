@@ -4,6 +4,7 @@ import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -52,13 +53,22 @@ public class Truck {
     private Boolean isDeleted = false;
 
     @OneToMany(mappedBy = "truck")
-    private List<TruckMenu> menus = new ArrayList<>();
+    @BatchSize(size = 10)
+    private List<TruckMenu>
+            menus = new ArrayList<>();
 
     @OneToMany(mappedBy = "truck")
+    @BatchSize(size = 10)
     private List<TruckPhoto> photos = new ArrayList<>();
 
     @OneToMany(mappedBy = "truck")
     private List<TruckDocument> documents = new ArrayList<>();
+
+    @OneToMany(mappedBy = "truck")
+    private List<TruckCategory> categories = new ArrayList<>();
+
+    @OneToMany(mappedBy = "truck")
+    private List<TruckRegion> regions = new ArrayList<>();
 
     protected Truck() {
     }

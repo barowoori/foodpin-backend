@@ -5,6 +5,7 @@ import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
 import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
+import com.barowoori.foodpinbackend.truck.command.application.dto.ResponseTruck;
 import com.barowoori.foodpinbackend.truck.command.domain.exception.TruckErrorCode;
 import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckManager;
@@ -23,22 +24,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TruckQueryService {
     private final MemberRepository memberRepository;
-    private final TruckRepository truckRepository;
     private final TruckManagerRepository truckManagerRepository;
-    private final ImageManager imageManager;
 
     @Transactional(readOnly = true)
-    public List<TruckDetail.TruckInfo> getOwnedTruck(){
+    public List<ResponseTruck.GetTruckNameDto> getOwnedTruck(){
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
-        List<TruckManager> truckManagerList = truckManagerRepository.findAllByMember(member);
-        List<TruckDetail.TruckInfo> truckInfoList = new ArrayList<>();
-        truckManagerList.forEach(truckManager -> {
-            Truck truck = truckRepository.findById(truckManager.getTruck().getId())
-                    .orElseThrow(() -> new CustomException(TruckErrorCode.NOT_FOUND_TRUCK));
-            truckInfoList.add(TruckDetail.TruckInfo.of(truck, imageManager));
-        });
-        return truckInfoList;
+        List<Truck> trucks = truckManagerRepository.findOwnedTrucks(member.getId());
+        return trucks.stream().map(ResponseTruck.GetTruckNameDto::of).toList();
     }
 }

@@ -7,4 +7,6 @@ import org.springframework.data.domain.Pageable;
 public interface EventApplicationRepositoryCustom {
     Page<EventApplication> findPendingEventApplications(String eventId, Pageable pageable);
     Page<EventApplication> findRejectedEventApplications(String eventId, Pageable pageable);
+    Page<EventApplication> findAppliedApplications(String status, String truckId, Pageable pageable);
+
 }

@@ -3,6 +3,7 @@ package com.barowoori.foodpinbackend.truck.command.domain.repository.dto;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
+import com.barowoori.foodpinbackend.truck.command.domain.model.TruckMenu;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckPhoto;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,14 +20,14 @@ public class TruckList {
         private List<String> menuNames;
         private String photo;
 
-        public static TruckList of(Truck truck, List<DocumentType> documents, List<String> regions, List<String> truckMenuNames, ImageManager imageManager) {
+        public static TruckList of(Truck truck, List<DocumentType> documents, List<String> regions, ImageManager imageManager) {
 
             return TruckList.builder()
                     .id(truck.getId())
                     .name(truck.getName())
                     .documents(documents)
                     .regions(regions)
-                    .menuNames(truckMenuNames)
+                    .menuNames(truck.getMenus().stream().map(TruckMenu::getName).toList())
                     .photo(truck.getPhotos()
                             .stream()
                             .map(truckPhoto -> imageManager.getPreSignUrl(truckPhoto.getFile().getPath()))

@@ -45,10 +45,9 @@ public class TruckListService {
         Map<RegionType, List<String>> regionIds = regionDoRepository.findRegionIdsByFilter(regionCodes);
         Page<Truck> trucks = truckRepository.findTruckListByFilter(searchTerm, categoryNames, regionIds, pageable);
         List<String> truckIds = trucks.map(Truck::getId).stream().toList();
-        Map<String, List<String>> menuNames = truckMenuRepository.getMenuNamesByTruckIds(truckIds);
         Map<String, List<DocumentType>> documents = truckDocumentRepository.getDocumentTypeByTruckIds(truckIds);
         Map<String, List<String>> regionNames = truckRegionFullNameGenerator.findRegionNamesByTruckIds(truckIds);
-        return trucks.map(truck -> TruckList.of(truck, documents.get(truck.getId()), regionNames.get(truck.getId()), menuNames.get(truck.getId()), imageManager));
+        return trucks.map(truck -> TruckList.of(truck, documents.get(truck.getId()), regionNames.get(truck.getId()), imageManager));
     }
 
     @Transactional(readOnly = true)
@@ -56,9 +55,8 @@ public class TruckListService {
         Map<RegionType, List<String>> regionIds = regionDoRepository.findRegionIdsByFilter(regionCodes);
         Page<Truck> trucks = truckRepository.findLikeTruckListByFilter(memberId, searchTerm, categoryNames, regionIds, pageable);
         List<String> truckIds = trucks.map(Truck::getId).stream().toList();
-        Map<String, List<String>> menuNames = truckMenuRepository.getMenuNamesByTruckIds(truckIds);
         Map<String, List<DocumentType>> documents = truckDocumentRepository.getDocumentTypeByTruckIds(truckIds);
         Map<String, List<String>> regionNames = truckRegionFullNameGenerator.findRegionNamesByTruckIds(truckIds);
-        return trucks.map(truck -> TruckList.of(truck, documents.get(truck.getId()), regionNames.get(truck.getId()), menuNames.get(truck.getId()), imageManager));
+        return trucks.map(truck -> TruckList.of(truck, documents.get(truck.getId()), regionNames.get(truck.getId()),imageManager));
     }
 }

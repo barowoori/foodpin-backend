@@ -185,4 +185,51 @@ public class RequestEvent {
                     .build();
         }
     }
+
+    @Builder
+    @Getter
+    public static class HandleEventApplicationDto{
+        @Schema(description = "처리할 eventApplication id, 지원자 목록 리스트 api에서 반환된 id")
+        @NotEmpty
+        private String eventApplicationId;
+        @Schema(description = "선정 여부")
+        @NotEmpty
+        private Boolean isSelected;
+        @Schema(description = "선정할 날짜 리스트, 선정인 경우 필수")
+        private List<LocalDate> dates;
+    }
+
+    @Builder
+    @Getter
+    public static class CreateEventNoticeDto{
+        @Schema(description = "행사 id")
+        @NotEmpty
+        private String eventId;
+        @Schema(description = "제목")
+        @NotEmpty
+        private String title;
+        @Schema(description = "내용")
+        @NotEmpty
+        private String content;
+
+        public EventNotice toEntity(Event event){
+            return EventNotice.builder()
+                    .title(this.title)
+                    .content(this.content)
+                    .isDeleted(Boolean.FALSE)
+                    .event(event)
+                    .build();
+        }
+    }
+
+    @Builder
+    @Getter
+    public static class UpdateEventNoticeDto{
+        @Schema(description = "제목")
+        @NotEmpty
+        private String title;
+        @Schema(description = "내용")
+        @NotEmpty
+        private String content;
+    }
 }

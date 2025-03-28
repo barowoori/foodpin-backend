@@ -4,6 +4,7 @@ package com.barowoori.foodpinbackend.event.controller;
 import com.barowoori.foodpinbackend.common.dto.CommonResponse;
 import com.barowoori.foodpinbackend.common.exception.ErrorResponse;
 import com.barowoori.foodpinbackend.event.command.application.dto.RequestEvent;
+import com.barowoori.foodpinbackend.event.command.application.dto.ResponseEvent;
 import com.barowoori.foodpinbackend.event.command.application.service.EventService;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.*;
 import com.barowoori.foodpinbackend.event.query.application.*;
@@ -372,4 +373,19 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "행사 공지사항 목록 조회", description = "")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/{eventId}/notices")
+    public ResponseEntity<CommonResponse<Page<ResponseEvent.GetEventNoticeDto>>> getEventNoticeList(@PathVariable(value = "eventId") String eventId,
+                                                                                  @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<ResponseEvent.GetEventNoticeDto> eventNotices = eventService.getEventNotices(eventId, pageable);
+        CommonResponse<Page<ResponseEvent.GetEventNoticeDto>> commonResponse = CommonResponse.<Page<ResponseEvent.GetEventNoticeDto>>builder()
+                .data(eventNotices)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
 }

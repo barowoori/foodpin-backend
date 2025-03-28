@@ -51,6 +51,7 @@ public class ResponseMember {
         private String email;
         @Schema(description = "닉네임")
         private String nickname;
+        private String imageId;
         @Schema(description = "이미지")
         private String image;
 
@@ -60,6 +61,7 @@ public class ResponseMember {
                     .phone(member.getPhone())
                     .email(member.getEmail())
                     .nickname(member.getNickname())
+                    .imageId(member.getImage() != null ? member.getImage().getId() : null)
                     .image(member.getImage() != null ? member.getImage().getPreSignUrl(imageManager) : null)
                     .build();
         }

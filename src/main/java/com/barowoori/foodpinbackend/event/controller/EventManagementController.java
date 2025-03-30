@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 public class EventManagementController {
     private final EventManagementService eventManagementService;
 
+    //TODO url 이름 필요 시 수정
     @Operation(summary = "행사 지원자 선정/탈락 처리", description = "행사 등록자만 사용 가능" +
             "\n\n선정인 경우 isSelected = true, dates 포함 필수 / 탈락인 경우 isSelected = false")
     @ApiResponses(value = {
@@ -35,7 +36,7 @@ public class EventManagementController {
                     "지원 날짜가 없거나 행사 날짜와 일치하지 않는 경우[40009]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PutMapping(value = "/v1/applications")
+    @PutMapping(value = "/v1/applications/{applicationId}/new")
     public ResponseEntity<CommonResponse<String>> handleEventApplication(@Valid @RequestBody RequestEvent.HandleEventApplicationDto handleEventApplicationDto) {
         eventManagementService.handleEventApplication(handleEventApplicationDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
@@ -54,7 +55,7 @@ public class EventManagementController {
             @ApiResponse(responseCode = "404", description = "행사를 못 찾을 경우[40000]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PostMapping(value = "/v1/notice")
+    @PostMapping(value = "/v1/notices")
     public ResponseEntity<CommonResponse<String>> createEventNotice(@Valid @RequestBody RequestEvent.CreateEventNoticeDto createEventNoticeDto) {
         eventManagementService.createEventNotice(createEventNoticeDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
@@ -74,7 +75,7 @@ public class EventManagementController {
                     "행사 공지를 못 찾을 경우[40008]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PutMapping(value = "/v1/notice/{eventNoticeId}")
+    @PutMapping(value = "/v1/notices/{eventNoticeId}")
     public ResponseEntity<CommonResponse<String>> updateEventNotice(@Valid @PathVariable("eventNoticeId") String eventNoticeId,
                                                                     @Valid @RequestBody RequestEvent.UpdateEventNoticeDto updateEventNoticeDto) {
         eventManagementService.updateEventNotice(eventNoticeId, updateEventNoticeDto);
@@ -95,7 +96,7 @@ public class EventManagementController {
                     "행사 공지를 못 찾을 경우[40008]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @DeleteMapping(value = "/v1/notice/{eventNoticeId}")
+    @DeleteMapping(value = "/v1/notices/{eventNoticeId}")
     public ResponseEntity<CommonResponse<String>> deleteEventNotice(@Valid @PathVariable("eventNoticeId") String eventNoticeId) {
         eventManagementService.deleteEventNotice(eventNoticeId);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()

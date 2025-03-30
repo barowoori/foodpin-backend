@@ -39,29 +39,32 @@ public class EventManagementService {
         if (!eventApplication.getEvent().getCreatedBy().equals(getMemberId())){
             throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
         }
-
-        if (handleEventApplicationDto.getIsSelected()){
-            if (!Objects.equals(handleEventApplicationDto.getDates(), null) && !handleEventApplicationDto.getDates().isEmpty()){
-                EventTruck eventTruck = EventTruck.builder().event(eventApplication.getEvent()).truck(eventApplication.getTruck()).status(EventTruckStatus.PENDING).build();
-                eventTruck = eventTruckRepository.save(eventTruck);
-                List<LocalDate> selectedDates = handleEventApplicationDto.getDates();
-                boolean isDateMatched = false;
-
-                for (EventApplicationDate eventApplicationDate : eventApplication.getDates()){
-                    if (selectedDates.contains(eventApplicationDate.getEventDate().getDate())){
-                        EventTruckDate eventTruckDate = EventTruckDate.builder().eventDate(eventApplicationDate.getEventDate()).eventTruck(eventTruck).build();
-                        eventTruckDateRepository.save(eventTruckDate);
-                        isDateMatched = true;
-                    }
-                }
-                if (!isDateMatched){
-                    throw new CustomException(EventErrorCode.EVENT_DATE_NOT_FOUND);
-                }
-            } else throw new CustomException(EventErrorCode.EVENT_DATE_NOT_FOUND);
-            eventApplication.select();
-        } else {
+        if(!handleEventApplicationDto.getIsSelected()){
             eventApplication.reject();
+            eventApplicationRepository.save(eventApplication);
+            return;
         }
+
+        if (!Objects.equals(handleEventApplicationDto.getDates(), null) && !handleEventApplicationDto.getDates().isEmpty()){
+            EventTruck eventTruck = EventTruck.builder().event(eventApplication.getEvent()).truck(eventApplication.getTruck()).status(EventTruckStatus.PENDING).build();
+            eventTruck = eventTruckRepository.save(eventTruck);
+            List<LocalDate> selectedDates = handleEventApplicationDto.getDates();
+            boolean isDateMatched = false;
+
+            for (EventApplicationDate eventApplicationDate : eventApplication.getDates()){
+                if (selectedDates.contains(eventApplicationDate.getEventDate().getDate())) {
+                    isDateMatched = true;
+                    break;
+                }
+            }
+            if (!isDateMatched){
+                throw new CustomException(EventErrorCode.EVENT_DATE_NOT_FOUND);
+            }
+//            EventTruckDate eventTruckDate = EventTruckDate.builder().eventDate(eventApplicationDate.getEventDate()).eventTruck(eventTruck).build();
+//            eventTruckDateRepository.save(eventTruckDate);
+
+        } else throw new CustomException(EventErrorCode.EVENT_DATE_NOT_FOUND);
+        eventApplication.select();
         eventApplicationRepository.save(eventApplication);
     }
 
@@ -78,6 +81,7 @@ public class EventManagementService {
         eventNoticeRepository.save(eventNotice);
     }
 
+    //TODO 행사 공지를 본 트럭이 있으면 수정 못 하는 것인지 확인 필요
     @Transactional
     public void updateEventNotice(String eventNoticeId, RequestEvent.UpdateEventNoticeDto updateEventNoticeDto){
         EventNotice eventNotice = eventNoticeRepository.findById(eventNoticeId)
@@ -93,6 +97,7 @@ public class EventManagementService {
         eventNoticeRepository.save(eventNotice);
     }
 
+    //TODO 행사 공지를 본 트럭이 있으면 삭제 못 하는 것인지 확인 필요
     @Transactional
     public void deleteEventNotice(String eventNoticeId){
         EventNotice eventNotice = eventNoticeRepository.findById(eventNoticeId)

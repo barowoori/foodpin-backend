@@ -21,10 +21,7 @@ public class EventApplicableTruckList {
         return EventApplicableTruckList.builder()
                 .id(truck.getId())
                 .name(truck.getName())
-                .menuNames(truck.getMenus().stream()
-                        .sorted(Comparator.comparing(TruckMenu::getCreateAt))
-                        .map(TruckMenu::getName)
-                        .toList())
+                .menuNames(truck.getSortedTruckMenuNames())
                 .missingDocuments(missingDocuments)
                 .build();
     }

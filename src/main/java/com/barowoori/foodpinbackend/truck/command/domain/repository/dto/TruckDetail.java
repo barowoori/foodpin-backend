@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 
 @Getter
@@ -25,7 +26,7 @@ public class TruckDetail {
     private List<MenuInfo> menus;
     private Boolean isLike;
 
-    public static TruckDetail of(TruckManager truckManager, Truck truck, TruckDocumentManager truckDocumentManager, List<RegionCode> regions, List<Category> categories, List<TruckMenu> truckMenus, Boolean isLike, ImageManager imageManager) {
+    public static TruckDetail of(TruckManager truckManager, Truck truck, TruckDocumentManager truckDocumentManager, List<RegionCode> regions, List<Category> categories,List<TruckMenu> truckMenus, Boolean isLike, ImageManager imageManager) {
         return TruckDetail.builder()
                 .isAvailableUpdate(checkAvailableUpdate(truckManager))
                 .isAvailableDelete(checkAvailableDelete(truckManager))
@@ -33,8 +34,12 @@ public class TruckDetail {
                 .documents(truckDocumentManager.getTypes())
                 .documentInfos(truckDocumentManager.getDocuments().stream().map(TruckDocumentInfo::of).toList())
                 .regions(regions)
-                .categories(categories.stream().map(CategoryInfo::of).toList())
-                .menus(truckMenus.stream().map(truckMenu -> MenuInfo.of(truckMenu, imageManager)).toList())
+                .categories(categories.stream()
+                        .sorted(Comparator.comparing(Category::getCode))
+                        .map(CategoryInfo::of).toList())
+                .menus(truckMenus.stream()
+                        .map(truckMenu -> MenuInfo.of(truckMenu, imageManager))
+                        .toList())
                 .isLike(isLike)
                 .build();
     }
@@ -72,9 +77,8 @@ public class TruckDetail {
                     .electricityUsage(truck.getElectricityUsage())
                     .gasUsage(truck.getGasUsage())
                     .selfGenerationAvailability(truck.getSelfGenerationAvailability())
-                    .photos(truck.getPhotos()
-                            .stream()
-                            .map(truckPhoto -> Photo.of(truckPhoto.getFile(), imageManager))
+                    .photos(truck.getTruckPhotoFiles().stream()
+                            .map(file -> Photo.of(file, imageManager))
                             .toList())
                     .build();
         }
@@ -95,11 +99,9 @@ public class TruckDetail {
                     .name(truckMenu.getName())
                     .price(truckMenu.getPrice())
                     .description(truckMenu.getDescription())
-                    .photos(truckMenu.getPhotos()
-                            .stream()
-                            .map(truckMenuPhoto -> Photo.of(truckMenuPhoto.getFile(), imageManager))
+                    .photos(truckMenu.getTruckMenuPhotoFiles().stream()
+                            .map(file -> Photo.of(file, imageManager))
                             .toList())
-
                     .build();
 
         }

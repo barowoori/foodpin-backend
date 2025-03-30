@@ -1,5 +1,7 @@
 package com.barowoori.foodpinbackend.truck.command.domain.model;
 
+import com.barowoori.foodpinbackend.file.command.domain.model.File;
+import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -8,6 +10,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Entity
@@ -56,5 +59,18 @@ public class TruckMenu {
         this.description = description;
         this.price = price;
         this.truck = truck;
+    }
+
+    public String getTruckMenuMainPhotoUrl(ImageManager imageManager){
+        return getTruckMenuPhotoFiles().stream()
+                .map(file -> imageManager.getPreSignUrl(file.getPath()))
+                .findFirst().orElse(null);
+    }
+
+    public List<File> getTruckMenuPhotoFiles(){
+        return photos.stream()
+                .sorted(Comparator.comparing(TruckMenuPhoto::getCreateAt).reversed())
+                .map(TruckMenuPhoto::getFile)
+                .toList();
     }
 }

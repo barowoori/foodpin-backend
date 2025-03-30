@@ -57,7 +57,7 @@ public class TruckRepositoryTests {
         void Then_withPhotoLists(){
             Truck resultTruck = truckRepository.getTruckWithPhotoById(truck.getId());
             assertNotNull(resultTruck);
-            assertEquals(5, resultTruck.getPhotos().size());
+            assertEquals(5, resultTruck.getTruckPhotoFiles().size());
         }
     }
 }

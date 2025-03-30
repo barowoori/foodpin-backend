@@ -1,5 +1,8 @@
 package com.barowoori.foodpinbackend.event.command.domain.model;
 
+import com.barowoori.foodpinbackend.file.command.domain.model.File;
+import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
+import com.barowoori.foodpinbackend.truck.command.domain.model.TruckPhoto;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,6 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Entity
@@ -136,5 +140,24 @@ public class Event {
 
     public void delete(){
         this.isDeleted = true;
+    }
+
+    public String getEventMainPhotoUrl(ImageManager imageManager){
+        return getEventPhotoFiles().stream()
+                .map(file -> imageManager.getPreSignUrl(file.getPath()))
+                .findFirst().orElse(null);
+    }
+
+    public List<File> getEventPhotoFiles(){
+        return photos.stream()
+                .sorted(Comparator.comparing(EventPhoto::getCreatedAt).reversed())
+                .map(EventPhoto::getFile)
+                .toList();
+    }
+
+    public List<EventDate> getSortedEventDates(){
+        return eventDates.stream()
+                .sorted(Comparator.comparing(EventDate::getCreatedAt).reversed())
+                .toList();
     }
 }

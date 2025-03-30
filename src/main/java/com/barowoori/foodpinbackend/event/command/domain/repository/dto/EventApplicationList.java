@@ -26,10 +26,7 @@ public class EventApplicationList {
             return TruckInfo.builder()
                     .id(truck.getId())
                     .name(truck.getName())
-                    .photo(truck.getPhotos()
-                            .stream()
-                            .map(truckPhoto -> imageManager.getPreSignUrl(truckPhoto.getFile().getPath()))
-                            .findFirst().orElse(null))
+                    .photo(truck.getTruckMainPhotoUrl(imageManager))
                     .approval(truck.approval())
                     .build();
         }

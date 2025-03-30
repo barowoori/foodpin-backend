@@ -27,25 +27,8 @@ public class TruckList {
                     .name(truck.getName())
                     .documents(documents)
                     .regions(regions)
-                    .menuNames(truck.getMenus().stream().map(TruckMenu::getName).toList())
-                    .photo(truck.getPhotos()
-                            .stream()
-                            .map(truckPhoto -> imageManager.getPreSignUrl(truckPhoto.getFile().getPath()))
-                            .findFirst().orElse(null))
+                    .menuNames(truck.getSortedTruckMenuNames())
+                    .photo(truck.getTruckMainPhotoUrl(imageManager))
                     .build();
-        }
-
-        @Getter
-        @Builder
-        public static class Photo {
-            private String id;
-            private String path;
-
-            public static Photo ofTruckPhoto(TruckPhoto truckPhoto, ImageManager imageManager) {
-                return Photo.builder()
-                        .id(truckPhoto.getId())
-                        .path(imageManager.getPreSignUrl(truckPhoto.getFile().getPath()))
-                        .build();
-            }
         }
 }

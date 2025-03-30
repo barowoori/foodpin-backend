@@ -24,8 +24,8 @@ public class EventNotice {
     @Column(name = "title")
     private String title;
 
-    @Column(name = "context", columnDefinition = "TEXT")
-    private String context;
+    @Column(name = "content", columnDefinition = "TEXT")
+    private String content;
 
     @Column(name = "is_deleted")
     private Boolean isDeleted;
@@ -40,16 +40,16 @@ public class EventNotice {
     protected EventNotice(){}
 
     @Builder
-    public EventNotice(String title, String context, Boolean isDeleted, Event event) {
+    public EventNotice(String title, String content, Boolean isDeleted, Event event) {
         this.title = title;
-        this.context = context;
+        this.content = content;
         this.isDeleted = isDeleted;
         this.event = event;
     }
 
-    public void update(String title, String context) {
+    public void update(String title, String content) {
         this.title = title;
-        this.context = context;
+        this.content = content;
     }
 
     public void delete() {

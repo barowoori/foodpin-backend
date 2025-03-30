@@ -176,6 +176,7 @@ public class TruckService {
 
         List<TruckPhoto> photoList = truckPhotoRepository.findByTruckOrderByCreateAt(truck);
         photoList.forEach(truckPhotoRepository::delete);
+        truckRepository.flush();
         for (String fileId : updateTruckInfoDto.getFileIdList()) {
             File file = fileRepository.findById(fileId)
                     .orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_PHOTO_NOT_FOUND));
@@ -226,10 +227,12 @@ public class TruckService {
         List<TruckMenu> truckMenuList = truckMenuRepository.getMenuListWithPhotoByTruckId(truckId);
         truckMenuList.forEach(truckMenu -> {
             List<TruckMenuPhoto> truckMenuPhotoList = truckMenuPhotoRepository.findAllByTruckMenu(truckMenu);
-            truckMenuPhotoList.forEach(truckMenuPhotoRepository::delete);
+            if (truckMenuPhotoList != null) {
+                truckMenuPhotoList.forEach(truckMenuPhotoRepository::delete);
+            }
             truckMenuRepository.delete(truckMenu);
         });
-
+        truckMenuPhotoRepository.flush();
         for (RequestTruck.TruckMenuDto truckMenuDto : updateTruckMenuDto.getTruckMenuDtoList()) {
             TruckMenu truckMenu = truckMenuDto.toEntity(truck);
             truckMenuRepository.save(truckMenu);

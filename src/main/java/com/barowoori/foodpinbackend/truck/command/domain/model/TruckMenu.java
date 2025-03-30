@@ -69,7 +69,7 @@ public class TruckMenu {
 
     public List<File> getTruckMenuPhotoFiles(){
         return photos.stream()
-                .sorted(Comparator.comparing(TruckMenuPhoto::getCreateAt).reversed())
+                .sorted(Comparator.comparing(TruckMenuPhoto::getCreateAt))
                 .map(TruckMenuPhoto::getFile)
                 .toList();
     }

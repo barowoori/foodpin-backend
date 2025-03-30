@@ -119,14 +119,14 @@ public class Truck {
 
     public List<File> getTruckPhotoFiles(){
         return photos.stream()
-                .sorted(Comparator.comparing(TruckPhoto::getCreateAt).reversed())
+                .sorted(Comparator.comparing(TruckPhoto::getCreateAt))
                 .map(TruckPhoto::getFile)
                 .toList();
     }
 
     public List<TruckMenu> getSortedTruckMenus(){
         return menus.stream()
-                .sorted(Comparator.comparing(TruckMenu::getCreateAt).reversed())
+                .sorted(Comparator.comparing(TruckMenu::getCreateAt))
                 .toList();
     }
 

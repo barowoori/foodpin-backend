@@ -29,7 +29,7 @@ public class TruckMenuRepositoryCustomImpl implements TruckMenuRepositoryCustom{
                 .leftJoin(menu.photos, menuPhoto).fetchJoin()
                 .leftJoin(menuPhoto.file, file).fetchJoin()
                 .where(menu.truck.id.eq(truckId))
-                .orderBy(menu.createAt.desc())
+                .orderBy(menu.createAt.asc())
                 .fetch();
     }
 

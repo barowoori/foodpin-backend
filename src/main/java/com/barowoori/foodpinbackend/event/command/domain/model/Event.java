@@ -150,14 +150,14 @@ public class Event {
 
     public List<File> getEventPhotoFiles(){
         return photos.stream()
-                .sorted(Comparator.comparing(EventPhoto::getCreatedAt).reversed())
+                .sorted(Comparator.comparing(EventPhoto::getCreatedAt))
                 .map(EventPhoto::getFile)
                 .toList();
     }
 
     public List<EventDate> getSortedEventDates(){
         return eventDates.stream()
-                .sorted(Comparator.comparing(EventDate::getCreatedAt).reversed())
+                .sorted(Comparator.comparing(EventDate::getCreatedAt))
                 .toList();
     }
 }

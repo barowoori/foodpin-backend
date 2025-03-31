@@ -4,6 +4,7 @@ import com.barowoori.foodpinbackend.category.command.domain.model.Category;
 import com.barowoori.foodpinbackend.category.command.domain.repository.CategoryRepository;
 import com.barowoori.foodpinbackend.common.exception.CustomException;
 import com.barowoori.foodpinbackend.event.command.application.dto.RequestEvent;
+import com.barowoori.foodpinbackend.event.command.application.dto.ResponseEvent;
 import com.barowoori.foodpinbackend.event.command.domain.exception.EventErrorCode;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.event.command.domain.repository.*;
@@ -19,6 +20,8 @@ import com.barowoori.foodpinbackend.truck.command.domain.model.TruckManager;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckManagerRepository;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,11 +48,13 @@ public class EventService {
     private final EventApplicationRepository eventApplicationRepository;
     private final EventApplicationDateRepository eventApplicationDateRepository;
     private final TruckManagerRepository truckManagerRepository;
+    private final EventNoticeRepository eventNoticeRepository;
 
     private String getMemberId() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
     }
-    private Event getEvent(String eventId){
+
+    private Event getEvent(String eventId) {
         return eventRepository.findById(eventId)
                 .orElseThrow(() -> new CustomException(EventErrorCode.NOT_FOUND_EVENT));
     }
@@ -60,7 +65,7 @@ public class EventService {
     }
 
     @Transactional
-    public void createEvent(RequestEvent.CreateEventDto createEventDto){
+    public void createEvent(RequestEvent.CreateEventDto createEventDto) {
         String memberId = getMemberId();
 
         Event event = createEventDto.getEventInfoDto().toEntity(memberId);
@@ -103,8 +108,8 @@ public class EventService {
             eventCategoryRepository.save(eventCategory);
         });
 
-        if (!Objects.equals(createEventDto.getEventDocumentTypeList(),null) && !createEventDto.getEventDocumentTypeList().isEmpty()) {
-            createEventDto.getEventDocumentTypeList().forEach( documentType -> {
+        if (!Objects.equals(createEventDto.getEventDocumentTypeList(), null) && !createEventDto.getEventDocumentTypeList().isEmpty()) {
+            createEventDto.getEventDocumentTypeList().forEach(documentType -> {
                 EventDocument eventDocument = EventDocument.builder().event(event).type(documentType).build();
                 eventDocumentRepository.save(eventDocument);
             });
@@ -114,7 +119,7 @@ public class EventService {
     }
 
     @Transactional
-    public void updateEventInfo(String eventId, RequestEvent.UpdateEventInfoDto updateEventInfoDto){
+    public void updateEventInfo(String eventId, RequestEvent.UpdateEventInfoDto updateEventInfoDto) {
         String memberId = getMemberId();
         Event event = getEvent(eventId);
 
@@ -151,7 +156,7 @@ public class EventService {
     }
 
     @Transactional
-    public void updateEventRecruit(String eventId, RequestEvent.EventRecruitDto eventRecruitDto){
+    public void updateEventRecruit(String eventId, RequestEvent.EventRecruitDto eventRecruitDto) {
         Event event = getEvent(eventId);
 
         EventRecruitDetail eventRecruitDetail = eventRecruitDetailRepository.findByEvent(event);
@@ -166,7 +171,7 @@ public class EventService {
     }
 
     @Transactional
-    public void updateEventDetail(String eventId, RequestEvent.UpdateEventDetailDto updateEventDetailDto){
+    public void updateEventDetail(String eventId, RequestEvent.UpdateEventDetailDto updateEventDetailDto) {
         Event event = getEvent(eventId);
 
         List<EventCategory> eventCategoryList = eventCategoryRepository.findAllByEvent(event);
@@ -184,7 +189,7 @@ public class EventService {
     }
 
     @Transactional
-    public void updateEventDocument(String eventId, RequestEvent.UpdateEventDocumentDto updateEventDocumentDto){
+    public void updateEventDocument(String eventId, RequestEvent.UpdateEventDocumentDto updateEventDocumentDto) {
         Event event = getEvent(eventId);
 
         List<EventDocument> eventDocumentList = eventDocumentRepository.findByEventId(eventId);
@@ -200,13 +205,13 @@ public class EventService {
     }
 
     @Transactional
-    public void deleteEvent(String eventId){
+    public void deleteEvent(String eventId) {
         String memberId = getMemberId();
         Event event = getEvent(eventId);
-        if (!event.isCreator(memberId)){
+        if (!event.isCreator(memberId)) {
             throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
         }
-        if (event.isCreator(memberId)){
+        if (event.isCreator(memberId)) {
             event.delete();
             List<EventLike> eventLikeList = eventLikeRepository.findByEventId(eventId);
             if (eventLikeList != null)
@@ -215,7 +220,7 @@ public class EventService {
     }
 
     @Transactional
-    public void applyEvent(RequestEvent.ApplyEventDto applyEventDto){
+    public void applyEvent(RequestEvent.ApplyEventDto applyEventDto) {
         TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(applyEventDto.getTruckId(), getMemberId());
         if (truckManager == null)
             throw new CustomException(TruckErrorCode.TRUCK_MANAGER_NOT_FOUND);
@@ -228,12 +233,18 @@ public class EventService {
         EventApplication eventApplication = applyEventDto.toEntity(truck, event);
         eventApplication = eventApplicationRepository.save(eventApplication);
 
-        for (String eventDateId : applyEventDto.getEventDateIdList()){
+        for (String eventDateId : applyEventDto.getEventDateIdList()) {
             EventDate eventDate = eventDateRepository.findById(eventDateId)
                     .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_DATE_NOT_FOUND));
 
             EventApplicationDate eventApplicationDate = EventApplicationDate.builder().eventDate(eventDate).eventApplication(eventApplication).build();
             eventApplicationDateRepository.save(eventApplicationDate);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ResponseEvent.GetEventNoticeDto> getEventNotices(String eventId, Pageable pageable) {
+        return eventNoticeRepository.findEventNoticeListByEventId(eventId, pageable)
+                .map(ResponseEvent.GetEventNoticeDto::of);
     }
 }

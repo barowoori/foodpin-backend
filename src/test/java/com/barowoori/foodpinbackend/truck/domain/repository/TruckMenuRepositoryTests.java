@@ -73,7 +73,7 @@ public class TruckMenuRepositoryTests {
             List<TruckMenu> menus = truckMenuRepository.getMenuListWithPhotoByTruckId(truck.getId());
             assertEquals(5, menus.size());
             for (TruckMenu menu : menus){
-                assertEquals(5, menu.getPhotos().size());
+                assertEquals(5, menu.getTruckMenuPhotoFiles().size());
             }
         }
     }

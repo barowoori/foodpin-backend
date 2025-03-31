@@ -26,10 +26,7 @@ public class EventApplicationList {
             return TruckInfo.builder()
                     .id(truck.getId())
                     .name(truck.getName())
-                    .photo(truck.getPhotos()
-                            .stream()
-                            .map(truckPhoto -> imageManager.getPreSignUrl(truckPhoto.getFile().getPath()))
-                            .findFirst().orElse(null))
+                    .photo(truck.getTruckMainPhotoUrl(imageManager))
                     .approval(truck.approval())
                     .build();
         }
@@ -40,8 +37,9 @@ public class EventApplicationList {
     public static class EventPendingApplication {
         private String id;
         private TruckInfo truck;
-        private List<LocalDate> dates;
+        private List<ApplicationDateInfo> dates;
         private Boolean isRead;
+
 
         public static EventPendingApplication of(EventApplication eventApplication, ImageManager imageManager) {
             return EventPendingApplication.builder()
@@ -50,12 +48,27 @@ public class EventApplicationList {
                     .dates(eventApplication.getDates().stream()
                             .map(EventApplicationDate::getEventDate)
                             .sorted(Comparator.comparing(EventDate::getDate))
-                            .map(EventDate::getDate).toList())
+                            .map(ApplicationDateInfo::of).toList())
                     .isRead(eventApplication.getIsRead())
                     .build();
 
         }
     }
+
+    @Getter
+    @Builder
+    public static class ApplicationDateInfo{
+        private String eventDateId;
+        private LocalDate date;
+
+        public static ApplicationDateInfo of(EventDate eventDate){
+            return ApplicationDateInfo.builder()
+                    .eventDateId(eventDate.getId())
+                    .date(eventDate.getDate())
+                    .build();
+        }
+    }
+
 
     @Getter
     @Builder

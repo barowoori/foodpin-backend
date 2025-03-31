@@ -1,6 +1,8 @@
 package com.barowoori.foodpinbackend.truck.command.domain.model;
 
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
+import com.barowoori.foodpinbackend.file.command.domain.model.File;
+import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -10,6 +12,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Entity
@@ -106,5 +109,28 @@ public class Truck {
 
     public Boolean approval(){
        return this.documents.stream().anyMatch(doc -> doc.getType().equals(DocumentType.BUSINESS_REGISTRATION));
+    }
+
+    public String getTruckMainPhotoUrl(ImageManager imageManager){
+        return getTruckPhotoFiles().stream()
+                .map(file -> imageManager.getPreSignUrl(file.getPath()))
+                .findFirst().orElse(null);
+    }
+
+    public List<File> getTruckPhotoFiles(){
+        return photos.stream()
+                .sorted(Comparator.comparing(TruckPhoto::getCreateAt))
+                .map(TruckPhoto::getFile)
+                .toList();
+    }
+
+    public List<TruckMenu> getSortedTruckMenus(){
+        return menus.stream()
+                .sorted(Comparator.comparing(TruckMenu::getCreateAt))
+                .toList();
+    }
+
+    public List<String> getSortedTruckMenuNames(){
+        return getSortedTruckMenus().stream().map(TruckMenu::getName).toList();
     }
 }

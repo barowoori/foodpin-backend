@@ -142,6 +142,10 @@ public class Event {
         this.isDeleted = true;
     }
 
+    public void updateStatus(EventStatus eventStatus){
+        this.status = eventStatus;
+    }
+
     public String getEventMainPhotoUrl(ImageManager imageManager){
         return getEventPhotoFiles().stream()
                 .map(file -> imageManager.getPreSignUrl(file.getPath()))

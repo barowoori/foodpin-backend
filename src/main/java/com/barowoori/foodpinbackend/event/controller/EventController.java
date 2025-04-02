@@ -50,7 +50,7 @@ public class EventController {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "행사 사진 파일을 못 찾을 경우[40001]," +
+            @ApiResponse(responseCode = "404", description = "행사 사진 파일을 못 찾을 경우[40001], " +
                     "지역을 못 찾을 경우[40002], 카테고리를 못 찾을 경우[40003]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -129,7 +129,7 @@ public class EventController {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "행사를 못 찾을 경우[40000]" +
+            @ApiResponse(responseCode = "404", description = "행사를 못 찾을 경우[40000], " +
                     "행사 사진 파일을 못 찾을 경우[40001], 지역을 못 찾을 경우[40002]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -219,8 +219,8 @@ public class EventController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "행사를 못 찾을 경우[40000]" +
-                    "트럭을 못 찾을 경우[30000], 행사 날짜를 못 찾을 경우[40006]" +
+            @ApiResponse(responseCode = "404", description = "행사를 못 찾을 경우[40000], " +
+                    "트럭을 못 찾을 경우[30000], 행사 날짜를 못 찾을 경우[40006], " +
                     "트럭 운영자가 아닐 경우[30004]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -229,6 +229,47 @@ public class EventController {
         eventService.applyEvent(applyEventDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Event applied successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "행사 참여 확정/거절", description = "EventTruckStatus : 참여 확정 = CONFIRMED, 참여 거절 = REJECTED")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "행사 참여 여부가 잘못된 경우[40013]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "EventTruck을 못 찾을 경우[40012], " +
+                    "트럭 운영자가 아닐 경우[30004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping(value = "/v1/trucks/pending")
+    public ResponseEntity<CommonResponse<String>> handleEventTruck(@RequestBody RequestEvent.HandleEventTruckDto handleEventTruckDto) {
+        eventService.handleEventTruck(handleEventTruckDto);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Event truck handled successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "행사 제안", description = "행사 주최자만 사용 가능")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "행사 주최자가 아닌 경우[40005], " +
+                    "이미 제안한 트럭인 경우[40011]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "행사를 못 찾을 경우[40000], " +
+                    "트럭을 못 찾을 경우[30000]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping(value = "/v1/proposal")
+    public ResponseEntity<CommonResponse<String>> proposeEvent(@RequestBody RequestEvent.ProposeEventDto proposeEventDto) {
+        eventService.proposeEvent(proposeEventDto);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Event proposed successfully.")
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }

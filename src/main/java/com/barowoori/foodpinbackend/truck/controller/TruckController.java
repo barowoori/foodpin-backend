@@ -50,8 +50,8 @@ public class TruckController {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "트럭 사진 파일을 못 찾을 경우[30001]," +
-                    "트럭 카테고리가 없을 경우[30007], 트럭 메뉴 사진 파일을 못 찾을 경우[30002]," +
+            @ApiResponse(responseCode = "404", description = "트럭 사진 파일을 못 찾을 경우[30001], " +
+                    "트럭 카테고리가 없을 경우[30007], 트럭 메뉴 사진 파일을 못 찾을 경우[30002], " +
                     "트럭 서류 사진 파일을 못 찾을 경우[30003], 멤버를 못 찾을 경우[20004]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -67,12 +67,12 @@ public class TruckController {
     @Operation(summary = "트럭 운영자 추가", description = "초대된 사람(새 운영자) 계정에서 실행, 초대된 트럭 id(초대코드) 입력")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
-            @ApiResponse(responseCode = "400", description = "매니저가 이미 등록되어 있는 경우[30006]" +
+            @ApiResponse(responseCode = "400", description = "매니저가 이미 등록되어 있는 경우[30006], " +
                     "초대 코드가 일치하지 않는 경우[30010]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "멤버를 못 찾을 경우[20004]," +
+            @ApiResponse(responseCode = "404", description = "멤버를 못 찾을 경우[20004], " +
                     "트럭을 못 찾을 경우[30000]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -88,12 +88,12 @@ public class TruckController {
     @Operation(summary = "트럭 운영자 초대 문구 조회")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
-            @ApiResponse(responseCode = "400", description = "매니저가 이미 등록되어 있는 경우[30006]" +
+            @ApiResponse(responseCode = "400", description = "매니저가 이미 등록되어 있는 경우[30006], " +
                     "초대 코드가 일치하지 않는 경우[30010]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "멤버를 못 찾을 경우[20004]," +
+            @ApiResponse(responseCode = "404", description = "멤버를 못 찾을 경우[20004], " +
                     "트럭을 못 찾을 경우[30000]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -169,7 +169,7 @@ public class TruckController {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000]," +
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
                     "멤버를 못 찾을 경우[20004]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -187,7 +187,7 @@ public class TruckController {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000]," +
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
                     "멤버를 못 찾을 경우[20004], 트럭 사진 파일을 못 찾는 경우[30001]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -208,7 +208,7 @@ public class TruckController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000]," +
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
                     "멤버를 못 찾을 경우[20004]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -227,8 +227,8 @@ public class TruckController {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000]," +
-                    "멤버를 못 찾을 경우[20004], 카테고리를 못 찾을 경우[30007]," +
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
+                    "멤버를 못 찾을 경우[20004], 카테고리를 못 찾을 경우[30007], " +
                     "메뉴 사진 파일을 못 찾을 경우[30003]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -246,13 +246,13 @@ public class TruckController {
             "\n\n사업자 등록증의 경우 사업자 정보 createBusinessRegistrationDto를, 그 외 서류의 경우 사진 파일 id 리스트를 같이 보내야 함")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
-            @ApiResponse(responseCode = "400", description = "사업자 등록 정보가 누락됐을 경우[30008]" +
+            @ApiResponse(responseCode = "400", description = "사업자 등록 정보가 누락됐을 경우[30008], " +
                     "서류 사진이 누락됐을 경우[30009]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000]," +
-                    "멤버를 못 찾을 경우[20004], 카테고리를 못 찾을 경우[30007]," +
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
+                    "멤버를 못 찾을 경우[20004], 카테고리를 못 찾을 경우[30007], " +
                     "메뉴 사진 파일을 못 찾을 경우[30003]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -271,7 +271,7 @@ public class TruckController {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000]," +
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
                     "멤버를 못 찾을 경우[20004], 트럭 소유자를 못 찾을(아닐) 경우[30005]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -290,7 +290,7 @@ public class TruckController {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000]," +
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
                     "멤버를 못 찾을 경우[20004], 트럭 소유자를 못 찾을(아닐) 경우[30005]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -309,7 +309,7 @@ public class TruckController {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000]," +
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
                     "멤버를 못 찾을 경우[20004]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -329,7 +329,7 @@ public class TruckController {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000]," +
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
                     "멤버를 못 찾을 경우[20004], 트럭 소유자를 못 찾을(아닐) 경우[30005]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })

@@ -65,7 +65,7 @@ public class RequestEvent {
                     .guidelines(this.guidelines)
                     .documentSubmissionTarget(this.documentSubmissionTarget)
                     .submissionEmail(this.submissionEmail)
-                    .status(EventStatus.IN_PROGRESS)
+                    .status(EventStatus.RECRUITING)
                     .build();
         }
     }
@@ -163,6 +163,24 @@ public class RequestEvent {
 
     @Builder
     @Data
+    public static class ProposeEventDto{
+        @Schema(description = "제안할 행사 id")
+        @NotEmpty
+        private String eventId;
+        @Schema(description = "제안할 트럭 id")
+        @NotEmpty
+        private String truckId;
+
+        public EventProposal toEntity(Event event, Truck truck){
+            return EventProposal.builder()
+                    .event(event)
+                    .truck(truck)
+                    .build();
+        }
+    }
+
+    @Builder
+    @Data
     @Getter
     public static class ApplyEventDto{
         @Schema(description = "지원할 행사 id")
@@ -189,14 +207,33 @@ public class RequestEvent {
     @Builder
     @Getter
     public static class HandleEventApplicationDto{
-        @Schema(description = "처리할 eventApplication id, 지원자 목록 리스트 api에서 반환된 id")
-        @NotEmpty
-        private String eventApplicationId;
         @Schema(description = "선정 여부")
         @NotEmpty
         private Boolean isSelected;
-        @Schema(description = "선정할 날짜 리스트, 선정인 경우 필수")
-        private List<LocalDate> dates;
+        @Schema(description = "선정할 날짜(EventDate) id 리스트, 선정인 경우 필수")
+        private List<String> eventDateIdList;
+    }
+
+    @Builder
+    @Getter
+    public static class HandleEventRecruitmentDto{
+        @Schema(description = "행사 id")
+        @NotEmpty
+        private String eventId;
+        @Schema(description = "모집 종료/취소 여부")
+        @NotEmpty
+        private EventStatus recruitmentStatus;
+    }
+
+    @Builder
+    @Getter
+    public static class HandleEventTruckDto{
+        @Schema(description = "EventTruck id")
+        @NotEmpty
+        private String eventTruckId;
+        @Schema(description = "행사 참여 여부")
+        @NotEmpty
+        private EventTruckStatus eventTruckStatus;
     }
 
     @Builder

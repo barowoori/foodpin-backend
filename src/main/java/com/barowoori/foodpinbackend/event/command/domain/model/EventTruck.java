@@ -48,4 +48,12 @@ public class EventTruck {
         this.truck = truck;
         this.status = status;
     }
+
+    public void confirm(){
+        this.status = EventTruckStatus.CONFIRMED;
+    }
+
+    public void reject(){
+        this.status = EventTruckStatus.REJECTED;
+    }
 }

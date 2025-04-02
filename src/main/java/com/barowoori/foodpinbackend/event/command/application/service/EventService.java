@@ -49,6 +49,8 @@ public class EventService {
     private final EventApplicationDateRepository eventApplicationDateRepository;
     private final TruckManagerRepository truckManagerRepository;
     private final EventNoticeRepository eventNoticeRepository;
+    private final EventProposalRepository eventProposalRepository;
+    private final EventTruckRepository eventTruckRepository;
 
     private String getMemberId() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
@@ -128,6 +130,7 @@ public class EventService {
         if (!Objects.equals(updateEventInfoDto.getFileIdList(), null) && !updateEventInfoDto.getFileIdList().isEmpty()) {
             List<EventPhoto> photoList = eventPhotoRepository.findAllByEvent(event);
             photoList.forEach(eventPhotoRepository::delete);
+            eventPhotoRepository.flush();
             for (String fileId : updateEventInfoDto.getFileIdList()) {
                 File file = fileRepository.findById(fileId)
                         .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_PHOTO_NOT_FOUND));
@@ -220,6 +223,21 @@ public class EventService {
     }
 
     @Transactional
+    public void proposeEvent(RequestEvent.ProposeEventDto proposeEventDto){
+        String memberId = getMemberId();
+        Event event = getEvent(proposeEventDto.getEventId());
+        if (!event.isCreator(memberId)) {
+            throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
+        }
+        EventProposal eventProposal = eventProposalRepository.findByEventIdAndTruckId(proposeEventDto.getEventId(), proposeEventDto.getTruckId());
+        if (eventProposal != null) {
+            throw new CustomException(EventErrorCode.ALREADY_PROPOSED_TRUCK);
+        }
+        EventProposal newEventProposal = proposeEventDto.toEntity(event, getTruck(proposeEventDto.getTruckId()));
+        eventProposalRepository.save(newEventProposal);
+    }
+
+    @Transactional
     public void applyEvent(RequestEvent.ApplyEventDto applyEventDto) {
         TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(applyEventDto.getTruckId(), getMemberId());
         if (truckManager == null)
@@ -240,6 +258,23 @@ public class EventService {
             EventApplicationDate eventApplicationDate = EventApplicationDate.builder().eventDate(eventDate).eventApplication(eventApplication).build();
             eventApplicationDateRepository.save(eventApplicationDate);
         }
+    }
+
+    //TODO 한 번 처리(확정/거절)하고 난 후에는 안 되게 막을 것인지 확인 필요
+    @Transactional
+    public void handleEventTruck(RequestEvent.HandleEventTruckDto handleEventTruckDto){
+        EventTruck eventTruck = eventTruckRepository.findById(handleEventTruckDto.getEventTruckId())
+                .orElseThrow(()-> new CustomException(EventErrorCode.EVENT_TRUCK_NOT_FOUND));
+        TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(eventTruck.getTruck().getId(), getMemberId());
+        if (truckManager == null) {
+            throw new CustomException(TruckErrorCode.TRUCK_MANAGER_NOT_FOUND);
+        }
+        if (handleEventTruckDto.getEventTruckStatus().equals(EventTruckStatus.CONFIRMED)){
+            eventTruck.confirm();
+        } else if (handleEventTruckDto.getEventTruckStatus().equals(EventTruckStatus.REJECTED)){
+            eventTruck.reject();
+        } else throw new CustomException(EventErrorCode.WRONG_EVENT_TRUCK_STATUS);
+        eventTruckRepository.save(eventTruck);
     }
 
     @Transactional(readOnly = true)

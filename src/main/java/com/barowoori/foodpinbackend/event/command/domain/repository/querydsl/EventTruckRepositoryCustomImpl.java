@@ -14,7 +14,6 @@ import java.util.List;
 
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEvent.event;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventApplication.eventApplication;
-import static com.barowoori.foodpinbackend.event.command.domain.model.QEventApplicationDate.eventApplicationDate;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventPhoto.eventPhoto;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventTruck.eventTruck;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventTruckDate.eventTruckDate;
@@ -117,6 +116,23 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
             return filterBuilder.and(eventTruck.status.eq(EventTruckStatus.CONFIRMED).and(eventTruck.event.status.eq(EventStatus.COMPLETED)));
         }
         return filterBuilder;
+    }
+
+    @Override
+    public Boolean isConfirmedEventTruck(String eventId, String truckId) {
+        return jpaQueryFactory.selectFrom(eventTruck)
+                .innerJoin(eventTruck.event, event).on(event.id.eq(eventId))
+                .innerJoin(eventTruck.truck, truck).on(truck.id.eq(truckId))
+                .where(eventTruck.status.eq(EventTruckStatus.CONFIRMED))
+                .fetchFirst() != null;
+    }
+
+    public EventTruck findConfirmedEventTruck(String eventId, String truckId) {
+        return jpaQueryFactory.selectFrom(eventTruck)
+                .innerJoin(eventTruck.event, event).on(event.id.eq(eventId))
+                .innerJoin(eventTruck.truck, truck).on(truck.id.eq(truckId))
+                .where(eventTruck.status.eq(EventTruckStatus.CONFIRMED))
+                .fetchOne();
     }
 
 }

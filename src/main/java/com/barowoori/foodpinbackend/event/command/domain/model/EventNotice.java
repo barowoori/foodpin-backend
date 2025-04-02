@@ -1,5 +1,6 @@
 package com.barowoori.foodpinbackend.event.command.domain.model;
 
+import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -7,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Entity
@@ -37,7 +39,8 @@ public class EventNotice {
     @OneToMany(mappedBy = "eventNotice", fetch = FetchType.LAZY)
     private List<EventNoticeView> views = new ArrayList<>();
 
-    protected EventNotice(){}
+    protected EventNotice() {
+    }
 
     @Builder
     public EventNotice(String title, String content, Boolean isDeleted, Event event) {
@@ -54,5 +57,34 @@ public class EventNotice {
 
     public void delete() {
         this.isDeleted = Boolean.TRUE;
+    }
+
+    public List<EventTruck> getReadEventTrucks() {
+        return this.views.stream()
+                .sorted(Comparator.comparing(EventNoticeView::getCreatedAt))
+                .map(EventNoticeView::getEventTruck)
+                .toList();
+    }
+
+    public List<String> getReadEventTruckNames() {
+        return getReadEventTrucks().stream()
+                .map(EventTruck::getTruck)
+                .map(Truck::getName)
+                .toList();
+    }
+
+    public List<EventTruck> getUnReadEventTrucks() {
+        List<EventTruck> readEventTrucks = getReadEventTrucks();
+        return this.event.getConfirmedEventTrucks()
+                .stream()
+                .filter(truck -> !readEventTrucks.contains(truck))
+                .toList();
+    }
+
+    public List<String> getUnReadEventTruckNames() {
+        return getUnReadEventTrucks().stream()
+                .map(EventTruck::getTruck)
+                .map(Truck::getName)
+                .toList();
     }
 }

@@ -7,5 +7,7 @@ import org.springframework.data.domain.Pageable;
 public interface EventTruckRepositoryCustom {
     Page<EventTruck> findSelectedEventTrucks(String eventId, String status, Pageable pageable);
     Page<EventTruck> findSelectedApplications(String status, String truckId, Pageable pageable);
+    Boolean isConfirmedEventTruck(String eventId, String truckId);
+    EventTruck findConfirmedEventTruck(String eventId, String truckId);
 
 }

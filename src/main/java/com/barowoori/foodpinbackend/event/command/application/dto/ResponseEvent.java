@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class ResponseEvent {
     @Builder
@@ -23,5 +24,46 @@ public class ResponseEvent {
                     .createdAt(eventNotice.getCreatedAt())
                     .build();
         }
+    }
+
+    @Builder
+    @Data
+    @Getter
+    public static class GetEventNoticeDetailForCreatorDto{
+        private String id;
+        private String title;
+        private LocalDateTime createdAt;
+        private String content;
+        private List<String> readTruckNames;
+        private List<String> unreadTruckNames;
+
+        public static GetEventNoticeDetailForCreatorDto of(EventNotice eventNotice){
+            return GetEventNoticeDetailForCreatorDto.builder()
+                    .id(eventNotice.getId())
+                    .title(eventNotice.getTitle())
+                    .createdAt(eventNotice.getCreatedAt())
+                    .readTruckNames(eventNotice.getReadEventTruckNames())
+                    .unreadTruckNames(eventNotice.getUnReadEventTruckNames())
+                    .build();
+        }
+    }
+
+    @Builder
+    @Data
+    @Getter
+    public static class GetEventNoticeDetailForTruckDto{
+        private String id;
+        private String title;
+        private LocalDateTime createdAt;
+        private String content;
+
+        public static GetEventNoticeDetailForTruckDto of(EventNotice eventNotice){
+            return GetEventNoticeDetailForTruckDto.builder()
+                    .id(eventNotice.getId())
+                    .title(eventNotice.getTitle())
+                    .createdAt(eventNotice.getCreatedAt())
+                    .build();
+        }
+
     }
 }

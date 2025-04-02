@@ -429,4 +429,35 @@ public class EventController {
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
+
+    @Operation(summary = "행사 주최자용 공지사항 상세 조회", description = "")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/creator/notices/{noticeId}")
+    public ResponseEntity<CommonResponse<ResponseEvent.GetEventNoticeDetailForCreatorDto>> getEventNoticeDetailForCreator(@PathVariable(value = "noticeId") String noticeId) {
+        ResponseEvent.GetEventNoticeDetailForCreatorDto eventNotice = eventService.getEventNoticeDetailForCreator(noticeId);
+        CommonResponse<ResponseEvent.GetEventNoticeDetailForCreatorDto> commonResponse = CommonResponse.<ResponseEvent.GetEventNoticeDetailForCreatorDto>builder()
+                .data(eventNotice)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "행사 참가 트럭용 공지사항 상세 조회", description = "")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/trucks/{truckId}/notices/{noticeId}")
+    public ResponseEntity<CommonResponse<ResponseEvent.GetEventNoticeDetailForTruckDto>> getEventNoticeDetailForTruck(@PathVariable(value = "truckId") String truckId,
+                                                                                                      @PathVariable(value = "noticeId") String noticeId) {
+        ResponseEvent.GetEventNoticeDetailForTruckDto eventNotice = eventService.getEventNoticeDetailForTruck(truckId, noticeId);
+        CommonResponse<ResponseEvent.GetEventNoticeDetailForTruckDto> commonResponse = CommonResponse.<ResponseEvent.GetEventNoticeDetailForTruckDto>builder()
+                .data(eventNotice)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
 }

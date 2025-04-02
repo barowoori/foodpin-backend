@@ -85,6 +85,9 @@ public class Event {
     @OneToMany(mappedBy = "event")
     private List<EventDocument> documents = new ArrayList<>();
 
+    @OneToMany(mappedBy = "event")
+    private List<EventTruck> eventTrucks = new ArrayList<>();
+
     protected Event() {
     }
 
@@ -114,54 +117,60 @@ public class Event {
         this.guidelines = guidelines;
     }
 
-    public void updateSubmissionEmail(String submissionEmail){
+    public void updateSubmissionEmail(String submissionEmail) {
         this.submissionEmail = submissionEmail;
     }
 
-    public void updateDocumentSubmissionTarget(EventDocumentSubmissionTarget documentSubmissionTarget){
+    public void updateDocumentSubmissionTarget(EventDocumentSubmissionTarget documentSubmissionTarget) {
         this.documentSubmissionTarget = documentSubmissionTarget;
     }
 
-    public void initEventRecruitDetail(EventRecruitDetail eventRecruitDetail){
+    public void initEventRecruitDetail(EventRecruitDetail eventRecruitDetail) {
         this.recruitDetail = eventRecruitDetail;
     }
 
-    public void initEventView(EventView eventView){
+    public void initEventView(EventView eventView) {
         this.view = eventView;
     }
 
-    public void initEventRegion(EventRegion eventRegion){
+    public void initEventRegion(EventRegion eventRegion) {
         this.eventRegion = eventRegion;
     }
 
-    public Boolean isCreator(String memberId){
+    public Boolean isCreator(String memberId) {
         return this.createdBy.equals(memberId);
     }
 
-    public void delete(){
+    public void delete() {
         this.isDeleted = true;
     }
 
-    public void updateStatus(EventStatus eventStatus){
+    public void updateStatus(EventStatus eventStatus) {
         this.status = eventStatus;
     }
 
-    public String getEventMainPhotoUrl(ImageManager imageManager){
+    public String getEventMainPhotoUrl(ImageManager imageManager) {
         return getEventPhotoFiles().stream()
                 .map(file -> imageManager.getPreSignUrl(file.getPath()))
                 .findFirst().orElse(null);
     }
 
-    public List<File> getEventPhotoFiles(){
+    public List<File> getEventPhotoFiles() {
         return photos.stream()
                 .sorted(Comparator.comparing(EventPhoto::getCreatedAt))
                 .map(EventPhoto::getFile)
                 .toList();
     }
 
-    public List<EventDate> getSortedEventDates(){
+    public List<EventDate> getSortedEventDates() {
         return eventDates.stream()
                 .sorted(Comparator.comparing(EventDate::getCreatedAt))
+                .toList();
+    }
+
+    public List<EventTruck> getConfirmedEventTrucks() {
+        return this.eventTrucks.stream()
+                .filter(truck -> truck.getStatus().equals(EventTruckStatus.CONFIRMED))
                 .toList();
     }
 }

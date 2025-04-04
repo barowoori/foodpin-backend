@@ -21,7 +21,7 @@ public class RequestTruck {
         private TruckInfoDto truckInfoDto;
         @Schema(description = "트럭 지역 코드 Set")
         @NotEmpty
-        private Set<String> truckRegionCodeSet;
+        private List<String> truckRegionCodeSet;
         @Schema(description = "트럭 카테고리 코드 Set")
         @NotEmpty
         private Set<String> truckCategoryCodeSet;

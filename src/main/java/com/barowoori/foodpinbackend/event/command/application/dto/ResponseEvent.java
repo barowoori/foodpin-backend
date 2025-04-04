@@ -34,6 +34,8 @@ public class ResponseEvent {
         private String title;
         private LocalDateTime createdAt;
         private String content;
+        private Boolean isAvailableUpdate;
+        private Boolean isAvailableDelete;
         private List<String> readTruckNames;
         private List<String> unreadTruckNames;
 
@@ -42,6 +44,8 @@ public class ResponseEvent {
                     .id(eventNotice.getId())
                     .title(eventNotice.getTitle())
                     .createdAt(eventNotice.getCreatedAt())
+                    .isAvailableUpdate(eventNotice.getReadEventTrucks().isEmpty())
+                    .isAvailableDelete(eventNotice.getReadEventTrucks().isEmpty())
                     .readTruckNames(eventNotice.getReadEventTruckNames())
                     .unreadTruckNames(eventNotice.getUnReadEventTruckNames())
                     .build();

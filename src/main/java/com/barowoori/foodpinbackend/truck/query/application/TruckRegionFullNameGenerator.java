@@ -38,6 +38,7 @@ public class TruckRegionFullNameGenerator {
                 .select(truckRegion.regionType, truckRegion.regionId)
                 .from(truckRegion)
                 .where(truckRegion.truck.id.eq(truckId))
+                .orderBy(truckRegion.createAt.asc())
                 .fetch();
 
         List<String> regionNames = new ArrayList<>();
@@ -59,6 +60,7 @@ public class TruckRegionFullNameGenerator {
                 .select(truckRegion.regionType, truckRegion.regionId)
                 .from(truckRegion)
                 .where(truckRegion.truck.id.eq(truckId))
+                .orderBy(truckRegion.createAt.asc())
                 .fetch();
 
         List<RegionCode> regionCodes = new ArrayList<>();

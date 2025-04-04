@@ -51,6 +51,7 @@ public class EventService {
     private final EventNoticeRepository eventNoticeRepository;
     private final EventProposalRepository eventProposalRepository;
     private final EventTruckRepository eventTruckRepository;
+    private final EventNoticeViewRepository eventNoticeViewRepository;
 
     private String getMemberId() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
@@ -223,7 +224,7 @@ public class EventService {
     }
 
     @Transactional
-    public void proposeEvent(RequestEvent.ProposeEventDto proposeEventDto){
+    public void proposeEvent(RequestEvent.ProposeEventDto proposeEventDto) {
         String memberId = getMemberId();
         Event event = getEvent(proposeEventDto.getEventId());
         if (!event.isCreator(memberId)) {
@@ -262,16 +263,16 @@ public class EventService {
 
     //TODO 한 번 처리(확정/거절)하고 난 후에는 안 되게 막을 것인지 확인 필요
     @Transactional
-    public void handleEventTruck(RequestEvent.HandleEventTruckDto handleEventTruckDto){
+    public void handleEventTruck(RequestEvent.HandleEventTruckDto handleEventTruckDto) {
         EventTruck eventTruck = eventTruckRepository.findById(handleEventTruckDto.getEventTruckId())
-                .orElseThrow(()-> new CustomException(EventErrorCode.EVENT_TRUCK_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_TRUCK_NOT_FOUND));
         TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(eventTruck.getTruck().getId(), getMemberId());
         if (truckManager == null) {
             throw new CustomException(TruckErrorCode.TRUCK_MANAGER_NOT_FOUND);
         }
-        if (handleEventTruckDto.getEventTruckStatus().equals(EventTruckStatus.CONFIRMED)){
+        if (handleEventTruckDto.getEventTruckStatus().equals(EventTruckStatus.CONFIRMED)) {
             eventTruck.confirm();
-        } else if (handleEventTruckDto.getEventTruckStatus().equals(EventTruckStatus.REJECTED)){
+        } else if (handleEventTruckDto.getEventTruckStatus().equals(EventTruckStatus.REJECTED)) {
             eventTruck.reject();
         } else throw new CustomException(EventErrorCode.WRONG_EVENT_TRUCK_STATUS);
         eventTruckRepository.save(eventTruck);
@@ -281,5 +282,40 @@ public class EventService {
     public Page<ResponseEvent.GetEventNoticeDto> getEventNotices(String eventId, Pageable pageable) {
         return eventNoticeRepository.findEventNoticeListByEventId(eventId, pageable)
                 .map(ResponseEvent.GetEventNoticeDto::of);
+    }
+
+    @Transactional
+    public ResponseEvent.GetEventNoticeDetailForCreatorDto getEventNoticeDetailForCreator(String noticeId) {
+        String memberId = getMemberId();
+        EventNotice eventNotice = eventNoticeRepository.findEventNoticeForCreator(noticeId);
+        if (eventNotice == null) {
+            throw new CustomException(EventErrorCode.EVENT_NOTICE_NOT_FOUND);
+        }
+        if (eventNotice.getEvent().isCreator(memberId)) {
+            throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
+        }
+        return ResponseEvent.GetEventNoticeDetailForCreatorDto.of(eventNotice);
+    }
+
+    @Transactional
+    public ResponseEvent.GetEventNoticeDetailForTruckDto getEventNoticeDetailForTruck(String truckId, String noticeId) {
+        EventNotice eventNotice = eventNoticeRepository.findById(noticeId)
+                .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_NOTICE_NOT_FOUND));
+
+        EventTruck eventTruck = eventTruckRepository.findConfirmedEventTruck(eventNotice.getEvent().getId(), truckId);
+        if (eventTruck == null) {
+            throw new CustomException(EventErrorCode.EVENT_TRUCK_NOT_FOUND);
+        }
+
+        EventNoticeView eventNoticeView = eventNoticeViewRepository.findByEventNoticeAndEventTruck(eventNotice, eventTruck);
+        if (eventNoticeView == null) {
+            eventNoticeView = EventNoticeView.builder()
+                    .eventTruck(eventTruck)
+                    .eventNotice(eventNotice)
+                    .build();
+            eventNoticeViewRepository.save(eventNoticeView);
+        }
+        return ResponseEvent.GetEventNoticeDetailForTruckDto.of(eventNotice);
+
     }
 }

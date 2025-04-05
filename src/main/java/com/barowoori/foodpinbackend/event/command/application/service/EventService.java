@@ -83,7 +83,7 @@ public class EventService {
             }
         }
 
-        EventView eventView = EventView.builder().event(event).build();
+        EventView eventView = EventView.builder().event(event).views(0).build();
         eventViewRepository.save(eventView);
         event.initEventView(eventView);
 

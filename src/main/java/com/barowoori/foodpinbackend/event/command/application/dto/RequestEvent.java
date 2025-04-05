@@ -66,6 +66,7 @@ public class RequestEvent {
                     .documentSubmissionTarget(this.documentSubmissionTarget)
                     .submissionEmail(this.submissionEmail)
                     .status(EventStatus.RECRUITING)
+                    .isDeleted(Boolean.FALSE)
                     .build();
         }
     }
@@ -92,6 +93,8 @@ public class RequestEvent {
             return EventRecruitDetail.builder()
                     .recruitEndDateTime(this.recruitEndDateTime)
                     .recruitCount(this.recruitCount)
+                    .applicantCount(0)
+                    .selectedCount(0)
                     .event(event)
                     .generatorRequirement(this.generatorRequirement)
                     .electricitySupportAvailability(this.electricitySupportAvailability)

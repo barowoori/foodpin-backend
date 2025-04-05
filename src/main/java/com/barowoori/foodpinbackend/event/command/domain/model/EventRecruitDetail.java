@@ -51,7 +51,7 @@ public class EventRecruitDetail {
     protected EventRecruitDetail(){}
 
     @Builder
-    public EventRecruitDetail(LocalDateTime recruitEndDateTime, Integer recruitCount, Integer applicantCount,
+    public EventRecruitDetail(LocalDateTime recruitEndDateTime, Integer recruitCount, Integer applicantCount, Integer selectedCount,
                               Boolean generatorRequirement, Boolean electricitySupportAvailability, Integer entryFee,
                               Event event) {
         this.recruitEndDateTime = recruitEndDateTime;

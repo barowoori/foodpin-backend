@@ -52,14 +52,12 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
 
     @Override
     public Page<Truck> findTruckListByFilter(String searchTerm, List<String> categoryCodes, Map<RegionType, List<String>> regionIds, Pageable pageable) {
-        List<Truck> trucks = jpaQueryFactory.selectDistinct(truck)
+        List<String> truckIds = jpaQueryFactory.selectDistinct(truck.id)
                 .from(truck)
                 .leftJoin(truck.regions, truckRegion)
                 .leftJoin(truck.categories, truckCategory)
                 .leftJoin(truckCategory.category, category)
                 .leftJoin(truck.menus, truckMenu)
-                .leftJoin(truck.photos, truckPhoto)
-                .leftJoin(truckPhoto.file, file)
                 .where(
                         truck.isDeleted.isFalse()
                                 .and(
@@ -67,9 +65,21 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
                                                 .and(regionFilterCondition(regionIds))
                                 )
                 )
-                .orderBy(getOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
+                .fetch();
+
+
+        List<Truck> trucks = jpaQueryFactory.selectDistinct(truck)
+                .from(truck)
+                .leftJoin(truck.regions, truckRegion).fetchJoin()
+                .leftJoin(truck.categories, truckCategory).fetchJoin()
+                .leftJoin(truckCategory.category, category).fetchJoin()
+                .leftJoin(truck.menus, truckMenu).fetchJoin()
+                .leftJoin(truck.photos, truckPhoto).fetchJoin()
+                .leftJoin(truckPhoto.file, file).fetchJoin()
+                .where(truck.id.in(truckIds))
+                .orderBy(getOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
                 .fetch();
 
         Long total = jpaQueryFactory.select(truck.countDistinct()).from(truck)
@@ -91,15 +101,13 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
 
     @Override
     public Page<Truck> findLikeTruckListByFilter(String memberId, String searchTerm, List<String> categoryCodes, Map<RegionType, List<String>> regionIds, Pageable pageable) {
-        List<Truck> trucks = jpaQueryFactory.selectDistinct(truck)
+        List<String> truckIds = jpaQueryFactory.selectDistinct(truck.id)
                 .from(truck)
                 .innerJoin(truckLike).on(truckLike.truck.eq(truck).and(truckLike.member.id.eq(memberId)))
                 .leftJoin(truck.regions, truckRegion)
                 .leftJoin(truck.categories, truckCategory)
                 .leftJoin(truckCategory.category, category)
-                .leftJoin(truckMenu).on(truckMenu.truck.eq(truck))
-                .leftJoin(truck.photos, truckPhoto).fetchJoin()
-                .leftJoin(truckPhoto.file, file).fetchJoin()
+                .leftJoin(truck.menus, truckMenu)
                 .where(
                         truck.isDeleted.isFalse()
                                 .and(
@@ -107,9 +115,21 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
                                                 .and(regionFilterCondition(regionIds))
                                 )
                 )
-                .orderBy(getOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
+                .fetch();
+
+        List<Truck> trucks = jpaQueryFactory.selectDistinct(truck)
+                .from(truck)
+                .innerJoin(truckLike).on(truckLike.truck.eq(truck).and(truckLike.member.id.eq(memberId)))
+                .leftJoin(truck.regions, truckRegion).fetchJoin()
+                .leftJoin(truck.categories, truckCategory).fetchJoin()
+                .leftJoin(truckCategory.category, category).fetchJoin()
+                .leftJoin(truck.menus, truckMenu).fetchJoin()
+                .leftJoin(truck.photos, truckPhoto).fetchJoin()
+                .leftJoin(truckPhoto.file, file).fetchJoin()
+                .where(truck.id.in(truckIds))
+                .orderBy(getOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
                 .fetch();
 
 
@@ -117,9 +137,8 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
                 .innerJoin(truckLike).on(truckLike.truck.eq(truck).and(truckLike.member.id.eq(memberId)))
                 .leftJoin(truck.regions, truckRegion)
                 .leftJoin(truck.categories, truckCategory)
-                .leftJoin(category).on(truckCategory.category.eq(category))
-                .leftJoin(truckDocument).on(truckDocument.truck.eq(truck))
-                .leftJoin(truckMenu).on(truckMenu.truck.eq(truck))
+                .leftJoin(truckCategory.category, category)
+                .leftJoin(truck.menus, truckMenu)
                 .where(
                         truck.isDeleted.isFalse()
                                 .and(

@@ -38,6 +38,7 @@ import static com.barowoori.foodpinbackend.event.command.domain.model.QEventTruc
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventView.eventView;
 import static com.barowoori.foodpinbackend.file.command.domain.model.QFile.file;
 import static com.barowoori.foodpinbackend.member.command.domain.model.QEventLike.eventLike;
+import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckRegion.truckRegion;
 
 public class EventRepositoryCustomImpl implements EventRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
@@ -78,10 +79,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                         event.isDeleted.isFalse()
                                 .and(
                                         createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, event, eventDate, category)
-                                                .or(regionFilterCondition(eventRegion, RegionType.REGION_DO, regionIds.get(RegionType.REGION_DO)))
-                                                .or(regionFilterCondition(eventRegion, RegionType.REGION_SI, regionIds.get(RegionType.REGION_SI)))
-                                                .or(regionFilterCondition(eventRegion, RegionType.REGION_GU, regionIds.get(RegionType.REGION_GU)))
-                                                .or(regionFilterCondition(eventRegion, RegionType.REGION_GUN, regionIds.get(RegionType.REGION_GUN)))
+                                                .and(regionFilterCondition(regionIds))
                                 )
                 )
                 .orderBy(getOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
@@ -99,10 +97,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                         event.isDeleted.isFalse()
                                 .and(
                                         createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, event, eventDate, category)
-                                                .or(regionFilterCondition(eventRegion, RegionType.REGION_DO, regionIds.get(RegionType.REGION_DO)))
-                                                .or(regionFilterCondition(eventRegion, RegionType.REGION_SI, regionIds.get(RegionType.REGION_SI)))
-                                                .or(regionFilterCondition(eventRegion, RegionType.REGION_GU, regionIds.get(RegionType.REGION_GU)))
-                                                .or(regionFilterCondition(eventRegion, RegionType.REGION_GUN, regionIds.get(RegionType.REGION_GUN)))
+                                                .and(regionFilterCondition(regionIds))
                                 )
                 )
                 .fetchOne();
@@ -128,10 +123,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                         event.isDeleted.isFalse()
                                 .and(
                                         createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, event, eventDate, category)
-                                                .or(regionFilterCondition(eventRegion, RegionType.REGION_DO, regionIds.get(RegionType.REGION_DO)))
-                                                .or(regionFilterCondition(eventRegion, RegionType.REGION_SI, regionIds.get(RegionType.REGION_SI)))
-                                                .or(regionFilterCondition(eventRegion, RegionType.REGION_GU, regionIds.get(RegionType.REGION_GU)))
-                                                .or(regionFilterCondition(eventRegion, RegionType.REGION_GUN, regionIds.get(RegionType.REGION_GUN)))
+                                                .and(regionFilterCondition(regionIds))
                                 )
                 )
                 .orderBy(getOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
@@ -150,10 +142,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                         event.isDeleted.isFalse()
                                 .and(
                                         createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, event, eventDate, category)
-                                                .or(regionFilterCondition(eventRegion, RegionType.REGION_DO, regionIds.get(RegionType.REGION_DO)))
-                                                .or(regionFilterCondition(eventRegion, RegionType.REGION_SI, regionIds.get(RegionType.REGION_SI)))
-                                                .or(regionFilterCondition(eventRegion, RegionType.REGION_GU, regionIds.get(RegionType.REGION_GU)))
-                                                .or(regionFilterCondition(eventRegion, RegionType.REGION_GUN, regionIds.get(RegionType.REGION_GUN)))
+                                                .and(regionFilterCondition(regionIds))
                                 )
                 )
                 .fetchOne();
@@ -175,28 +164,31 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
         if (searchTerm == null) {
             return;
         }
-        builder.or(event.name.contains(searchTerm));
+        builder.and(event.name.contains(searchTerm));
     }
 
     private void addCategoryFilter(QCategory category, List<String> categoryCodes, BooleanBuilder builder) {
         if (categoryCodes == null || categoryCodes.isEmpty()) {
             return;
         }
-        builder.or(category.code.in(categoryCodes));
+        builder.and(category.code.in(categoryCodes));
     }
 
     private void addPeriodFilter(QEventDate eventDate, LocalDate startDate, LocalDate endDate, BooleanBuilder builder) {
         if (startDate == null || endDate == null) {
             return;
         }
-        builder.or(eventDate.date.between(startDate, endDate));
+        builder.and(eventDate.date.between(startDate, endDate));
     }
 
-    private BooleanExpression regionFilterCondition(QEventRegion eventRegion, RegionType regionType, List<String> regionIds) {
+    private BooleanExpression regionFilterCondition(Map<RegionType, List<String>> regionIds){
         if (regionIds == null || regionIds.isEmpty()) {
             return null;
         }
-        return eventRegion.regionId.in(regionIds).and(eventRegion.regionType.eq(regionType));
+        return eventRegion.regionId.in(regionIds.get(RegionType.REGION_DO)).and(eventRegion.regionType.eq(RegionType.REGION_DO))
+                .or(eventRegion.regionId.in(regionIds.get(RegionType.REGION_SI)).and(eventRegion.regionType.eq(RegionType.REGION_SI)))
+                .or(eventRegion.regionId.in(regionIds.get(RegionType.REGION_GU)).and(eventRegion.regionType.eq(RegionType.REGION_GU)))
+                .or(eventRegion.regionId.in(regionIds.get(RegionType.REGION_GUN)).and(eventRegion.regionType.eq(RegionType.REGION_GUN)));
     }
 
     private List<OrderSpecifier> getOrderSpecifier(Sort sort) {

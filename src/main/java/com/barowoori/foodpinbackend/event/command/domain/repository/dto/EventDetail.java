@@ -18,10 +18,10 @@ import java.util.List;
 @Getter
 @Builder
 public class EventDetail {
+    private String id;
     private Boolean isAvailableUpdate;
     private Boolean isAvailableDelete;
     private Boolean isLike;
-    private String id;
     private List<Photo> photos;
     private RecruitInfo recruitInfo;
     private String name;

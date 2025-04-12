@@ -156,6 +156,9 @@ public class Event {
     }
 
     public List<File> getEventPhotoFiles() {
+        if(this.photos == null){
+            return new ArrayList<>();
+        }
         return photos.stream()
                 .sorted(Comparator.comparing(EventPhoto::getCreatedAt))
                 .map(EventPhoto::getFile)
@@ -163,12 +166,18 @@ public class Event {
     }
 
     public List<EventDate> getSortedEventDates() {
+        if(this.eventDates == null){
+            return new ArrayList<>();
+        }
         return eventDates.stream()
                 .sorted(Comparator.comparing(EventDate::getCreatedAt))
                 .toList();
     }
 
     public List<EventTruck> getConfirmedEventTrucks() {
+        if(this.eventTrucks == null){
+            return new ArrayList<>();
+        }
         return this.eventTrucks.stream()
                 .filter(truck -> truck.getStatus().equals(EventTruckStatus.CONFIRMED))
                 .toList();

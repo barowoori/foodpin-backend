@@ -54,7 +54,7 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
 
     @Override
     public Page<Truck> findTruckListByFilter(String searchTerm, List<String> categoryCodes, Map<RegionType, List<String>> regionIds, Pageable pageable) {
-        List<Tuple> result = jpaQueryFactory.select(truck.id, truck.createdAt, truck.views)
+        List<Tuple> result = jpaQueryFactory.selectDistinct(truck.id, truck.createdAt, truck.views)
                 .from(truck)
                 .leftJoin(truck.regions, truckRegion)
                 .leftJoin(truck.categories, truckCategory)
@@ -107,7 +107,7 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
 
     @Override
     public Page<Truck> findLikeTruckListByFilter(String memberId, String searchTerm, List<String> categoryCodes, Map<RegionType, List<String>> regionIds, Pageable pageable) {
-        List<Tuple> result = jpaQueryFactory.select(truck.id, truck.createdAt, truck.views)
+        List<Tuple> result = jpaQueryFactory.selectDistinct(truck.id, truck.createdAt, truck.views)
                 .from(truck)
                 .innerJoin(truckLike).on(truckLike.truck.eq(truck).and(truckLike.member.id.eq(memberId)))
                 .leftJoin(truck.regions, truckRegion)

@@ -45,7 +45,8 @@ public class EventController {
     private final TruckEventApplicationListService truckEventApplicationListService;
     private final EventApplicableTruckListService eventApplicableTruckListService;
 
-    @Operation(summary = "행사 생성", description = "사진의 경우 파일 저장 api로 업로드 후 반환된 파일 id 리스트로 전달")
+    @Operation(summary = "행사 생성", description = "사진의 경우 파일 저장 api로 업로드 후 반환된 파일 id 리스트로 전달"
+    +"\n\n서류 타입 : BUSINESS_REGISTRATION(사업자등록증), BUSINESS_LICENSE(영업신고증), VEHICLE_REGISTRATION(자동차등록증), SANITATION_EDUCATION(위생교육필증), HEALTH_CERTIFICATE(보건증), GAS_SAFETY_INSPECTION_CERTIFICATE(가스안전점검필증)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
@@ -81,7 +82,8 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
-    @Operation(summary = "행사 목록 조회", description = "정렬 : 최신순(createdAt, DESC), 조회순(views, DESC)")
+    @Operation(summary = "행사 목록 조회", description = "정렬 : 최신순(createdAt, DESC), 조회순(views, DESC)"
+    +"\n\n 행사 상태 : RECRUITING(모집중), RECRUITMENT_CANCELLED(모집취소), RECRUITMENT_CLOSED(모집마감)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",

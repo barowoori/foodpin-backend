@@ -56,6 +56,7 @@ public class EventRecruitDetail {
                               Event event) {
         this.recruitEndDateTime = recruitEndDateTime;
         this.recruitCount = recruitCount;
+        this.selectedCount = selectedCount;
         this.applicantCount = applicantCount;
         this.event = event;
         this.generatorRequirement = generatorRequirement;

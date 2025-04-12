@@ -109,6 +109,9 @@ public class Truck {
     }
 
     public Boolean approval(){
+        if (this.documents == null){
+            return Boolean.FALSE;
+        }
        return this.documents.stream().anyMatch(doc -> doc.getType().equals(DocumentType.BUSINESS_REGISTRATION));
     }
 
@@ -119,14 +122,20 @@ public class Truck {
     }
 
     public List<File> getTruckPhotoFiles(){
-        return photos.stream()
+        if (this.photos == null){
+            return new ArrayList<>();
+        }
+        return this.photos.stream()
                 .sorted(Comparator.comparing(TruckPhoto::getCreateAt))
                 .map(TruckPhoto::getFile)
                 .toList();
     }
 
     public List<TruckMenu> getSortedTruckMenus(){
-        return menus.stream()
+        if(this.menus == null){
+            return new ArrayList<>();
+        }
+        return this.menus.stream()
                 .sorted(Comparator.comparing(TruckMenu::getCreateAt))
                 .toList();
     }
@@ -136,7 +145,10 @@ public class Truck {
     }
 
     public List<TruckRegion> getSortedTruckRegions(){
-        return regions.stream()
+        if(this.regions == null){
+            return new ArrayList<>();
+        }
+        return this.regions.stream()
                 .sorted(Comparator.comparing(TruckRegion::getCreateAt))
                 .toList();
     }

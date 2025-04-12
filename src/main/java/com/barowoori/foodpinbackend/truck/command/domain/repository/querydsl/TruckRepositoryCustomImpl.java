@@ -6,6 +6,7 @@ import com.barowoori.foodpinbackend.member.command.domain.model.QTruckLike;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Sort;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.barowoori.foodpinbackend.category.command.domain.model.QCategory.category;
 import static com.barowoori.foodpinbackend.file.command.domain.model.QFile.file;
@@ -52,14 +54,12 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
 
     @Override
     public Page<Truck> findTruckListByFilter(String searchTerm, List<String> categoryCodes, Map<RegionType, List<String>> regionIds, Pageable pageable) {
-        List<Truck> trucks = jpaQueryFactory.selectDistinct(truck)
+        List<Tuple> result = jpaQueryFactory.select(truck.id, truck.createdAt, truck.views)
                 .from(truck)
                 .leftJoin(truck.regions, truckRegion)
                 .leftJoin(truck.categories, truckCategory)
                 .leftJoin(truckCategory.category, category)
                 .leftJoin(truck.menus, truckMenu)
-                .leftJoin(truck.photos, truckPhoto)
-                .leftJoin(truckPhoto.file, file)
                 .where(
                         truck.isDeleted.isFalse()
                                 .and(
@@ -70,6 +70,22 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
                 .orderBy(getOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
+                .fetch();
+
+        List<String> truckIds = result.stream()
+                .map(tuple -> tuple.get(truck.id))
+                .collect(Collectors.toList());
+
+        List<Truck> trucks = jpaQueryFactory.selectDistinct(truck)
+                .from(truck)
+                .leftJoin(truck.regions, truckRegion).fetchJoin()
+                .leftJoin(truck.categories, truckCategory).fetchJoin()
+                .leftJoin(truckCategory.category, category).fetchJoin()
+                .leftJoin(truck.menus, truckMenu).fetchJoin()
+                .leftJoin(truck.photos, truckPhoto).fetchJoin()
+                .leftJoin(truckPhoto.file, file).fetchJoin()
+                .where(truck.id.in(truckIds))
+                .orderBy(getOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
                 .fetch();
 
         Long total = jpaQueryFactory.select(truck.countDistinct()).from(truck)
@@ -91,15 +107,13 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
 
     @Override
     public Page<Truck> findLikeTruckListByFilter(String memberId, String searchTerm, List<String> categoryCodes, Map<RegionType, List<String>> regionIds, Pageable pageable) {
-        List<Truck> trucks = jpaQueryFactory.selectDistinct(truck)
+        List<Tuple> result = jpaQueryFactory.select(truck.id, truck.createdAt, truck.views)
                 .from(truck)
                 .innerJoin(truckLike).on(truckLike.truck.eq(truck).and(truckLike.member.id.eq(memberId)))
                 .leftJoin(truck.regions, truckRegion)
                 .leftJoin(truck.categories, truckCategory)
                 .leftJoin(truckCategory.category, category)
-                .leftJoin(truckMenu).on(truckMenu.truck.eq(truck))
-                .leftJoin(truck.photos, truckPhoto).fetchJoin()
-                .leftJoin(truckPhoto.file, file).fetchJoin()
+                .leftJoin(truck.menus, truckMenu)
                 .where(
                         truck.isDeleted.isFalse()
                                 .and(
@@ -112,14 +126,30 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
                 .limit(pageable.getPageSize())
                 .fetch();
 
+        List<String> truckIds = result.stream()
+                .map(tuple -> tuple.get(truck.id))
+                .collect(Collectors.toList());
+
+        List<Truck> trucks = jpaQueryFactory.selectDistinct(truck)
+                .from(truck)
+                .innerJoin(truckLike).on(truckLike.truck.eq(truck).and(truckLike.member.id.eq(memberId)))
+                .leftJoin(truck.regions, truckRegion).fetchJoin()
+                .leftJoin(truck.categories, truckCategory).fetchJoin()
+                .leftJoin(truckCategory.category, category).fetchJoin()
+                .leftJoin(truck.menus, truckMenu).fetchJoin()
+                .leftJoin(truck.photos, truckPhoto).fetchJoin()
+                .leftJoin(truckPhoto.file, file).fetchJoin()
+                .where(truck.id.in(truckIds))
+                .orderBy(getOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
+                .fetch();
+
 
         Long total = jpaQueryFactory.select(truck.countDistinct()).from(truck)
                 .innerJoin(truckLike).on(truckLike.truck.eq(truck).and(truckLike.member.id.eq(memberId)))
                 .leftJoin(truck.regions, truckRegion)
                 .leftJoin(truck.categories, truckCategory)
-                .leftJoin(category).on(truckCategory.category.eq(category))
-                .leftJoin(truckDocument).on(truckDocument.truck.eq(truck))
-                .leftJoin(truckMenu).on(truckMenu.truck.eq(truck))
+                .leftJoin(truckCategory.category, category)
+                .leftJoin(truck.menus, truckMenu)
                 .where(
                         truck.isDeleted.isFalse()
                                 .and(

@@ -3,6 +3,7 @@ package com.barowoori.foodpinbackend.truck.command.domain.model;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
+import com.barowoori.foodpinbackend.region.command.domain.query.application.RegionSearchProcessor;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "trucks")
@@ -57,21 +59,20 @@ public class Truck {
 
     @OneToMany(mappedBy = "truck")
     @BatchSize(size = 10)
-    private List<TruckMenu>
-            menus = new ArrayList<>();
+    private Set<TruckMenu> menus;
 
     @OneToMany(mappedBy = "truck")
     @BatchSize(size = 10)
-    private List<TruckPhoto> photos = new ArrayList<>();
+    private Set<TruckPhoto> photos;
 
     @OneToMany(mappedBy = "truck")
-    private List<TruckDocument> documents = new ArrayList<>();
+    private Set<TruckDocument> documents;
 
     @OneToMany(mappedBy = "truck")
-    private List<TruckCategory> categories = new ArrayList<>();
+    private Set<TruckCategory> categories ;
 
     @OneToMany(mappedBy = "truck")
-    private List<TruckRegion> regions = new ArrayList<>();
+    private Set<TruckRegion> regions;
 
     protected Truck() {
     }
@@ -108,6 +109,9 @@ public class Truck {
     }
 
     public Boolean approval(){
+        if (this.documents == null){
+            return Boolean.FALSE;
+        }
        return this.documents.stream().anyMatch(doc -> doc.getType().equals(DocumentType.BUSINESS_REGISTRATION));
     }
 
@@ -118,19 +122,41 @@ public class Truck {
     }
 
     public List<File> getTruckPhotoFiles(){
-        return photos.stream()
+        if (this.photos == null){
+            return new ArrayList<>();
+        }
+        return this.photos.stream()
                 .sorted(Comparator.comparing(TruckPhoto::getCreateAt))
                 .map(TruckPhoto::getFile)
                 .toList();
     }
 
     public List<TruckMenu> getSortedTruckMenus(){
-        return menus.stream()
+        if(this.menus == null){
+            return new ArrayList<>();
+        }
+        return this.menus.stream()
                 .sorted(Comparator.comparing(TruckMenu::getCreateAt))
                 .toList();
     }
 
     public List<String> getSortedTruckMenuNames(){
         return getSortedTruckMenus().stream().map(TruckMenu::getName).toList();
+    }
+
+    public List<TruckRegion> getSortedTruckRegions(){
+        if(this.regions == null){
+            return new ArrayList<>();
+        }
+        return this.regions.stream()
+                .sorted(Comparator.comparing(TruckRegion::getCreateAt))
+                .toList();
+    }
+
+    public List<String> getTruckRegionNames(RegionSearchProcessor regionSearchProcessor){
+        return getSortedTruckRegions().stream()
+                .map(truckRegion ->
+                        regionSearchProcessor.findFullRegionName(truckRegion.getRegionType(), truckRegion.getRegionId()))
+                .toList();
     }
 }

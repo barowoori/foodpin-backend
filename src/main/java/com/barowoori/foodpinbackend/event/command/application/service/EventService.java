@@ -12,6 +12,8 @@ import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepository;
 import com.barowoori.foodpinbackend.member.command.domain.model.EventLike;
 import com.barowoori.foodpinbackend.member.command.domain.repository.EventLikeRepository;
+import com.barowoori.foodpinbackend.notification.command.domain.model.ApplicationReceivedNotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationEvent;
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionDoRepository;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionInfo;
 import com.barowoori.foodpinbackend.truck.command.domain.exception.TruckErrorCode;
@@ -259,6 +261,8 @@ public class EventService {
             EventApplicationDate eventApplicationDate = EventApplicationDate.builder().eventDate(eventDate).eventApplication(eventApplication).build();
             eventApplicationDateRepository.save(eventApplicationDate);
         }
+
+        NotificationEvent.raise(new ApplicationReceivedNotificationEvent(event.getId(), event.getName(), eventApplication.getId()));
     }
 
     //TODO 한 번 처리(확정/거절)하고 난 후에는 안 되게 막을 것인지 확인 필요

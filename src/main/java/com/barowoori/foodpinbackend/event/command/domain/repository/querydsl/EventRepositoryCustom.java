@@ -19,4 +19,5 @@ public interface EventRepositoryCustom {
                                           List<String> categoryCodes, Pageable pageable);
     Page<Event> findProgressEventManageList(String memberId, String status, Pageable pageable);
     Page<Event> findCompletedEventManageList(String memberId, String status, Pageable pageable);
+    String findEventCreatorFcmToken(String eventId);
 }

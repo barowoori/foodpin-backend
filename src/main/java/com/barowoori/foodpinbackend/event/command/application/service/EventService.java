@@ -14,6 +14,8 @@ import com.barowoori.foodpinbackend.member.command.domain.model.EventLike;
 import com.barowoori.foodpinbackend.member.command.domain.repository.EventLikeRepository;
 import com.barowoori.foodpinbackend.notification.command.domain.model.ApplicationReceivedNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.SelectionCanceledNotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.SelectionConfirmedNotificationEvent;
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionDoRepository;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionInfo;
 import com.barowoori.foodpinbackend.truck.command.domain.exception.TruckErrorCode;
@@ -270,15 +272,19 @@ public class EventService {
     public void handleEventTruck(RequestEvent.HandleEventTruckDto handleEventTruckDto) {
         EventTruck eventTruck = eventTruckRepository.findById(handleEventTruckDto.getEventTruckId())
                 .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_TRUCK_NOT_FOUND));
+        Event event = eventTruck.getEvent();
         TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(eventTruck.getTruck().getId(), getMemberId());
         if (truckManager == null) {
             throw new CustomException(TruckErrorCode.TRUCK_MANAGER_NOT_FOUND);
         }
         if (handleEventTruckDto.getEventTruckStatus().equals(EventTruckStatus.CONFIRMED)) {
             eventTruck.confirm();
+            NotificationEvent.raise(new SelectionConfirmedNotificationEvent(event.getId(), event.getName(), eventTruck.getTruck().getName(), eventTruck.getId()));
         } else if (handleEventTruckDto.getEventTruckStatus().equals(EventTruckStatus.REJECTED)) {
             eventTruck.reject();
+            NotificationEvent.raise(new SelectionCanceledNotificationEvent(event.getId(), event.getName(), eventTruck.getTruck().getName()));
         } else throw new CustomException(EventErrorCode.WRONG_EVENT_TRUCK_STATUS);
+
         eventTruckRepository.save(eventTruck);
     }
 

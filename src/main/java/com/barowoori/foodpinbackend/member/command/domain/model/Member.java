@@ -61,6 +61,9 @@ public class Member implements UserDetails {
     @Column(name = "refresh_token", length = 1000)
     private String refreshToken;
 
+    @Column(name = "fcm_token", length = 1000)
+    private String fcmToken;
+
     protected Member() {
     }
 
@@ -111,6 +114,10 @@ public class Member implements UserDetails {
 
     private void setImage(File image) {
         this.image = image;
+    }
+
+    public void updateFcmToken(String fcmToken){
+        this.fcmToken = fcmToken;
     }
 
     //Spring Security에서 쓰이는 getAuthorities는 ROLE_ 접두사를 사용하므로 type 앞에 붙여서 넣어줌

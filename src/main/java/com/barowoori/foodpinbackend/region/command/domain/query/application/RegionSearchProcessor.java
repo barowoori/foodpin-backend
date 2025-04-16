@@ -105,10 +105,8 @@ public class RegionSearchProcessor {
                         .filter(regionGun -> regionGun.getId().equals(regionId))
                         .map(regionGun -> {
                             RegionSi regionSi = regionGun.getRegionSi();
-                            if (regionSi == null) {
-                                return makeFullName(regionGun);
-                            }
-                            return makeFullName(regionSi.getRegionDo(), regionSi, regionGun);
+                            RegionDo regionDo = regionGun.getRegionDo();
+                            return makeFullName(regionDo, regionSi, regionGun);
                         })
                         .findFirst()
                         .orElse(null);
@@ -132,20 +130,6 @@ public class RegionSearchProcessor {
 
     private boolean isExistGUN(String id) {
         return regionGunIds.contains(id);
-    }
-
-    private RegionDo findDoById(String id) {
-        return regionDos.stream()
-                .filter(doObj -> doObj.getId().equals(id))
-                .findFirst()
-                .orElse(null);
-    }
-
-    private RegionSi findSiById(String id) {
-        return regionSis.stream()
-                .filter(si -> si.getId().equals(id))
-                .findFirst()
-                .orElse(null);
     }
 
     private String makeFullName(Region... regions) {

@@ -38,6 +38,7 @@ import static com.barowoori.foodpinbackend.event.command.domain.model.QEventTruc
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventView.eventView;
 import static com.barowoori.foodpinbackend.file.command.domain.model.QFile.file;
 import static com.barowoori.foodpinbackend.member.command.domain.model.QEventLike.eventLike;
+import static com.barowoori.foodpinbackend.member.command.domain.model.QMember.member;
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckRegion.truckRegion;
 
 public class EventRepositoryCustomImpl implements EventRepositoryCustom {
@@ -181,7 +182,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
         builder.and(eventDate.date.between(startDate, endDate));
     }
 
-    private BooleanExpression regionFilterCondition(Map<RegionType, List<String>> regionIds){
+    private BooleanExpression regionFilterCondition(Map<RegionType, List<String>> regionIds) {
         if (regionIds == null || regionIds.isEmpty()) {
             return null;
         }
@@ -282,7 +283,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
         if (status.equals("ALL")) {
             filterBuilder
                     .and(event.status.in(EventStatus.RECRUITING, EventStatus.SELECTING, EventStatus.IN_PROGRESS));
-        }else {
+        } else {
             filterBuilder.and(event.status.eq(EventStatus.valueOf(status)));
         }
         return filterBuilder;
@@ -292,9 +293,16 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
         BooleanBuilder filterBuilder = new BooleanBuilder();
         if (status.equals("ALL")) {
             filterBuilder.and(event.status.in(EventStatus.COMPLETED, EventStatus.RECRUITMENT_CANCELLED));
-        }else {
+        } else {
             filterBuilder.and(event.status.eq(EventStatus.valueOf(status)));
         }
         return filterBuilder;
+    }
+
+    public String findEventCreatorFcmToken(String eventId) {
+        return jpaQueryFactory.select(member.fcmToken).from(event)
+                .innerJoin(member).on(event.createdBy.eq(member.id))
+                .where(event.id.eq(eventId))
+                .fetchOne();
     }
 }

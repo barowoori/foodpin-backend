@@ -34,7 +34,6 @@ public class EventManagementService {
                 .orElseThrow(() -> new CustomException(EventErrorCode.NOT_FOUND_EVENT));
     }
 
-    //TODO 이미 처리(선정/탈락)된 경우, 다시 처리를 못하게 막을 건지 확인 필요
     @Transactional
     public void handleEventApplication(String eventApplicationId, RequestEvent.HandleEventApplicationDto handleEventApplicationDto){
         EventApplication eventApplication = eventApplicationRepository.findById(eventApplicationId)
@@ -43,6 +42,11 @@ public class EventManagementService {
         if (!eventApplication.getEvent().isCreator(getMemberId())){
             throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
         }
+
+        if (!eventApplication.getStatus().equals(EventApplicationStatus.PENDING)){
+            throw new CustomException(EventErrorCode.ALREADY_HANDLED_EVENT_APPLICATION);
+        }
+
         if(!handleEventApplicationDto.getIsSelected()){
             eventApplication.reject();
             eventApplicationRepository.save(eventApplication);
@@ -114,11 +118,15 @@ public class EventManagementService {
         eventNoticeRepository.save(eventNotice);
     }
 
-    //TODO 행사 공지를 본 트럭이 있으면 수정 못 하는 것인지 확인 필요
     @Transactional
     public void updateEventNotice(String eventNoticeId, RequestEvent.UpdateEventNoticeDto updateEventNoticeDto){
         EventNotice eventNotice = eventNoticeRepository.findById(eventNoticeId)
                 .orElseThrow(()-> new CustomException(EventErrorCode.EVENT_NOTICE_NOT_FOUND));
+
+        if (!eventNotice.getViews().isEmpty()){
+            throw new CustomException(EventErrorCode.ALREADY_VIEWED_EVENT_NOTICE);
+        }
+
         Event event = getEvent(eventNotice.getEvent().getId());
         String memberId = getMemberId();
 
@@ -130,12 +138,16 @@ public class EventManagementService {
         eventNoticeRepository.save(eventNotice);
     }
 
-    //TODO 행사 공지를 본 트럭이 있으면 삭제 못 하는 것인지 확인 필요
     @Transactional
     public void deleteEventNotice(String eventNoticeId){
         EventNotice eventNotice = eventNoticeRepository.findById(eventNoticeId)
                 .orElseThrow(()-> new CustomException(EventErrorCode.EVENT_NOTICE_NOT_FOUND));
         Event event = getEvent(eventNotice.getEvent().getId());
+
+        if (!eventNotice.getViews().isEmpty()){
+            throw new CustomException(EventErrorCode.ALREADY_VIEWED_EVENT_NOTICE);
+        }
+
         String memberId = getMemberId();
 
         if (!event.isCreator(memberId)){

@@ -173,26 +173,4 @@ public class Event {
                 .filter(truck -> truck.getStatus().equals(EventTruckStatus.CONFIRMED))
                 .toList();
     }
-
-    public void updateStatusByDate(LocalDate today) {
-        if (eventDates.isEmpty()) return;
-
-        LocalDate minDate = eventDates.stream()
-                .map(EventDate::getDate)
-                .min(LocalDate::compareTo)
-                .orElse(null);
-
-        LocalDate maxDate = eventDates.stream()
-                .map(EventDate::getDate)
-                .max(LocalDate::compareTo)
-                .orElse(null);
-
-        if (minDate != null && minDate.equals(today)) {
-            this.status = EventStatus.IN_PROGRESS;
-        }
-
-        if (maxDate != null && maxDate.equals(today.minusDays(1))) {
-            this.status = EventStatus.COMPLETED;
-        }
-    }
 }

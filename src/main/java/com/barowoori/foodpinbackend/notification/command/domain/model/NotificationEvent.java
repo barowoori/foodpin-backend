@@ -1,6 +1,5 @@
 package com.barowoori.foodpinbackend.notification.command.domain.model;
 
-import lombok.Builder;
 import lombok.Getter;
 import org.springframework.context.ApplicationEventPublisher;
 

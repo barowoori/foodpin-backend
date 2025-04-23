@@ -1,8 +1,8 @@
 package com.barowoori.foodpinbackend.notification;
 
-import com.barowoori.foodpinbackend.notification.command.domain.model.ApplicationReceivedNotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.event.ApplicationReceivedNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationEvent;
-import com.barowoori.foodpinbackend.notification.command.domain.model.SelectionCanceledNotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.event.SelectionCanceledNotificationEvent;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

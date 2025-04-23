@@ -12,6 +12,10 @@ import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
 import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
+import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.truck.ManagerAddedNotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.truck.ManagerRemovedNotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.truck.OwnerUpdatedNotificationEvent;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionDo;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionGu;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionGun;
@@ -178,6 +182,7 @@ public class TruckService {
                     .build();
             truckManagerRepository.save(newTruckManager);
         } else throw new CustomException(TruckErrorCode.TRUCK_MANAGER_EXISTS);
+        NotificationEvent.raise(new ManagerAddedNotificationEvent(truck.getId(), truck.getName(), member.getNickname()));
     }
 
     @Transactional(readOnly = true)
@@ -333,6 +338,8 @@ public class TruckService {
             truckOwner.updateRole(TruckManagerRole.MEMBER);
             truckManagerRepository.save(truckOwner);
         } else throw new CustomException(TruckErrorCode.TRUCK_OWNER_NOT_FOUND);
+        Truck truck = truckMember.getTruck();
+        NotificationEvent.raise(new OwnerUpdatedNotificationEvent(truckId, truck.getName(), truckMember.getMember().getNickname()));
     }
 
     @Transactional
@@ -344,6 +351,9 @@ public class TruckService {
         if (truckOwner != null && truckMember != null && Objects.equals(truckOwner.getRole(), TruckManagerRole.OWNER)) {
             truckManagerRepository.delete(truckMember);
         } else throw new CustomException(TruckErrorCode.TRUCK_OWNER_NOT_FOUND);
+        Truck truck = truckMember.getTruck();
+
+        NotificationEvent.raise(new ManagerRemovedNotificationEvent(truck.getName(), managerId));
     }
 
     @Transactional

@@ -1,9 +1,10 @@
-package com.barowoori.foodpinbackend.notification.command.domain.model;
+package com.barowoori.foodpinbackend.notification.command.domain.model.event;
 
+import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationEvent;
 import lombok.Getter;
 
 @Getter
-public class SelectionConfirmedNotificationEvent extends NotificationEvent{
+public class SelectionConfirmedNotificationEvent extends NotificationEvent {
     private final String eventId;
     private final String eventName;
     private final String truckName;

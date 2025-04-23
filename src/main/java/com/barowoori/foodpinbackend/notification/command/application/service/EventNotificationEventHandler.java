@@ -1,7 +1,11 @@
 package com.barowoori.foodpinbackend.notification.command.application.service;
 
+import com.barowoori.foodpinbackend.common.dto.MemberFcmInfoDto;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventRepository;
 import com.barowoori.foodpinbackend.notification.command.domain.model.*;
+import com.barowoori.foodpinbackend.notification.command.domain.model.event.ApplicationReceivedNotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.event.SelectionCanceledNotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.event.SelectionConfirmedNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.service.NotificationService;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
@@ -28,9 +32,12 @@ public class EventNotificationEventHandler {
         String content = type.format(Map.of(
                 "행사명", event.getEventName()
         ));
-        System.out.println("==== "+ content);
-        String eventCreatorToken = eventRepository.findEventCreatorFcmToken(event.getEventId());
-        notificationService.pushAlarmToToken(type, targetType.name(), content, eventCreatorToken, targetType, event.getEventApplicationId());
+        System.out.println("notificationMessage : " + content);
+        MemberFcmInfoDto eventCreatorFcmInfo = eventRepository.findEventCreatorFcmInfo(event.getEventId());
+        if (eventCreatorFcmInfo == null) {
+            return;
+        }
+        notificationService.pushAlarmToToken(type, targetType.name(), content, eventCreatorFcmInfo.getFcmToken(), targetType, event.getEventApplicationId());
     }
 
     //선정 확정 알림 handler
@@ -43,9 +50,12 @@ public class EventNotificationEventHandler {
                 "행사명", event.getEventName(),
                 "푸드트럭명", event.getTruckName()
         ));
-        System.out.println("==== "+ content);
-        String eventCreatorToken = eventRepository.findEventCreatorFcmToken(event.getEventId());
-        notificationService.pushAlarmToToken(type, targetType.name(), content, eventCreatorToken, targetType, event.getEventTruckId());
+        System.out.println("notificationMessage : " + content);
+        MemberFcmInfoDto eventCreatorFcmInfo = eventRepository.findEventCreatorFcmInfo(event.getEventId());
+        if (eventCreatorFcmInfo == null) {
+            return;
+        }
+        notificationService.pushAlarmToToken(type, targetType.name(), content, eventCreatorFcmInfo.getFcmToken(), targetType, event.getEventTruckId());
     }
 
     //선정 취소 알림 handler
@@ -58,8 +68,11 @@ public class EventNotificationEventHandler {
                 "행사명", event.getEventName(),
                 "푸드트럭명", event.getTruckName()
         ));
-        System.out.println("notificationMessage : "+ content);
-        String eventCreatorToken = eventRepository.findEventCreatorFcmToken(event.getEventId());
-        notificationService.pushAlarmToToken(type, targetType.name(), content, eventCreatorToken, targetType, null);
+        System.out.println("notificationMessage : " + content);
+        MemberFcmInfoDto eventCreatorFcmInfo = eventRepository.findEventCreatorFcmInfo(event.getEventId());
+        if (eventCreatorFcmInfo == null) {
+            return;
+        }
+        notificationService.pushAlarmToToken(type, targetType.name(), content, eventCreatorFcmInfo.getFcmToken(), targetType, null);
     }
 }

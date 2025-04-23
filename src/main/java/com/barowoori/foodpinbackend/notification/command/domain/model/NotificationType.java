@@ -1,7 +1,9 @@
 package com.barowoori.foodpinbackend.notification.command.domain.model;
 
-import java.util.Map;
+import lombok.Getter;
 
+import java.util.Map;
+@Getter
 public enum NotificationType {
     // 지원/선정 관련
     APPLICATION_RECEIVED("지원자 알림", "[{행사명}] 새로운 지원자를 확인해 주세요!"),
@@ -31,10 +33,10 @@ public enum NotificationType {
             "{행사지역} - {행사명}"),
 
     // 공지
-    ANNOUNCEMENT_POSTED("공지사항 알림", "[{행사명}] 새로운 공지사항이 등록되었습니다."),
+    EVENT_NOTICE_POSTED("공지사항 알림", "[{행사명}] 새로운 공지사항이 등록되었습니다."),
 
     // 섭외 관련
-    EVENT_SCOUTED("행사 섭외 알림","[{행사명}] 행사 참여 제안이 도착했습니다."),
+    EVENT_CASTED("행사 섭외 알림","[{행사명}] 행사 참여 제안이 도착했습니다."),
 
     // 운영자 관련
     MANAGER_ADDED("운영자 추가 알림", "{푸드트럭명} 운영자로 {닉네임}님이 추가되었습니다."),

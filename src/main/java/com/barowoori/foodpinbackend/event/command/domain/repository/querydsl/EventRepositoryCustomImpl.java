@@ -1,6 +1,7 @@
 package com.barowoori.foodpinbackend.event.command.domain.repository.querydsl;
 
 import com.barowoori.foodpinbackend.category.command.domain.model.QCategory;
+import com.barowoori.foodpinbackend.common.dto.MemberFcmInfoDto;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventManageList;
 import com.barowoori.foodpinbackend.file.command.domain.model.QFile;
@@ -12,6 +13,7 @@ import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.PathBuilder;
@@ -299,8 +301,11 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
         return filterBuilder;
     }
 
-    public String findEventCreatorFcmToken(String eventId) {
-        return jpaQueryFactory.select(member.fcmToken).from(event)
+    @Override
+    public MemberFcmInfoDto findEventCreatorFcmInfo(String eventId) {
+        return jpaQueryFactory
+                .select(Projections.constructor(MemberFcmInfoDto.class, member.id, member.fcmToken))
+                .from(event)
                 .innerJoin(member).on(event.createdBy.eq(member.id))
                 .where(event.id.eq(eventId))
                 .fetchOne();

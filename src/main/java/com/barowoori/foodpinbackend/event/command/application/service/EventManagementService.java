@@ -7,6 +7,7 @@ import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.event.command.domain.repository.*;
 import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.EventNoticePostedNotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.truck.EventRecruitmentCanceledNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.SelectionCompletedNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.SelectionNotSelectedNotificationEvent;
 import com.barowoori.foodpinbackend.truck.command.domain.exception.TruckErrorCode;
@@ -93,6 +94,7 @@ public class EventManagementService {
         } else if (handleEventRecruitmentDto.getRecruitmentStatus().equals(EventStatus.RECRUITMENT_CANCELLED)) {
             event.updateStatus(EventStatus.RECRUITMENT_CANCELLED);
         } else throw new CustomException(EventErrorCode.WRONG_EVENT_RECRUITMENT_STATUS);
+        NotificationEvent.raise(new EventRecruitmentCanceledNotificationEvent(event.getId(), event.getName()));
         eventRepository.save(event);
     }
 

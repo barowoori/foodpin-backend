@@ -238,7 +238,8 @@ public class EventController {
     @Operation(summary = "행사 참여 확정/거절", description = "EventTruckStatus : 참여 확정 = CONFIRMED, 참여 거절 = REJECTED")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
-            @ApiResponse(responseCode = "400", description = "행사 참여 여부가 잘못된 경우[40013]",
+            @ApiResponse(responseCode = "400", description = "행사 참여 여부가 잘못된 경우[40013], " +
+                    "이미 답변(확정/거절)한 경우[40016]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),

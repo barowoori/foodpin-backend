@@ -270,7 +270,6 @@ public class EventService {
         NotificationEvent.raise(new ApplicationReceivedNotificationEvent(event.getId(), event.getName(), eventApplication.getId()));
     }
 
-    //TODO 한 번 처리(확정/거절)하고 난 후에는 안 되게 막을 것인지 확인 필요
     @Transactional
     public void handleEventTruck(RequestEvent.HandleEventTruckDto handleEventTruckDto) {
         EventTruck eventTruck = eventTruckRepository.findById(handleEventTruckDto.getEventTruckId())
@@ -280,6 +279,11 @@ public class EventService {
         if (truckManager == null) {
             throw new CustomException(TruckErrorCode.TRUCK_MANAGER_NOT_FOUND);
         }
+
+        if (!eventTruck.getStatus().equals(EventTruckStatus.PENDING)){
+            throw new CustomException(EventErrorCode.ALREADY_HANDLED_EVENT_TRUCK);
+        }
+
         if (handleEventTruckDto.getEventTruckStatus().equals(EventTruckStatus.CONFIRMED)) {
             eventTruck.confirm();
             NotificationEvent.raise(new SelectionConfirmedNotificationEvent(event.getId(), event.getName(), eventTruck.getTruck().getName(), eventTruck.getId()));

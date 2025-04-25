@@ -196,7 +196,6 @@ public class RequestEvent {
         @NotEmpty
         private List<String> eventDateIdList;
 
-        //TODO EventApplication 기본값 설정 코드 정상 작동 시 아래서 status, isRead 설정 제거
         public EventApplication toEntity(Truck truck, Event event){
             return EventApplication.builder()
                     .truck(truck)

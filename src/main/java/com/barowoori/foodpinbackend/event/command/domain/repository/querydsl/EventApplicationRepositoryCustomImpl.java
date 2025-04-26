@@ -1,10 +1,12 @@
 package com.barowoori.foodpinbackend.event.command.domain.repository.querydsl;
 
 
+import com.barowoori.foodpinbackend.common.dto.MemberFcmInfoDto;
 import com.barowoori.foodpinbackend.event.command.domain.model.EventApplication;
 import com.barowoori.foodpinbackend.event.command.domain.model.EventApplicationStatus;
 import com.barowoori.foodpinbackend.event.command.domain.model.EventStatus;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -17,9 +19,12 @@ import static com.barowoori.foodpinbackend.event.command.domain.model.QEvent.eve
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventApplication.eventApplication;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventApplicationDate.eventApplicationDate;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventPhoto.eventPhoto;
+import static com.barowoori.foodpinbackend.event.command.domain.model.QEventTruck.eventTruck;
 import static com.barowoori.foodpinbackend.file.command.domain.model.QFile.file;
+import static com.barowoori.foodpinbackend.member.command.domain.model.QMember.member;
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruck.truck;
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckDocument.truckDocument;
+import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckManager.truckManager;
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckMenu.truckMenu;
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckPhoto.truckPhoto;
 
@@ -121,5 +126,29 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
             return filterBuilder.and(event.status.eq(EventStatus.valueOf(status)));
         }
         return filterBuilder;
+    }
+
+    @Override
+    public List<MemberFcmInfoDto> findAllFcmInfoOfTruckManagersByEventId(String eventId){
+        return jpaQueryFactory
+                .select(Projections.constructor(MemberFcmInfoDto.class, member.id, member.fcmToken))
+                .from(eventApplication)
+                .innerJoin(eventApplication.truck, truck)
+                .innerJoin(truckManager).on(truck.eq(truckManager.truck))
+                .innerJoin(truckManager.member)
+                .where(eventApplication.event.id.eq(eventId))
+                .fetch();
+    }
+
+    @Override
+    public List<MemberFcmInfoDto> findFcmInfoOfTruckManagers(String eventApplicationId){
+        return jpaQueryFactory
+                .select(Projections.constructor(MemberFcmInfoDto.class, member.id, member.fcmToken))
+                .from(eventApplication)
+                .innerJoin(eventApplication.truck, truck)
+                .innerJoin(truckManager).on(truck.eq(truckManager.truck))
+                .innerJoin(truckManager.member)
+                .where(eventApplication.id.eq(eventApplicationId))
+                .fetch();
     }
 }

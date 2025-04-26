@@ -1,5 +1,6 @@
 package com.barowoori.foodpinbackend.truck.command.domain.repository.querydsl;
 
+import com.barowoori.foodpinbackend.common.dto.MemberFcmInfoDto;
 import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckManagerSummary;
 import com.querydsl.core.types.Projections;
@@ -16,7 +17,7 @@ import static com.barowoori.foodpinbackend.member.command.domain.model.QMember.m
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruck.truck;
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckManager.truckManager;
 
-public class TruckManagerRepositoryCustomImpl implements TruckManagerRepositoryCustom{
+public class TruckManagerRepositoryCustomImpl implements TruckManagerRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
 
     public TruckManagerRepositoryCustomImpl(JPAQueryFactory jpaQueryFactory) {
@@ -24,13 +25,13 @@ public class TruckManagerRepositoryCustomImpl implements TruckManagerRepositoryC
     }
 
     @Override
-    public Page<TruckManagerSummary> findTruckManagerPages(String truckId, String memberId, Pageable pageable){
+    public Page<TruckManagerSummary> findTruckManagerPages(String truckId, String memberId, Pageable pageable) {
         List<TruckManagerSummary> truckManagers = jpaQueryFactory.select(Projections.fields(TruckManagerSummary.class,
-                    truckManager.id.as("truckManagerId"),
-                    member.nickname,
-                    member.phone,
-                    file.path.as("image"),
-                    truckManager.role.as("role")
+                        truckManager.id.as("truckManagerId"),
+                        member.nickname,
+                        member.phone,
+                        file.path.as("image"),
+                        truckManager.role.as("role")
                 ))
                 .from(truckManager)
                 .innerJoin(truckManager.member, member)
@@ -54,7 +55,7 @@ public class TruckManagerRepositoryCustomImpl implements TruckManagerRepositoryC
     }
 
     @Override
-    public List<Truck> findOwnedTrucks(String memberId){
+    public List<Truck> findOwnedTrucks(String memberId) {
         return jpaQueryFactory.select(truck)
                 .from(truckManager)
                 .innerJoin(truckManager.truck, truck)
@@ -64,5 +65,15 @@ public class TruckManagerRepositoryCustomImpl implements TruckManagerRepositoryC
                 .orderBy(truck.createdAt.desc())
                 .fetch();
 
+    }
+
+    @Override
+    public List<MemberFcmInfoDto> findTruckManagersFcmInfo(String truckId) {
+        return jpaQueryFactory
+                .select(Projections.constructor(MemberFcmInfoDto.class, member.id, member.fcmToken))
+                .from(truckManager)
+                .innerJoin(truckManager.member, member)
+                .where(truckManager.truck.id.eq(truckId))
+                .fetch();
     }
 }

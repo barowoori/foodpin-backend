@@ -122,6 +122,13 @@ jobs:
           echo "  encodingKey: ${{ secrets.ODCLOUD_ENCODING_KEY }}" >> ${APP_CONFIG_FILE}
           echo "  decodingKey: ${{ secrets.ODCLOUD_DECODING_KEY }}" >> ${APP_CONFIG_FILE}
 
+      - name: create firebase-adminsdk.json
+        uses: jsdaniell/create-json@1.1.2
+        with:
+          name: "foodpin-d001c-firebase-adminsdk-idqc0-9e68a6effd.json"
+          json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          dir: './src/main/resources/secrets'
+
       # 3. Gradle 빌드 및 Docker 이미지 생성
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew

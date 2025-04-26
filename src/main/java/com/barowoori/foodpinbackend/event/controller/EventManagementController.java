@@ -28,7 +28,7 @@ public class EventManagementController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "400", description = "행사 주최자가 아닌 경우[40005], " +
-                    "선정할 날짜가 누락된 경우[40010]",
+                    "선정할 날짜가 누락된 경우[40010], 이미 처리(선정/탈락)한 경우[40015]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
@@ -106,7 +106,8 @@ public class EventManagementController {
     @Operation(summary = "행사 공지 수정", description = "행사 주최자만 사용 가능")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
-            @ApiResponse(responseCode = "400", description = "행사 주최자가 아닌 경우[40005]",
+            @ApiResponse(responseCode = "400", description = "행사 주최자가 아닌 경우[40005], " +
+                    "이미 조회된 공지인 경우[40017]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
@@ -127,7 +128,8 @@ public class EventManagementController {
     @Operation(summary = "행사 공지 삭제", description = "행사 주최자만 사용 가능")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
-            @ApiResponse(responseCode = "400", description = "행사 주최자가 아닌 경우[40005]",
+            @ApiResponse(responseCode = "400", description = "행사 주최자가 아닌 경우[40005], " +
+                    "이미 조회된 공지인 경우[40017]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),

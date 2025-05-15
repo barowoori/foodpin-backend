@@ -65,7 +65,6 @@ public class RequestEvent {
                     .guidelines(this.guidelines)
                     .documentSubmissionTarget(this.documentSubmissionTarget)
                     .submissionEmail(this.submissionEmail)
-                    .status(EventStatus.RECRUITING)
                     .isDeleted(Boolean.FALSE)
                     .build();
         }
@@ -99,6 +98,8 @@ public class RequestEvent {
                     .generatorRequirement(this.generatorRequirement)
                     .electricitySupportAvailability(this.electricitySupportAvailability)
                     .entryFee(this.entryFee)
+                    .isSelecting(Boolean.TRUE)
+                    .recruitingStatus(EventRecruitingStatus.RECRUITING)
                     .build();
         }
     }
@@ -224,7 +225,7 @@ public class RequestEvent {
         private String eventId;
         @Schema(description = "모집 종료/취소 여부")
         @NotEmpty
-        private EventStatus recruitmentStatus;
+        private EventRecruitingStatus recruitmentStatus;
     }
 
     @Builder

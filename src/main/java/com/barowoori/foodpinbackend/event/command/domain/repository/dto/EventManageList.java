@@ -33,7 +33,7 @@ public class EventManageList {
                 .startDate(EventDateCalculator.getMinDate(event))
                 .endDate(EventDateCalculator.getMaxDate(event))
                 .region(regions.getFirst())
-                .recruitInfo(RecruitInfo.of(event, event.getRecruitDetail()))
+                .recruitInfo(RecruitInfo.of(event.getRecruitDetail()))
                 .views(event.getView().getViews())
                 .build();
     }

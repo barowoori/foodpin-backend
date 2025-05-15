@@ -52,10 +52,6 @@ public class Event {
     @Column(name = "submission_email")
     private String submissionEmail;
 
-    @Enumerated(value = EnumType.STRING)
-    @Column(name = "status")
-    private EventStatus status;
-
     @Column(name = "status_comment")
     private String statusComment;
 
@@ -94,7 +90,7 @@ public class Event {
     @Builder
 
     public Event(String createdBy, String name, String description, String guidelines, Boolean isDeleted,
-                 EventDocumentSubmissionTarget documentSubmissionTarget, String submissionEmail, EventStatus status) {
+                 EventDocumentSubmissionTarget documentSubmissionTarget, String submissionEmail) {
         this.createdBy = createdBy;
         this.name = name;
         this.description = description;
@@ -102,7 +98,6 @@ public class Event {
         this.isDeleted = isDeleted;
         this.documentSubmissionTarget = documentSubmissionTarget;
         this.submissionEmail = submissionEmail;
-        this.status = status;
     }
 
     public void updateName(String name) {
@@ -145,8 +140,8 @@ public class Event {
         this.isDeleted = true;
     }
 
-    public void updateStatus(EventStatus eventStatus) {
-        this.status = eventStatus;
+    public void updateStatus(EventRecruitingStatus status) {
+        this.recruitDetail.updateStatus(status);
     }
 
     public String getEventMainPhotoUrl(ImageManager imageManager) {

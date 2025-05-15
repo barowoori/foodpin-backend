@@ -93,10 +93,10 @@ public class EventManagementService {
         if (!event.isCreator(getMemberId())) {
             throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
         }
-        if (handleEventRecruitmentDto.getRecruitmentStatus().equals(EventStatus.RECRUITMENT_CLOSED)) {
-            event.updateStatus(EventStatus.RECRUITMENT_CLOSED);
-        } else if (handleEventRecruitmentDto.getRecruitmentStatus().equals(EventStatus.RECRUITMENT_CANCELLED)) {
-            event.updateStatus(EventStatus.RECRUITMENT_CANCELLED);
+        if (handleEventRecruitmentDto.getRecruitmentStatus().equals(EventRecruitingStatus.RECRUITMENT_CLOSED)) {
+            event.updateStatus(EventRecruitingStatus.RECRUITMENT_CLOSED);
+        } else if (handleEventRecruitmentDto.getRecruitmentStatus().equals(EventRecruitingStatus.RECRUITMENT_CANCELLED)) {
+            event.updateStatus(EventRecruitingStatus.RECRUITMENT_CANCELLED);
         } else throw new CustomException(EventErrorCode.WRONG_EVENT_RECRUITMENT_STATUS);
         NotificationEvent.raise(new EventRecruitmentCanceledNotificationEvent(event.getId(), event.getName()));
         eventRepository.save(event);

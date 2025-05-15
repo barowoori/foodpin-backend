@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -18,6 +19,7 @@ import static com.barowoori.foodpinbackend.event.command.domain.model.EventTruck
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEvent.event;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventApplication.eventApplication;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventPhoto.eventPhoto;
+import static com.barowoori.foodpinbackend.event.command.domain.model.QEventRecruitDetail.eventRecruitDetail;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventTruck.eventTruck;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventTruckDate.eventTruckDate;
 import static com.barowoori.foodpinbackend.file.command.domain.model.QFile.file;
@@ -82,6 +84,7 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
                 .innerJoin(eventTruck.truck, truck)
                 .leftJoin(eventTruck.dates, eventTruckDate)
                 .innerJoin(eventTruck.event, event)
+                .leftJoin(event.recruitDetail, eventRecruitDetail)
                 .leftJoin(event.photos, eventPhoto)
                 .leftJoin(eventPhoto.file, file)
                 .where(truck.id.eq(truckId)
@@ -95,6 +98,7 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
                 .innerJoin(eventTruck.truck, truck)
                 .leftJoin(eventTruck.dates, eventTruckDate)
                 .innerJoin(eventTruck.event, event)
+                .leftJoin(event.recruitDetail, eventRecruitDetail)
                 .where(truck.id.eq(truckId)
                         .and(createStatusBuilder(status)))
                 .fetchOne();
@@ -113,12 +117,11 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
         if (EventTruckStatus.REJECTED.toString().equals(status)) {
             return filterBuilder.and(eventTruck.status.eq(EventTruckStatus.REJECTED));
         }
-        if (CONFIRMED.toString().equals(status)) {
-            return filterBuilder.and(eventTruck.status.eq(CONFIRMED));
+        if (status.equals("CONFIRMED")) {
+            return filterBuilder.and(eventTruck.status.eq(EventTruckStatus.CONFIRMED));
         }
-
-        if (EventStatus.COMPLETED.toString().equals(status)) {
-            return filterBuilder.and(eventTruck.status.eq(CONFIRMED).and(eventTruck.event.status.eq(EventStatus.COMPLETED)));
+        if (status.equals("COMPLETED")) {
+            return filterBuilder.and(eventTruck.status.eq(EventTruckStatus.CONFIRMED).and(eventRecruitDetail.recruitEndDateTime.before(LocalDateTime.now())));
         }
         return filterBuilder;
     }

@@ -3,19 +3,12 @@ package com.barowoori.foodpinbackend.event.command.domain.repository.querydsl;
 import com.barowoori.foodpinbackend.category.command.domain.model.QCategory;
 import com.barowoori.foodpinbackend.common.dto.MemberFcmInfoDto;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
-import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventManageList;
-import com.barowoori.foodpinbackend.file.command.domain.model.QFile;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
-import com.barowoori.foodpinbackend.truck.command.domain.model.QTruck;
-import com.barowoori.foodpinbackend.truck.command.domain.model.QTruckMenu;
-import com.barowoori.foodpinbackend.truck.command.domain.model.QTruckRegion;
-import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.data.domain.Page;
@@ -36,12 +29,10 @@ import static com.barowoori.foodpinbackend.event.command.domain.model.QEventDocu
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventPhoto.eventPhoto;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventRecruitDetail.eventRecruitDetail;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventRegion.eventRegion;
-import static com.barowoori.foodpinbackend.event.command.domain.model.QEventTruck.eventTruck;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventView.eventView;
 import static com.barowoori.foodpinbackend.file.command.domain.model.QFile.file;
 import static com.barowoori.foodpinbackend.member.command.domain.model.QEventLike.eventLike;
 import static com.barowoori.foodpinbackend.member.command.domain.model.QMember.member;
-import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckRegion.truckRegion;
 
 public class EventRepositoryCustomImpl implements EventRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
@@ -80,6 +71,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .leftJoin(eventPhoto.file, file)
                 .where(
                         event.isDeleted.isFalse()
+                                .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
                                 .and(
                                         createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, event, eventDate, category)
                                                 .and(regionFilterCondition(regionIds))
@@ -98,6 +90,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .where(
                         event.isDeleted.isFalse()
+                                .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
                                 .and(
                                         createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, event, eventDate, category)
                                                 .and(regionFilterCondition(regionIds))
@@ -129,7 +122,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                                                 .and(regionFilterCondition(regionIds))
                                 )
                 )
-                .orderBy(getOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
+                .orderBy(getLikeOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -197,19 +190,33 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
     private List<OrderSpecifier> getOrderSpecifier(Sort sort) {
         List<OrderSpecifier> orders = new ArrayList<>();
         PathBuilder<Event> eventPathBuilder = new PathBuilder<>(Event.class, "event");
-        PathBuilder<EventView> eventViewPathBuilder = new PathBuilder<>(EventView.class, "eventView");
         PathBuilder<EventRecruitDetail> eventRecruitDetailPathBuilder = new PathBuilder<>(EventRecruitDetail.class, "eventRecruitDetail");
 
         sort.stream().forEach(order -> {
             Order direction = order.isAscending() ? Order.ASC : Order.DESC;
-            if (order.getProperty().equals("createdAt")) {
+            if (order.getProperty().equals("createdAt")) { //최신순
                 orders.add(new OrderSpecifier(direction, eventPathBuilder.get(order.getProperty())));
-            } else if (order.getProperty().equals("views")) {
-                orders.add(new OrderSpecifier(direction, eventViewPathBuilder.get(order.getProperty())));
-            } else if (order.getProperty().equals("applicant")) {
+            } else if (order.getProperty().equals("applicant")) { //지원순
                 orders.add(new OrderSpecifier(direction, eventRecruitDetailPathBuilder.get("applicantCount")));
-            } else if (order.getProperty().equals("close")) {
-                orders.add(new OrderSpecifier(direction, eventRecruitDetailPathBuilder.get("recruitEndDate")));
+            } else if (order.getProperty().equals("deadline")) { //마감순
+                orders.add(new OrderSpecifier(direction, eventRecruitDetailPathBuilder.get("recruitEndDateTime")));
+            }
+        });
+
+        return orders;
+    }
+
+    private List<OrderSpecifier> getLikeOrderSpecifier(Sort sort) {
+        List<OrderSpecifier> orders = new ArrayList<>();
+        PathBuilder<Event> eventPathBuilder = new PathBuilder<>(Event.class, "event");
+        PathBuilder<EventRecruitDetail> eventRecruitDetailPathBuilder = new PathBuilder<>(EventRecruitDetail.class, "eventRecruitDetail");
+
+        sort.stream().forEach(order -> {
+            Order direction = order.isAscending() ? Order.ASC : Order.DESC;
+            if (order.getProperty().equals("createdAt")) { //최신순
+                orders.add(new OrderSpecifier(direction, eventPathBuilder.get(order.getProperty())));
+            } else if (order.getProperty().equals("deadline")) { //마감순
+                orders.add(new OrderSpecifier(direction, eventRecruitDetailPathBuilder.get("recruitEndDateTime")));
             }
         });
 
@@ -284,9 +291,13 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
         BooleanBuilder filterBuilder = new BooleanBuilder();
         if (status.equals("ALL")) {
             filterBuilder
-                    .and(event.status.in(EventStatus.RECRUITING, EventStatus.SELECTING, EventStatus.IN_PROGRESS));
+                    //모집중이거나 모집 마감일 때
+                    .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING)
+                            .or(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITMENT_CLOSED)
+                                    .and(eventRecruitDetail.isSelecting.isTrue()))
+                    );
         } else {
-            filterBuilder.and(event.status.eq(EventStatus.valueOf(status)));
+            filterBuilder.and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.valueOf(status)));
         }
         return filterBuilder;
     }
@@ -294,9 +305,14 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
     public BooleanBuilder createCompletedFilterBuilder(String status) {
         BooleanBuilder filterBuilder = new BooleanBuilder();
         if (status.equals("ALL")) {
-            filterBuilder.and(event.status.in(EventStatus.COMPLETED, EventStatus.RECRUITMENT_CANCELLED));
+            filterBuilder.and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITMENT_CANCELLED)
+                    .or(eventRecruitDetail.isSelecting.isFalse())
+            );
+        } else if (status.equals(EventRecruitingStatus.RECRUITMENT_CANCELLED.toString())) {
+            filterBuilder.and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITMENT_CANCELLED));
+
         } else {
-            filterBuilder.and(event.status.eq(EventStatus.valueOf(status)));
+            filterBuilder.and(eventRecruitDetail.isSelecting.isFalse());
         }
         return filterBuilder;
     }

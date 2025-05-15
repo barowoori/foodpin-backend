@@ -82,7 +82,7 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
-    @Operation(summary = "행사 목록 조회", description = "정렬 : 최신순(createdAt, DESC), 조회순(views, DESC)"
+    @Operation(summary = "행사 목록 조회", description = "정렬 : 최신순(createdAt, DESC), 지원순(applicant, DESC), 마감순(deadline, ASC)"
             + "\n\n 행사 상태 : RECRUITING(모집중), RECRUITMENT_CANCELLED(모집취소), RECRUITMENT_CLOSED(모집마감)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
@@ -104,7 +104,7 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
-    @Operation(summary = "찜한 행사 목록 조회", description = "정렬 : 최신순(createdAt, DESC), 조회순(views, DESC)")
+    @Operation(summary = "찜한 행사 목록 조회", description = "정렬 : 최신순(createdAt, DESC), 마감순(deadline, ASC)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",

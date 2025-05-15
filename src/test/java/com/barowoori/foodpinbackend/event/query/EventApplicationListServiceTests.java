@@ -54,7 +54,6 @@ public class EventApplicationListServiceTests {
                 .createdBy("user")
                 .name("2월 행사")
                 .isDeleted(Boolean.FALSE)
-                .status(EventStatus.IN_PROGRESS)
                 .build();
         event = eventRepository.save(event);
     }

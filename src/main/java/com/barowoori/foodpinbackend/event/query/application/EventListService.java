@@ -32,7 +32,7 @@ public class EventListService {
         this.eventRegionRepository = eventRegionRepository;
         this.eventRegionFullNameGenerator = eventRegionFullNameGenerator;
     }
-    //TODO 지원순, 마감순 정렬 추가하기
+
     @Transactional(readOnly = true)
     public Page<EventList> findEventList(String searchTerm, List<String> regionCodes,
                                          LocalDate startDate, LocalDate endDate,

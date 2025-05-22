@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -43,11 +44,7 @@ public class TruckEventApplicationListService {
         if (eventApplication.getStatus().equals(EventApplicationStatus.REJECTED)) {
             return EventApplicationStatus.REJECTED.toString();
         }
-        if (eventApplication.getEvent().getStatus().equals(EventStatus.SELECTING)
-                || eventApplication.getEvent().getStatus().equals(EventStatus.IN_PROGRESS)) {
-            return EventStatus.RECRUITMENT_CLOSED.toString();
-        }
-        return eventApplication.getEvent().getStatus().toString();
+        return eventApplication.getEvent().getRecruitDetail().getRecruitingStatus().toString();
     }
 
     public Page<TruckEventApplicationList.SelectedInfo> getTruckEventSelectedApplicationList(String status, String truckId, Pageable pageable) {
@@ -65,9 +62,8 @@ public class TruckEventApplicationListService {
         if (eventTruck.getStatus().equals(EventTruckStatus.REJECTED)) {
             return EventTruckStatus.REJECTED.toString();
         }
-
-        if (eventTruck.getStatus().equals(EventTruckStatus.CONFIRMED) && eventTruck.getEvent().getStatus().equals(EventStatus.COMPLETED)) {
-            return EventStatus.COMPLETED.toString();
+        if (eventTruck.getEvent().getRecruitDetail().getRecruitEndDateTime().isBefore(LocalDateTime.now())) {
+            return "COMPLETED";
         }
         return EventTruckStatus.CONFIRMED.toString();
     }

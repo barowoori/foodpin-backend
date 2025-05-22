@@ -12,7 +12,19 @@ import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
 import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
+import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.truck.ManagerAddedNotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.truck.ManagerRemovedNotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.truck.OwnerUpdatedNotificationEvent;
+import com.barowoori.foodpinbackend.region.command.domain.model.RegionDo;
+import com.barowoori.foodpinbackend.region.command.domain.model.RegionGu;
+import com.barowoori.foodpinbackend.region.command.domain.model.RegionGun;
+import com.barowoori.foodpinbackend.region.command.domain.model.RegionSi;
+import com.barowoori.foodpinbackend.region.command.domain.query.application.RegionSearchProcessor;
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionDoRepository;
+import com.barowoori.foodpinbackend.region.command.domain.repository.RegionGuRepository;
+import com.barowoori.foodpinbackend.region.command.domain.repository.RegionGunRepository;
+import com.barowoori.foodpinbackend.region.command.domain.repository.RegionSiRepository;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionInfo;
 import com.barowoori.foodpinbackend.truck.command.application.dto.RequestTruck;
 import com.barowoori.foodpinbackend.truck.command.application.dto.ResponseTruck;
@@ -31,6 +43,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -51,6 +64,9 @@ public class TruckService {
     private final TruckDocumentPhotoRepository truckDocumentPhotoRepository;
     private final BusinessRegistrationRepository businessRegistrationRepository;
     private final TruckManagerInvitationGenerator truckManagerInvitationGenerator;
+    private final RegionSiRepository regionSiRepository;
+    private final RegionGuRepository regionGuRepository;
+    private final RegionGunRepository regionGunRepository;
 
     private String getMemberId() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
@@ -76,16 +92,25 @@ public class TruckService {
             truckPhotoRepository.save(truckPhoto);
         }
 
+        List<RegionDo> regionDos = regionDoRepository.findAll();
+        List<RegionSi> regionSis = regionSiRepository.findAll();
+        List<RegionGu> regionGus = regionGuRepository.findAll();
+        List<RegionGun> regionGuns = regionGunRepository.findAll();
+
+        RegionSearchProcessor regionSearchProcessor = new RegionSearchProcessor(regionDos, regionSis, regionGus, regionGuns);
+
         // 트럭 지역 생성
-        createTruckDto.getTruckRegionCodeSet().forEach( truckRegionCode -> {
-            RegionInfo regionInfo = regionDoRepository.findByCode(truckRegionCode);
-            TruckRegion truckRegion = TruckRegion.builder()
-                    .regionType(regionInfo.getRegionType())
-                    .regionId(regionInfo.getRegionId())
-                    .truck(truck)
-                    .build();
-            truckRegionRepository.save(truckRegion);
-        });
+        List<TruckRegion> truckRegions = createTruckDto.getTruckRegionCodeSet().stream()
+                .map(truckRegionCode -> {
+                    RegionInfo regionInfo = regionSearchProcessor.findByCode(truckRegionCode);
+                    return TruckRegion.builder()
+                            .regionType(regionInfo.getRegionType())
+                            .regionId(regionInfo.getRegionId())
+                            .truck(truck)
+                            .build();
+                })
+                .toList();
+        truckRegionRepository.saveAll(truckRegions);
 
         // 트럭 카테고리 생성
         createTruckDto.getTruckCategoryCodeSet().forEach(truckCategoryCode -> {
@@ -117,7 +142,7 @@ public class TruckService {
 
         if (!Objects.equals(createTruckDto.getTruckDocumentDtoSet(), null) && !createTruckDto.getTruckDocumentDtoSet().isEmpty()) {
             for (RequestTruck.TruckDocumentDto truckDocumentDto : createTruckDto.getTruckDocumentDtoSet()) {
-                if (truckDocumentDto.getType().equals(DocumentType.BUSINESS_REGISTRATION) && !Objects.equals(truckDocumentDto.getCreateBusinessRegistrationDto(), null)){
+                if (truckDocumentDto.getType().equals(DocumentType.BUSINESS_REGISTRATION) && !Objects.equals(truckDocumentDto.getCreateBusinessRegistrationDto(), null)) {
                     BusinessRegistration businessRegistration = truckDocumentDto.getCreateBusinessRegistrationDto().toEntity(memberId);
                     businessRegistration = businessRegistrationRepository.save(businessRegistration);
                     TruckDocument truckDocument = truckDocumentDto.toEntity(memberId, businessRegistration.getId(), truck);
@@ -157,10 +182,11 @@ public class TruckService {
                     .build();
             truckManagerRepository.save(newTruckManager);
         } else throw new CustomException(TruckErrorCode.TRUCK_MANAGER_EXISTS);
+        NotificationEvent.raise(new ManagerAddedNotificationEvent(truck.getId(), truck.getName(), member.getNickname()));
     }
 
     @Transactional(readOnly = true)
-    public ResponseTruck.GetTruckInviteMessageDto getManagerInviteMessage(String truckId){
+    public ResponseTruck.GetTruckInviteMessageDto getManagerInviteMessage(String truckId) {
         Truck truck = getTruck(truckId);
         return ResponseTruck.GetTruckInviteMessageDto.builder()
                 .message(truckManagerInvitationGenerator.getMessage(truck))
@@ -249,11 +275,11 @@ public class TruckService {
     }
 
     @Transactional
-    public void setTruckDocument(String truckId, RequestTruck.TruckDocumentDto truckDocumentDto){
+    public void setTruckDocument(String truckId, RequestTruck.TruckDocumentDto truckDocumentDto) {
         String memberId = getMemberId();
         Truck truck = getTruck(truckId);
 
-        if (truckDocumentDto.getType().equals(DocumentType.BUSINESS_REGISTRATION)){
+        if (truckDocumentDto.getType().equals(DocumentType.BUSINESS_REGISTRATION)) {
             if (!Objects.equals(truckDocumentDto.getCreateBusinessRegistrationDto(), null)) {
 
                 TruckDocument originalTruckDocument = truckDocumentRepository.findByTruckIdAndType(truckId, truckDocumentDto.getType());
@@ -270,7 +296,7 @@ public class TruckService {
                     originalTruckDocument.update(LocalDateTime.now(), memberId, truckDocumentDto.getApproval());
                     truckDocumentRepository.save(originalTruckDocument);
                 }
-            }  else throw new CustomException(TruckErrorCode.BUSINESS_INFO_MISSED);
+            } else throw new CustomException(TruckErrorCode.BUSINESS_INFO_MISSED);
         } else if (!Objects.equals(truckDocumentDto.getFileIdList(), null) && !truckDocumentDto.getFileIdList().isEmpty()) {
 
             TruckDocument originalTruckDocument = truckDocumentRepository.findByTruckIdAndType(truckId, truckDocumentDto.getType());
@@ -297,8 +323,7 @@ public class TruckService {
                 originalTruckDocument.update(LocalDateTime.now(), memberId, truckDocumentDto.getApproval());
                 truckDocumentRepository.save(originalTruckDocument);
             }
-        }
-        else throw new CustomException(TruckErrorCode.DOCUMENT_PHOTO_MISSED);
+        } else throw new CustomException(TruckErrorCode.DOCUMENT_PHOTO_MISSED);
     }
 
     @Transactional
@@ -313,6 +338,8 @@ public class TruckService {
             truckOwner.updateRole(TruckManagerRole.MEMBER);
             truckManagerRepository.save(truckOwner);
         } else throw new CustomException(TruckErrorCode.TRUCK_OWNER_NOT_FOUND);
+        Truck truck = truckMember.getTruck();
+        NotificationEvent.raise(new OwnerUpdatedNotificationEvent(truckId, truck.getName(), truckMember.getMember().getNickname()));
     }
 
     @Transactional
@@ -324,6 +351,9 @@ public class TruckService {
         if (truckOwner != null && truckMember != null && Objects.equals(truckOwner.getRole(), TruckManagerRole.OWNER)) {
             truckManagerRepository.delete(truckMember);
         } else throw new CustomException(TruckErrorCode.TRUCK_OWNER_NOT_FOUND);
+        Truck truck = truckMember.getTruck();
+
+        NotificationEvent.raise(new ManagerRemovedNotificationEvent(truck.getName(), managerId));
     }
 
     @Transactional

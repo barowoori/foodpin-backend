@@ -34,7 +34,7 @@ public class EventApplicableTruckListService {
             return trucks.map(truck -> EventApplicableTruckList.of(truck, new ArrayList<>()));
         }
         List<DocumentType> eventDocuments = eventDocumentRepository.findByEventId(eventId).stream().map(EventDocument::getType).toList();
-        return trucks.map(truck -> EventApplicableTruckList.of(truck, findMissingDocuments(eventDocuments, truck.getDocuments())));
+        return trucks.map(truck -> EventApplicableTruckList.of(truck, findMissingDocuments(eventDocuments, truck.getDocuments().stream().toList())));
     }
 
     private List<DocumentType> findMissingDocuments(List<DocumentType> eventDocuments, List<TruckDocument> truckDocuments) {

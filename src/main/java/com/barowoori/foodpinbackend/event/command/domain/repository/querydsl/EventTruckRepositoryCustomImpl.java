@@ -1,25 +1,32 @@
 package com.barowoori.foodpinbackend.event.command.domain.repository.querydsl;
 
 import com.barowoori.foodpinbackend.category.command.domain.model.QCategory;
+import com.barowoori.foodpinbackend.common.dto.MemberFcmInfoDto;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.barowoori.foodpinbackend.event.command.domain.model.EventTruckStatus.CONFIRMED;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEvent.event;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventApplication.eventApplication;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventPhoto.eventPhoto;
+import static com.barowoori.foodpinbackend.event.command.domain.model.QEventRecruitDetail.eventRecruitDetail;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventTruck.eventTruck;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventTruckDate.eventTruckDate;
 import static com.barowoori.foodpinbackend.file.command.domain.model.QFile.file;
+import static com.barowoori.foodpinbackend.member.command.domain.model.QMember.member;
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruck.truck;
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckDocument.truckDocument;
+import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckManager.truckManager;
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckMenu.truckMenu;
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckPhoto.truckPhoto;
 
@@ -46,7 +53,7 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
                 .orderBy(
                         new CaseBuilder()
                                 .when(eventTruck.status.eq(EventTruckStatus.PENDING)).then(1)
-                                .when(eventTruck.status.eq(EventTruckStatus.CONFIRMED)).then(2)
+                                .when(eventTruck.status.eq(CONFIRMED)).then(2)
                                 .when(eventTruck.status.eq(EventTruckStatus.REJECTED)).then(3)
                                 .otherwise(4)
                                 .asc()
@@ -77,11 +84,12 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
                 .innerJoin(eventTruck.truck, truck)
                 .leftJoin(eventTruck.dates, eventTruckDate)
                 .innerJoin(eventTruck.event, event)
+                .leftJoin(event.recruitDetail, eventRecruitDetail)
                 .leftJoin(event.photos, eventPhoto)
                 .leftJoin(eventPhoto.file, file)
                 .where(truck.id.eq(truckId)
                         .and(createStatusBuilder(status)))
-                .orderBy(eventApplication.createdAt.desc())
+                .orderBy(eventTruck.createdAt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -90,6 +98,7 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
                 .innerJoin(eventTruck.truck, truck)
                 .leftJoin(eventTruck.dates, eventTruckDate)
                 .innerJoin(eventTruck.event, event)
+                .leftJoin(event.recruitDetail, eventRecruitDetail)
                 .where(truck.id.eq(truckId)
                         .and(createStatusBuilder(status)))
                 .fetchOne();
@@ -108,12 +117,11 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
         if (EventTruckStatus.REJECTED.toString().equals(status)) {
             return filterBuilder.and(eventTruck.status.eq(EventTruckStatus.REJECTED));
         }
-        if (EventTruckStatus.CONFIRMED.toString().equals(status)) {
+        if (status.equals("CONFIRMED")) {
             return filterBuilder.and(eventTruck.status.eq(EventTruckStatus.CONFIRMED));
         }
-
-        if (EventStatus.COMPLETED.toString().equals(status)) {
-            return filterBuilder.and(eventTruck.status.eq(EventTruckStatus.CONFIRMED).and(eventTruck.event.status.eq(EventStatus.COMPLETED)));
+        if (status.equals("COMPLETED")) {
+            return filterBuilder.and(eventTruck.status.eq(EventTruckStatus.CONFIRMED).and(eventRecruitDetail.recruitEndDateTime.before(LocalDateTime.now())));
         }
         return filterBuilder;
     }
@@ -123,7 +131,7 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
         return jpaQueryFactory.selectFrom(eventTruck)
                 .innerJoin(eventTruck.event, event).on(event.id.eq(eventId))
                 .innerJoin(eventTruck.truck, truck).on(truck.id.eq(truckId))
-                .where(eventTruck.status.eq(EventTruckStatus.CONFIRMED))
+                .where(eventTruck.status.eq(CONFIRMED))
                 .fetchFirst() != null;
     }
 
@@ -131,8 +139,32 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
         return jpaQueryFactory.selectFrom(eventTruck)
                 .innerJoin(eventTruck.event, event).on(event.id.eq(eventId))
                 .innerJoin(eventTruck.truck, truck).on(truck.id.eq(truckId))
-                .where(eventTruck.status.eq(EventTruckStatus.CONFIRMED))
+                .where(eventTruck.status.eq(CONFIRMED))
                 .fetchOne();
     }
 
+    @Override
+    public List<MemberFcmInfoDto> findEventTruckManagersFcmInfo(String eventTruckId) {
+        return jpaQueryFactory
+                .selectDistinct(Projections.constructor(MemberFcmInfoDto.class, member.id, member.fcmToken))
+                .from(eventTruck)
+                .innerJoin(eventTruck.truck, truck)
+                .innerJoin(truckManager).on(truck.eq(truckManager.truck))
+                .innerJoin(truckManager.member, member)
+                .where(eventTruck.id.eq(eventTruckId))
+                .fetch();
+    }
+
+    @Override
+    public List<MemberFcmInfoDto> findConfirmedEventTruckManagersFcmInfo(String eventId) {
+        return jpaQueryFactory
+                .selectDistinct(Projections.constructor(MemberFcmInfoDto.class, member.id, member.fcmToken))
+                .from(event)
+                .innerJoin(eventTruck).on(eventTruck.event.eq(event))
+                .innerJoin(eventTruck.truck, truck)
+                .innerJoin(truckManager).on(truck.eq(truckManager.truck))
+                .innerJoin(truckManager.member, member)
+                .where(event.id.eq(eventId).and(eventTruck.status.eq(CONFIRMED)))
+                .fetch();
+    }
 }

@@ -3,7 +3,6 @@ package com.barowoori.foodpinbackend.event.query;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.event.command.domain.model.Event;
 import com.barowoori.foodpinbackend.event.command.domain.model.EventDocument;
-import com.barowoori.foodpinbackend.event.command.domain.model.EventStatus;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventDocumentRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventApplicableTruckList;
@@ -12,7 +11,6 @@ import com.barowoori.foodpinbackend.member.command.domain.model.Member;
 import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginInfo;
 import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginType;
 import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
-import com.barowoori.foodpinbackend.region.command.domain.model.RegionSi;
 import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckDocument;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckManager;
@@ -70,7 +68,6 @@ public class EventApplicationTruckListServiceTests {
                 .createdBy("user")
                 .name("2월 행사")
                 .isDeleted(Boolean.FALSE)
-                .status(EventStatus.IN_PROGRESS)
                 .build();
         event = eventRepository.save(event);
 

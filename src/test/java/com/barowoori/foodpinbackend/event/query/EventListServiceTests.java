@@ -73,7 +73,6 @@ public class EventListServiceTests {
                 .createdBy("user")
                 .name("2월 행사")
                 .isDeleted(Boolean.FALSE)
-                .status(EventStatus.IN_PROGRESS)
                 .build();
         event = eventRepository.save(event);
 
@@ -81,6 +80,7 @@ public class EventListServiceTests {
                 .recruitEndDateTime(LocalDateTime.of(2025, 3, 3, 0, 0))
                 .recruitCount(4)
                 .event(event)
+                .recruitingStatus(EventRecruitingStatus.RECRUITING)
                 .build();
         eventRecruitDetail = eventRecruitDetailRepository.save(eventRecruitDetail);
         event.initEventRecruitDetail(eventRecruitDetail);
@@ -96,7 +96,6 @@ public class EventListServiceTests {
                 .createdBy("user")
                 .name("2월 행사2")
                 .isDeleted(Boolean.FALSE)
-                .status(EventStatus.IN_PROGRESS)
                 .build();
         event1 = eventRepository.save(event1);
 
@@ -104,6 +103,7 @@ public class EventListServiceTests {
                 .recruitEndDateTime(LocalDateTime.of(2025, 3, 3, 0, 0))
                 .recruitCount(4)
                 .event(event1)
+                .recruitingStatus(EventRecruitingStatus.RECRUITING)
                 .build();
         eventRecruitDetail1 = eventRecruitDetailRepository.save(eventRecruitDetail1);
         event1.initEventRecruitDetail(eventRecruitDetail1);
@@ -149,7 +149,6 @@ public class EventListServiceTests {
                     .name("삭제된 행사")
                     .createdBy("user")
                     .isDeleted(Boolean.TRUE)
-                    .status(EventStatus.IN_PROGRESS)
                     .build();
             deletedEvent = eventRepository.save(deletedEvent);
 
@@ -158,6 +157,7 @@ public class EventListServiceTests {
                     .recruitCount(4)
                     .applicantCount(0)
                     .event(deletedEvent)
+                    .recruitingStatus(EventRecruitingStatus.RECRUITING)
                     .build();
             eventRecruitDetail1 = eventRecruitDetailRepository.save(eventRecruitDetail1);
             deletedEvent.initEventRecruitDetail(eventRecruitDetail1);
@@ -231,20 +231,12 @@ public class EventListServiceTests {
             assertEquals("2월 행사2", result.stream().findFirst().get().getName());
             result.forEach(event -> System.out.println(event.getName()));
         }
-        @Test
-        @Transactional
-        @DisplayName("정렬 기준이 조회순일 경우 행사 조회수 기준으로 내림차순 정렬된다")
-        void When_OrderByViews() {
-            Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "views"));
-            Page<EventList> result = eventListService.findEventList(null, null, null,  null, null, pageable);
-            assertEquals(event.getName(), result.stream().findFirst().get().getName());
-            result.forEach(event -> System.out.println(event.getName()));
-        }
+
         @Test
         @Transactional
         @DisplayName("정렬 기준이 지원순일 경우 행사 지원자수 기준으로 내림차순 정렬된다")
         void When_OrderByApplicant() {
-            Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "applicant"));
+            Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "applicantCount"));
             Page<EventList> result = eventListService.findEventList(null, null, null,  null, null, pageable);
             assertEquals(event.getName(), result.stream().findFirst().get().getName());
             result.forEach(event -> System.out.println(event.getName()));

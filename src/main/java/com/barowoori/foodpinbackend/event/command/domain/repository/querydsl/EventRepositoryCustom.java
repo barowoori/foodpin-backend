@@ -1,5 +1,6 @@
 package com.barowoori.foodpinbackend.event.command.domain.repository.querydsl;
 
+import com.barowoori.foodpinbackend.common.dto.MemberFcmInfoDto;
 import com.barowoori.foodpinbackend.event.command.domain.model.Event;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
 import org.springframework.data.domain.Page;
@@ -19,4 +20,5 @@ public interface EventRepositoryCustom {
                                           List<String> categoryCodes, Pageable pageable);
     Page<Event> findProgressEventManageList(String memberId, String status, Pageable pageable);
     Page<Event> findCompletedEventManageList(String memberId, String status, Pageable pageable);
+    MemberFcmInfoDto findEventCreatorFcmInfo(String eventId);
 }

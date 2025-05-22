@@ -12,6 +12,12 @@ import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepository;
 import com.barowoori.foodpinbackend.member.command.domain.model.EventLike;
 import com.barowoori.foodpinbackend.member.command.domain.repository.EventLikeRepository;
+import com.barowoori.foodpinbackend.notification.command.domain.model.event.ApplicationReceivedNotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.event.SelectionCanceledNotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.event.SelectionConfirmedNotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.truck.EventCastedNotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.truck.TruckSelectionConfirmedNotificationEvent;
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionDoRepository;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionInfo;
 import com.barowoori.foodpinbackend.truck.command.domain.exception.TruckErrorCode;
@@ -236,6 +242,7 @@ public class EventService {
         }
         EventProposal newEventProposal = proposeEventDto.toEntity(event, getTruck(proposeEventDto.getTruckId()));
         eventProposalRepository.save(newEventProposal);
+        NotificationEvent.raise(new EventCastedNotificationEvent(event.getId(), event.getName()));
     }
 
     @Transactional
@@ -259,12 +266,15 @@ public class EventService {
             EventApplicationDate eventApplicationDate = EventApplicationDate.builder().eventDate(eventDate).eventApplication(eventApplication).build();
             eventApplicationDateRepository.save(eventApplicationDate);
         }
+
+        NotificationEvent.raise(new ApplicationReceivedNotificationEvent(event.getId(), event.getName(), eventApplication.getId()));
     }
 
     @Transactional
     public void handleEventTruck(RequestEvent.HandleEventTruckDto handleEventTruckDto) {
         EventTruck eventTruck = eventTruckRepository.findById(handleEventTruckDto.getEventTruckId())
                 .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_TRUCK_NOT_FOUND));
+        Event event = eventTruck.getEvent();
         TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(eventTruck.getTruck().getId(), getMemberId());
         if (truckManager == null) {
             throw new CustomException(TruckErrorCode.TRUCK_MANAGER_NOT_FOUND);
@@ -276,10 +286,15 @@ public class EventService {
 
         if (handleEventTruckDto.getEventTruckStatus().equals(EventTruckStatus.CONFIRMED)) {
             eventTruck.confirm();
+            NotificationEvent.raise(new SelectionConfirmedNotificationEvent(event.getId(), event.getName(), eventTruck.getTruck().getName(), eventTruck.getId()));
         } else if (handleEventTruckDto.getEventTruckStatus().equals(EventTruckStatus.REJECTED)) {
             eventTruck.reject();
+            NotificationEvent.raise(new SelectionCanceledNotificationEvent(event.getId(), event.getName(), eventTruck.getTruck().getName()));
         } else throw new CustomException(EventErrorCode.WRONG_EVENT_TRUCK_STATUS);
+
         eventTruckRepository.save(eventTruck);
+
+        NotificationEvent.raise(new TruckSelectionConfirmedNotificationEvent(event.getId(), eventTruck.getId()));
     }
 
     @Transactional(readOnly = true)

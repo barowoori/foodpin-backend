@@ -45,7 +45,8 @@ public class EventController {
     private final TruckEventApplicationListService truckEventApplicationListService;
     private final EventApplicableTruckListService eventApplicableTruckListService;
 
-    @Operation(summary = "행사 생성", description = "사진의 경우 파일 저장 api로 업로드 후 반환된 파일 id 리스트로 전달")
+    @Operation(summary = "행사 생성", description = "사진의 경우 파일 저장 api로 업로드 후 반환된 파일 id 리스트로 전달"
+            + "\n\n서류 타입 : BUSINESS_REGISTRATION(사업자등록증), BUSINESS_LICENSE(영업신고증), VEHICLE_REGISTRATION(자동차등록증), SANITATION_EDUCATION(위생교육필증), HEALTH_CERTIFICATE(보건증), GAS_SAFETY_INSPECTION_CERTIFICATE(가스안전점검필증)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
@@ -81,7 +82,8 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
-    @Operation(summary = "행사 목록 조회", description = "정렬 : 최신순(createdAt, DESC), 조회순(views, DESC)")
+    @Operation(summary = "행사 목록 조회", description = "정렬 : 최신순(createdAt, DESC), 지원순(applicant, DESC), 마감순(deadline, ASC)"
+            + "\n\n 행사 상태 : RECRUITING(모집중), RECRUITMENT_CANCELLED(모집취소), RECRUITMENT_CLOSED(모집마감)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
@@ -102,7 +104,7 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
-    @Operation(summary = "찜한 행사 목록 조회", description = "정렬 : 최신순(createdAt, DESC), 조회순(views, DESC)")
+    @Operation(summary = "찜한 행사 목록 조회", description = "정렬 : 최신순(createdAt, DESC), 마감순(deadline, ASC)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
@@ -317,11 +319,12 @@ public class EventController {
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @GetMapping(value = "/v1/applications/pending")
-    public ResponseEntity<CommonResponse<Page<EventApplicationList.EventPendingApplication>>> getPendingEventApplicationList(@ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+    @GetMapping(value = "/{eventId}/v1/applications/pending")
+    public ResponseEntity<CommonResponse<Page<EventApplicationList.EventPendingApplication>>> getPendingEventApplicationList(@PathVariable(value = "eventId") String eventId,
+                                                                                                                             @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
-        Page<EventApplicationList.EventPendingApplication> eventLists = eventApplicationListService.findPendingEventApplications(memberId, pageable);
+        Page<EventApplicationList.EventPendingApplication> eventLists = eventApplicationListService.findPendingEventApplications(eventId, pageable);
         CommonResponse<Page<EventApplicationList.EventPendingApplication>> commonResponse = CommonResponse.<Page<EventApplicationList.EventPendingApplication>>builder()
                 .data(eventLists)
                 .build();
@@ -334,12 +337,13 @@ public class EventController {
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @GetMapping(value = "/v1/applications/selected/status/{status}")
-    public ResponseEntity<CommonResponse<Page<EventApplicationList.EventSelectedApplication>>> getSelectedEventApplicationList(@PathVariable(value = "status") String status,
+    @GetMapping(value = "/{eventId}/v1/applications/selected/status/{status}")
+    public ResponseEntity<CommonResponse<Page<EventApplicationList.EventSelectedApplication>>> getSelectedEventApplicationList(@PathVariable(value = "eventId") String eventId,
+                                                                                                                               @PathVariable(value = "status") String status,
                                                                                                                                @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
-        Page<EventApplicationList.EventSelectedApplication> eventLists = eventApplicationListService.findSelectedEventApplications(memberId, status, pageable);
+        Page<EventApplicationList.EventSelectedApplication> eventLists = eventApplicationListService.findSelectedEventApplications(eventId, status, pageable);
         CommonResponse<Page<EventApplicationList.EventSelectedApplication>> commonResponse = CommonResponse.<Page<EventApplicationList.EventSelectedApplication>>builder()
                 .data(eventLists)
                 .build();
@@ -352,11 +356,12 @@ public class EventController {
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @GetMapping(value = "/v1/applications/rejected")
-    public ResponseEntity<CommonResponse<Page<EventApplicationList.EventRejectedApplication>>> getRejectedEventApplicationList(@ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+    @GetMapping(value = "/{eventId}/v1/applications/rejected")
+    public ResponseEntity<CommonResponse<Page<EventApplicationList.EventRejectedApplication>>> getRejectedEventApplicationList(@PathVariable(value = "eventId") String eventId,
+                                                                                                                               @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
-        Page<EventApplicationList.EventRejectedApplication> eventLists = eventApplicationListService.findRejectedEventApplications(memberId, pageable);
+        Page<EventApplicationList.EventRejectedApplication> eventLists = eventApplicationListService.findRejectedEventApplications(eventId, pageable);
         CommonResponse<Page<EventApplicationList.EventRejectedApplication>> commonResponse = CommonResponse.<Page<EventApplicationList.EventRejectedApplication>>builder()
                 .data(eventLists)
                 .build();
@@ -423,7 +428,7 @@ public class EventController {
     })
     @GetMapping(value = "/v1/{eventId}/notices")
     public ResponseEntity<CommonResponse<Page<ResponseEvent.GetEventNoticeDto>>> getEventNoticeList(@PathVariable(value = "eventId") String eventId,
-                                                                                  @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+                                                                                                    @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<ResponseEvent.GetEventNoticeDto> eventNotices = eventService.getEventNotices(eventId, pageable);
         CommonResponse<Page<ResponseEvent.GetEventNoticeDto>> commonResponse = CommonResponse.<Page<ResponseEvent.GetEventNoticeDto>>builder()
                 .data(eventNotices)
@@ -454,7 +459,7 @@ public class EventController {
     })
     @GetMapping(value = "/v1/trucks/{truckId}/notices/{noticeId}")
     public ResponseEntity<CommonResponse<ResponseEvent.GetEventNoticeDetailForTruckDto>> getEventNoticeDetailForTruck(@PathVariable(value = "truckId") String truckId,
-                                                                                                      @PathVariable(value = "noticeId") String noticeId) {
+                                                                                                                      @PathVariable(value = "noticeId") String noticeId) {
         ResponseEvent.GetEventNoticeDetailForTruckDto eventNotice = eventService.getEventNoticeDetailForTruck(truckId, noticeId);
         CommonResponse<ResponseEvent.GetEventNoticeDetailForTruckDto> commonResponse = CommonResponse.<ResponseEvent.GetEventNoticeDetailForTruckDto>builder()
                 .data(eventNotice)

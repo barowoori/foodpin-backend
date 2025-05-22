@@ -18,10 +18,9 @@ import java.util.List;
 @Getter
 @Builder
 public class EventDetail {
-    private Boolean isAvailableUpdate;
-    private Boolean isAvailableDelete;
-    private Boolean isLike;
     private String id;
+    private Boolean isEventManager;
+    private Boolean isLike;
     private List<Photo> photos;
     private RecruitInfo recruitInfo;
     private String name;
@@ -37,8 +36,7 @@ public class EventDetail {
 
     public static EventDetail of(Event event, String memberId, Boolean isLike, ImageManager imageManager, List<RegionCode> regions) {
         return EventDetail.builder()
-                .isAvailableUpdate(event.isCreator(memberId))
-                .isAvailableDelete(event.isCreator(memberId))
+                .isEventManager(event.isCreator(memberId))
                 .id(event.getId())
                 .photos(event.getEventPhotoFiles().stream()
                         .map(file -> Photo.of(file, imageManager)).toList())
@@ -96,7 +94,7 @@ public class EventDetail {
     @Getter
     @Builder
     public static class RecruitInfo {
-        private EventStatus status;
+        private EventRecruitingStatus status;
         private String statusComment;
         private Integer applicantCount;
         private Integer selectedCount;
@@ -104,7 +102,7 @@ public class EventDetail {
 
         public static RecruitInfo of(Event event, EventRecruitDetail eventRecruitDetail) {
             return RecruitInfo.builder()
-                    .status(event.getStatus())
+                    .status(eventRecruitDetail.getRecruitingStatus())
                     .statusComment(event.getStatusComment())
                     .applicantCount(eventRecruitDetail.getApplicantCount())
                     .selectedCount(eventRecruitDetail.getSelectedCount())

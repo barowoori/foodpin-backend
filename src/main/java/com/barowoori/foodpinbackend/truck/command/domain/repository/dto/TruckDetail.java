@@ -16,6 +16,7 @@ import java.util.List;
 @Getter
 @Builder
 public class TruckDetail {
+    private Boolean isTruckManager;
     private Boolean isAvailableUpdate;
     private Boolean isAvailableDelete;
     private TruckInfo truck;
@@ -28,6 +29,7 @@ public class TruckDetail {
 
     public static TruckDetail of(TruckManager truckManager, Truck truck, TruckDocumentManager truckDocumentManager, List<RegionCode> regions, List<Category> categories,List<TruckMenu> truckMenus, Boolean isLike, ImageManager imageManager) {
         return TruckDetail.builder()
+                .isTruckManager(truckManager != null)
                 .isAvailableUpdate(checkAvailableUpdate(truckManager))
                 .isAvailableDelete(checkAvailableDelete(truckManager))
                 .truck(TruckInfo.of(truck, imageManager))

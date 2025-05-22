@@ -35,7 +35,7 @@ public class EventApplicationList {
     @Getter
     @Builder
     public static class EventPendingApplication {
-        private String id;
+        private String eventApplicationId;
         private TruckInfo truck;
         private List<ApplicationDateInfo> dates;
         private Boolean isRead;
@@ -43,7 +43,7 @@ public class EventApplicationList {
 
         public static EventPendingApplication of(EventApplication eventApplication, ImageManager imageManager) {
             return EventPendingApplication.builder()
-                    .id(eventApplication.getId())
+                    .eventApplicationId(eventApplication.getId())
                     .truck(TruckInfo.of(eventApplication.getTruck(), imageManager))
                     .dates(eventApplication.getDates().stream()
                             .map(EventApplicationDate::getEventDate)
@@ -73,14 +73,14 @@ public class EventApplicationList {
     @Getter
     @Builder
     public static class EventSelectedApplication {
-        private String id;
+        private String eventTruckId;
         private TruckInfo truck;
         private List<LocalDate> dates;
         private EventTruckStatus status;
 
         public static EventSelectedApplication of(EventTruck eventTruck, ImageManager imageManager) {
             return EventSelectedApplication.builder()
-                    .id(eventTruck.getId())
+                    .eventTruckId(eventTruck.getId())
                     .truck(TruckInfo.of(eventTruck.getTruck(), imageManager))
                     .dates(eventTruck.getDates().stream()
                             .map(EventTruckDate::getEventDate).map(EventDate::getDate).toList())
@@ -92,13 +92,13 @@ public class EventApplicationList {
     @Getter
     @Builder
     public static class EventRejectedApplication {
-        private String id;
+        private String eventApplicationId;
         private TruckInfo truck;
         private List<LocalDate> dates;
 
         public static EventRejectedApplication of(EventApplication eventApplication, ImageManager imageManager) {
             return EventRejectedApplication.builder()
-                    .id(eventApplication.getId())
+                    .eventApplicationId(eventApplication.getId())
                     .truck(TruckInfo.of(eventApplication.getTruck(), imageManager))
                     .dates(eventApplication.getDates().stream()
                             .map(EventApplicationDate::getEventDate).map(EventDate::getDate).toList())

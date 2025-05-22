@@ -3,7 +3,6 @@ package com.barowoori.foodpinbackend.event.query;
 import com.barowoori.foodpinbackend.category.command.domain.repository.CategoryRepository;
 import com.barowoori.foodpinbackend.event.command.domain.model.Event;
 import com.barowoori.foodpinbackend.event.command.domain.model.EventRecruitDetail;
-import com.barowoori.foodpinbackend.event.command.domain.model.EventStatus;
 import com.barowoori.foodpinbackend.event.command.domain.model.EventView;
 import com.barowoori.foodpinbackend.event.command.domain.repository.*;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventDetail;
@@ -25,7 +24,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -80,7 +78,6 @@ public class EventDetailServiceTests {
                 .createdBy("user")
                 .name("2월 행사")
                 .isDeleted(Boolean.FALSE)
-                .status(EventStatus.IN_PROGRESS)
                 .build();
         event = eventRepository.save(event);
 

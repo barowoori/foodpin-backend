@@ -24,6 +24,13 @@ public class EventRecruitDetail {
     @Column(name = "recruit_end_date_time")
     private LocalDateTime recruitEndDateTime;
 
+    @Enumerated(value = EnumType.STRING)
+    @Column(name = "recruiting_status")
+    private EventRecruitingStatus recruitingStatus;
+
+    @Column(name = "is_selecting")
+    private Boolean isSelecting;
+
     @Column(name = "recruit_count")
     private Integer recruitCount;
 
@@ -53,14 +60,18 @@ public class EventRecruitDetail {
     @Builder
     public EventRecruitDetail(LocalDateTime recruitEndDateTime, Integer recruitCount, Integer applicantCount, Integer selectedCount,
                               Boolean generatorRequirement, Boolean electricitySupportAvailability, Integer entryFee,
+                              EventRecruitingStatus recruitingStatus, Boolean isSelecting,
                               Event event) {
         this.recruitEndDateTime = recruitEndDateTime;
         this.recruitCount = recruitCount;
+        this.selectedCount = selectedCount;
         this.applicantCount = applicantCount;
         this.event = event;
         this.generatorRequirement = generatorRequirement;
         this.electricitySupportAvailability = electricitySupportAvailability;
         this.entryFee = entryFee;
+        this.recruitingStatus = recruitingStatus;
+        this.isSelecting = isSelecting;
     }
 
     public void update(LocalDateTime recruitEndDateTime, Integer recruitCount,
@@ -70,5 +81,13 @@ public class EventRecruitDetail {
         this.generatorRequirement = generatorRequirement;
         this.electricitySupportAvailability = electricitySupportAvailability;
         this.entryFee = entryFee;
+    }
+
+    public void updateStatus(EventRecruitingStatus status){
+        this.recruitingStatus = status;
+    }
+
+    public void closeSelection() {
+        this.isSelecting = Boolean.FALSE;
     }
 }

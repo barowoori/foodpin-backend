@@ -59,7 +59,6 @@ public class EventNoticeRepositoryTests {
                 .createdBy("user")
                 .name("2월 행사")
                 .isDeleted(Boolean.FALSE)
-                .status(EventStatus.IN_PROGRESS)
                 .build();
         event = eventRepository.save(event);
     }

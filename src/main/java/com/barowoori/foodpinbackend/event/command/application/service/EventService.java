@@ -32,6 +32,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -100,6 +101,14 @@ public class EventService {
         eventRegionRepository.save(eventRegion);
         event.initEventRegion(eventRegion);
 
+        if (Objects.equals(createEventDto.getEventRecruitDto().getRecruitEndDateTime(), null)){
+            LocalDateTime lastEndDateTime = createEventDto.getEventDateDtoList().stream()
+                    .map(dto -> LocalDateTime.of(dto.getDate(), dto.getEndTime()))
+                    .max(LocalDateTime::compareTo)
+                    .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_DATE_NOT_FOUND));
+
+            createEventDto.getEventRecruitDto().setRecruitEndDateTime(lastEndDateTime);
+        }
         EventRecruitDetail eventRecruitDetail = createEventDto.getEventRecruitDto().toEntity(event);
         eventRecruitDetailRepository.save(eventRecruitDetail);
         event.initEventRecruitDetail(eventRecruitDetail);
@@ -269,6 +278,28 @@ public class EventService {
 
         NotificationEvent.raise(new ApplicationReceivedNotificationEvent(event.getId(), event.getName(), eventApplication.getId()));
     }
+
+    @Transactional
+    public void cancelEventApplication(String eventApplicationId) {
+        EventApplication application = eventApplicationRepository.findById(eventApplicationId)
+                .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_APPLICATION_NOT_FOUND));
+
+        String memberId = getMemberId();
+        Truck truck = application.getTruck();
+
+        TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(truck.getId(), memberId);
+        if (truckManager == null) {
+            throw new CustomException(TruckErrorCode.TRUCK_MANAGER_NOT_FOUND);
+        }
+
+        if (application.getStatus() == EventApplicationStatus.SELECTED) {
+            throw new CustomException(EventErrorCode.ALREADY_SELECTED_EVENT_APPLICATION);
+        }
+
+        eventApplicationDateRepository.deleteAll(application.getDates());
+        eventApplicationRepository.delete(application);
+    }
+
 
     @Transactional
     public void handleEventTruck(RequestEvent.HandleEventTruckDto handleEventTruckDto) {

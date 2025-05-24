@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import lombok.Setter;
 
 import javax.validation.constraints.NotEmpty;
 import java.time.LocalDate;
@@ -72,8 +73,8 @@ public class RequestEvent {
 
     @Getter
     public static class EventRecruitDto{
-        @Schema(description = "모집 마감 날짜")
-        @NotEmpty
+        @Schema(description = "모집 마감 날짜, 미입력 시 행사 종료일로 설정")
+        @Setter
         private LocalDateTime recruitEndDateTime;
         @Schema(description = "모집 인원")
         @NotEmpty

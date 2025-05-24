@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -144,6 +145,24 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .fetchOne();
 
         return new PageImpl<>(events, pageable, total);
+    }
+
+    @Override
+    public List<Event> findEventsEndedAndStillSelecting(LocalDateTime now) {
+        QEvent event = QEvent.event;
+        QEventDate eventDate = QEventDate.eventDate;
+        QEventRecruitDetail eventRecruitDetail = QEventRecruitDetail.eventRecruitDetail;
+
+        return jpaQueryFactory.select(event)
+                .from(event)
+                .join(event.eventDates, eventDate)
+                .join(event.recruitDetail, eventRecruitDetail)
+                .where(event.isDeleted.isFalse()
+                        .and(eventRecruitDetail.isSelecting.isTrue())
+                )
+                .groupBy(event.id)
+                .having(eventDate.date.max().loe(now.toLocalDate()))
+                .fetch();
     }
 
     public BooleanBuilder createFilterBuilder(String searchTerm, List<String> categoryCodes, LocalDate startDate, LocalDate endDate,

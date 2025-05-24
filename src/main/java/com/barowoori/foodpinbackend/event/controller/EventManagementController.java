@@ -67,6 +67,44 @@ public class EventManagementController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "행사 선정 수동 마감", description = "행사 선정 마감 수동 처리. 마감 시 모집이 종료되지 않았다면 자동 종료, PENDING 상태인 EventApplication은 모두 REJECTED 처리.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "행사 주최자가 아닌 경우[40005], 이미 마감된 경우[40018]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "행사를 못 찾을 경우[40000]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PutMapping("/v1/selections/{eventId}/close")
+    public ResponseEntity<CommonResponse<String>> closeEventSelection(@PathVariable("eventId") String eventId) {
+        eventManagementService.closeEventSelection(eventId);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Event selection closed successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "지원자 선정 취소", description = "트럭 선정 취소. 이미 회신(CONFIRMED)한 경우 취소 불가.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "행사 주최자가 아닌 경우[40005], 선정된 상태가 아닌 경우[40019], 이미 참여 회신(CONFIRMED)된 경우[40020]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "지원 정보를 못 찾을 경우[40009], 트럭 정보를 못 찾을 경우[40012]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PutMapping("/v1/selections/{eventApplicationId}/cancel")
+    public ResponseEntity<CommonResponse<String>> cancelEventSelection(@PathVariable("eventApplicationId") String eventApplicationId) {
+        eventManagementService.cancelEventSelection(eventApplicationId);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Event selection canceled successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
     @Operation(summary = "행사 신청 읽음 처리", description = "행사 주최자가 호출 시에만 읽음 처리 적용")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),

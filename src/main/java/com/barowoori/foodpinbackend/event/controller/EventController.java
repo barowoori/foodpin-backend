@@ -235,6 +235,26 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "행사 지원 취소", description = "트럭 관리자만 가능. 선정된 상태인 경우 취소 불가.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "트럭 관리자 아님[30004], 이미 선정된 경우[40021]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "지원 정보를 못 찾을 경우[40009]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @DeleteMapping("/v1/applications/{eventApplicationId}")
+    public ResponseEntity<CommonResponse<String>> cancelEventApplication(@PathVariable("eventApplicationId") String eventApplicationId) {
+        eventService.cancelEventApplication(eventApplicationId);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Event application canceled successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+
     @Operation(summary = "행사 참여 확정/거절", description = "EventTruckStatus : 참여 확정 = CONFIRMED, 참여 거절 = REJECTED")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),

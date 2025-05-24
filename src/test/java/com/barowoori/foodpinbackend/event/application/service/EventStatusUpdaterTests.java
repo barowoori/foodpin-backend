@@ -2,9 +2,14 @@ package com.barowoori.foodpinbackend.event.application.service;
 
 import com.barowoori.foodpinbackend.event.command.application.service.EventStatusUpdater;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
+import com.barowoori.foodpinbackend.event.command.domain.repository.EventApplicationRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventDateRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventRecruitDetailRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventRepository;
+import com.barowoori.foodpinbackend.member.command.domain.model.Member;
+import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginInfo;
+import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginType;
+import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,116 +25,114 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @Transactional
 public class EventStatusUpdaterTests {
 
-    @Autowired
-    private EventRepository eventRepository;
-    @Autowired
-    private EventRecruitDetailRepository eventRecruitDetailRepository;
-    @Autowired
-    private EventStatusUpdater eventStatusUpdater;
-    @Autowired
-    private EventDateRepository eventDateRepository;
-    //TODO 경모 확인 필요
+    @Autowired private EventRepository eventRepository;
+    @Autowired private MemberRepository memberRepository;
+    @Autowired private EventRecruitDetailRepository recruitDetailRepository;
+    @Autowired private EventDateRepository eventDateRepository;
+    @Autowired private EventApplicationRepository eventApplicationRepository;
+    @Autowired private EventStatusUpdater eventStatusUpdater;
+
     @Test
-    public void testUpdateSelecting() {
+    void testCloseRecruitingEventsByDeadline() {
         // given
-        Event event = Event.builder()
-                .name("테스트 이벤트")
-                .createdBy("test")
-//                .status(EventStatus.RECRUITING)
-                .description("desc")
-                .guidelines("guideline")
-                .isDeleted(false)
-                .submissionEmail("test@example.com")
-                .documentSubmissionTarget(EventDocumentSubmissionTarget.ALL_APPLICANTS)
-                .build();
-
-        eventRepository.save(event);
-
+        Event event = saveBasicEvent();
         EventRecruitDetail detail = EventRecruitDetail.builder()
-                .recruitEndDateTime(LocalDateTime.now().minusMinutes(10))
-                .recruitCount(10)
-                .entryFee(10000)
-                .electricitySupportAvailability(true)
-                .generatorRequirement(false)
                 .event(event)
+                .recruitEndDateTime(LocalDateTime.now().minusDays(1))
+                .recruitingStatus(EventRecruitingStatus.RECRUITING)
+                .recruitCount(5)
+                .applicantCount(0)
+                .selectedCount(0)
+                .isSelecting(true)
+                .entryFee(0)
+                .generatorRequirement(false)
+                .electricitySupportAvailability(true)
                 .build();
-
-        eventRecruitDetailRepository.save(detail);
+        recruitDetailRepository.save(detail);
         event.initEventRecruitDetail(detail);
 
-        eventRepository.save(event);
-
         // when
-        eventStatusUpdater.updateSelecting();
+        eventStatusUpdater.closeRecruitingEventsByDeadline();
 
         // then
         Event updated = eventRepository.findById(event.getId()).orElseThrow();
-//        assertThat(updated.getStatus()).isEqualTo(EventStatus.SELECTING);
+        assertThat(updated.getRecruitDetail().getRecruitingStatus()).isEqualTo(EventRecruitingStatus.RECRUITMENT_CLOSED);
     }
 
     @Test
-    public void testUpdateToInProgress() {
-        Event event = Event.builder()
-                .name("진행 중 이벤트")
-                .createdBy("test")
-//                .status(EventStatus.SELECTING)
+    void testCloseSelectingEventsByEndDate() {
+        // given
+        Member member = memberRepository.save(Member.builder()
+                .email("email")
+                .phone("01012341234")
+                .nickname("nickname")
+                .socialLoginInfo(new SocialLoginInfo(SocialLoginType.KAKAO, "id123"))
+                .build());
+        Event event = eventRepository.save(Event.builder()
+                .name("스케쥴러 테스트 이벤트")
+                .createdBy(member.getId())
                 .description("desc")
                 .guidelines("guideline")
                 .isDeleted(false)
                 .submissionEmail("test@example.com")
                 .documentSubmissionTarget(EventDocumentSubmissionTarget.ALL_APPLICANTS)
-                .build();
-
-        eventRepository.save(event);
-
-        EventDate ed = EventDate.builder()
-                .date(LocalDate.now())
-                .startTime(LocalTime.of(10, 0))
-                .endTime(LocalTime.of(18, 0))
+                .build());
+        EventDate ed = eventDateRepository.save(EventDate.builder()
                 .event(event)
-                .build();
-
-        eventDateRepository.save(ed);
-        event.getEventDates().add(ed);
-
-        // when
-        eventStatusUpdater.updateInProgressAndCompleted();
-
-        // then
-        Event updated = eventRepository.findById(event.getId()).orElseThrow();
-//        assertThat(updated.getStatus()).isEqualTo(EventStatus.IN_PROGRESS);
-    }
-
-    @Test
-    public void testUpdateToCompleted() {
-        Event event = Event.builder()
-                .name("종료된 이벤트")
-                .createdBy("test")
-//                .status(EventStatus.IN_PROGRESS)
-                .description("desc")
-                .guidelines("guideline")
-                .isDeleted(false)
-                .submissionEmail("test@example.com")
-                .documentSubmissionTarget(EventDocumentSubmissionTarget.ALL_APPLICANTS)
-                .build();
-
-        eventRepository.save(event);
-
-        EventDate ed = EventDate.builder()
                 .date(LocalDate.now().minusDays(1))
                 .startTime(LocalTime.of(10, 0))
                 .endTime(LocalTime.of(18, 0))
-                .event(event)
-                .build();
-
-        eventDateRepository.save(ed);
+                .build());
         event.getEventDates().add(ed);
 
+        EventRecruitDetail detail = EventRecruitDetail.builder()
+                .event(event)
+                .recruitEndDateTime(LocalDateTime.now().minusDays(2))
+                .recruitingStatus(EventRecruitingStatus.RECRUITING)
+                .recruitCount(5)
+                .applicantCount(0)
+                .selectedCount(0)
+                .isSelecting(true)
+                .entryFee(0)
+                .generatorRequirement(false)
+                .electricitySupportAvailability(true)
+                .build();
+        recruitDetailRepository.save(detail);
+        event.initEventRecruitDetail(detail);
+
+        EventApplication app = eventApplicationRepository.save(EventApplication.builder()
+                .event(event)
+                .status(EventApplicationStatus.PENDING)
+                .isRead(false)
+                .build());
+
         // when
-        eventStatusUpdater.updateInProgressAndCompleted();
+        eventStatusUpdater.closeSelectingEventsByEndDate();
 
         // then
-        Event updated = eventRepository.findById(event.getId()).orElseThrow();
-//        assertThat(updated.getStatus()).isEqualTo(EventStatus.COMPLETED);
+        Event updatedEvent = eventRepository.findById(event.getId()).orElseThrow();
+        EventApplication updatedApp = eventApplicationRepository.findById(app.getId()).orElseThrow();
+
+        assertThat(updatedEvent.getRecruitDetail().getIsSelecting()).isFalse();
+        assertThat(updatedApp.getStatus()).isEqualTo(EventApplicationStatus.REJECTED);
+    }
+
+    private Event saveBasicEvent() {
+        Member memberBuilder = Member.builder()
+                .email("email")
+                .phone("01012341234")
+                .nickname("nickname")
+                .socialLoginInfo(new SocialLoginInfo(SocialLoginType.KAKAO, "id123"))
+                .build();
+        Member member = memberRepository.save(memberBuilder);
+        return eventRepository.save(Event.builder()
+                .name("스케쥴러 테스트 이벤트")
+                .createdBy(member.getId())
+                .description("desc")
+                .guidelines("guideline")
+                .isDeleted(false)
+                .submissionEmail("test@example.com")
+                .documentSubmissionTarget(EventDocumentSubmissionTarget.ALL_APPLICANTS)
+                .build());
     }
 }

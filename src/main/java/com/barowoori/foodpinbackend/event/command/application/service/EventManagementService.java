@@ -6,6 +6,7 @@ import com.barowoori.foodpinbackend.event.command.domain.exception.EventErrorCod
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.event.command.domain.repository.*;
 import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.event.SelectionCanceledNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.EventNoticePostedNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.EventRecruitmentCanceledNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.SelectionCompletedNotificationEvent;
@@ -85,8 +86,6 @@ public class EventManagementService {
         NotificationEvent.raise(new SelectionCompletedNotificationEvent(event.getId(), eventTruck.getId(), event.getName()));
     }
 
-    //TODO EventStatus 중 SELECTING, IN_PROGRESS, COMPLETED는 선정 시작 또는 기한에 맞춰서 자동으로 변경되게 할 건지 확인 필요
-    // 지금은 RECRUITING, RECRUITMENT_CANCELLED, RECRUITMENT_CLOSED만 있음
     @Transactional
     public void handleEventRecruitment(RequestEvent.HandleEventRecruitmentDto handleEventRecruitmentDto) {
         Event event = getEvent(handleEventRecruitmentDto.getEventId());
@@ -98,9 +97,73 @@ public class EventManagementService {
         } else if (handleEventRecruitmentDto.getRecruitmentStatus().equals(EventRecruitingStatus.RECRUITMENT_CANCELLED)) {
             event.updateStatus(EventRecruitingStatus.RECRUITMENT_CANCELLED);
         } else throw new CustomException(EventErrorCode.WRONG_EVENT_RECRUITMENT_STATUS);
-        NotificationEvent.raise(new EventRecruitmentCanceledNotificationEvent(event.getId(), event.getName()));
+//        NotificationEvent.raise(new EventRecruitmentCanceledNotificationEvent(event.getId(), event.getName()));
         eventRepository.save(event);
     }
+
+    @Transactional
+    public void closeEventSelection(String eventId){
+        Event event = getEvent(eventId);
+        if (!event.isCreator(getMemberId())) {
+            throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
+        }
+        EventRecruitDetail eventRecruitDetail = event.getRecruitDetail();
+        if (!eventRecruitDetail.getIsSelecting()) {
+            throw new CustomException(EventErrorCode.ALREADY_SELECTION_CLOSED);
+        }
+        eventRecruitDetail.closeSelection();
+        if (eventRecruitDetail.getRecruitingStatus() == EventRecruitingStatus.RECRUITING) {
+            eventRecruitDetail.updateStatus(EventRecruitingStatus.RECRUITMENT_CLOSED);
+        }
+        List<EventApplication> pendingApplications = eventApplicationRepository.findAllByEventAndStatus(event, EventApplicationStatus.PENDING);
+        for (EventApplication application : pendingApplications) {
+            application.reject();
+            eventApplicationRepository.save(application);
+
+            NotificationEvent.raise(new SelectionNotSelectedNotificationEvent(
+                    event.getId(),
+                    event.getName(),
+                    application.getId()
+            ));
+        }
+        eventRepository.save(event);
+    }
+
+    @Transactional
+    public void cancelEventSelection(String eventApplicationId) {
+        EventApplication application = eventApplicationRepository.findById(eventApplicationId)
+                .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_APPLICATION_NOT_FOUND));
+
+        Event event = application.getEvent();
+        if (!event.isCreator(getMemberId())) {
+            throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
+        }
+        if (application.getStatus() != EventApplicationStatus.SELECTED) {
+            throw new CustomException(EventErrorCode.EVENT_APPLICATION_NOT_SELECTED);
+        }
+
+        EventTruck eventTruck = eventTruckRepository.findByEventAndTruck(event, application.getTruck());
+        if (eventTruck == null) {
+            throw new CustomException(EventErrorCode.EVENT_TRUCK_NOT_FOUND);
+        }
+        if (eventTruck.getStatus() == EventTruckStatus.CONFIRMED) {
+            throw new CustomException(EventErrorCode.ALREADY_CONFIRMED_EVENT_TRUCK);
+        }
+
+        application.reject();
+        eventApplicationRepository.save(application);
+
+        List<EventTruckDate> eventTruckDates = eventTruck.getDates();
+        eventTruckDateRepository.deleteAll(eventTruckDates);
+        eventTruckRepository.delete(eventTruck);
+
+        NotificationEvent.raise(new SelectionCanceledNotificationEvent(
+                event.getId(),
+                event.getName(),
+                eventTruck.getTruck().getName()
+        ));
+    }
+
 
     @Transactional
     public void readEventApplication(String eventApplicationId) {

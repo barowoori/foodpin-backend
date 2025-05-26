@@ -3,9 +3,11 @@ package com.barowoori.foodpinbackend.event.command.domain.repository.querydsl;
 import com.barowoori.foodpinbackend.category.command.domain.model.QCategory;
 import com.barowoori.foodpinbackend.common.dto.MemberFcmInfoDto;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
+import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventTruckManagerFcmInfoDto;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -165,6 +167,30 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
                 .innerJoin(truckManager).on(truck.eq(truckManager.truck))
                 .innerJoin(truckManager.member, member)
                 .where(event.id.eq(eventId).and(eventTruck.status.eq(CONFIRMED)))
+                .fetch();
+    }
+
+    @Override
+    public List<EventTruckManagerFcmInfoDto> findPendingEventTruckManagersFcmInfo() {
+        LocalDateTime now = LocalDateTime.now();
+
+        return jpaQueryFactory
+                .selectDistinct(Projections.constructor(EventTruckManagerFcmInfoDto.class,event.id, event.name, member.id, member.fcmToken))
+                .from(eventTruck)
+                .innerJoin(eventTruck.event, event)
+                .innerJoin(eventTruck.truck, truck)
+                .innerJoin(truckManager).on(truck.eq(truckManager.truck))
+                .innerJoin(truckManager.member, member)
+                .where(
+                        eventTruck.status.eq(EventTruckStatus.PENDING),
+                        eventTruck.createdAt.isNotNull(),
+                        eventTruck.createdAt.loe(now.minusHours(24)),
+                        Expressions.numberTemplate(
+                                Long.class,
+                                "MOD(TIMESTAMPDIFF(HOUR, {0}, {1}), 24)",
+                                eventTruck.createdAt, now
+                        ).eq(0L)
+                )
                 .fetch();
     }
 }

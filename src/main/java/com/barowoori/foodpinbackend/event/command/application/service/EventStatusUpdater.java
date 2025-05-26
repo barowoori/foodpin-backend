@@ -11,7 +11,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -52,11 +51,11 @@ public class EventStatusUpdater {
                 application.reject();
                 eventApplicationRepository.save(application);
 
-//                NotificationEvent.raise(new SelectionNotSelectedNotificationEvent(
-//                        event.getId(),
-//                        event.getName(),
-//                        application.getId()
-//                ));
+                NotificationEvent.raise(new SelectionNotSelectedNotificationEvent(
+                        event.getId(),
+                        event.getName(),
+                        application.getId()
+                ));
             }
         }
     }

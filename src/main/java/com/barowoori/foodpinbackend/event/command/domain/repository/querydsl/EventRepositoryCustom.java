@@ -21,4 +21,5 @@ public interface EventRepositoryCustom {
     Page<Event> findProgressEventManageList(String memberId, String status, Pageable pageable);
     Page<Event> findCompletedEventManageList(String memberId, String status, Pageable pageable);
     MemberFcmInfoDto findEventCreatorFcmInfo(String eventId);
+    List<Event> findAvailableEventListForProposal(String memberId);
 }

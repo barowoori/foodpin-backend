@@ -326,4 +326,15 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .where(event.id.eq(eventId))
                 .fetchOne();
     }
+
+    @Override
+    public List<Event> findAvailableEventListForProposal(String memberId){
+        return jpaQueryFactory.selectDistinct(event)
+                .from(event)
+                .innerJoin(event.recruitDetail, eventRecruitDetail)
+                .where(event.createdBy.eq(memberId)
+                        .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING)))
+                .orderBy(eventRecruitDetail.recruitEndDateTime.asc())
+                .fetch();
+    }
 }

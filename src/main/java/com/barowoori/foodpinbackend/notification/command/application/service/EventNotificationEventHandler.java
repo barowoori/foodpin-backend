@@ -112,4 +112,22 @@ public class EventNotificationEventHandler {
             notificationService.pushAlarmToToken(type, targetType.name(), content, memberFcmInfoDto.getFcmToken(), targetType, memberFcmInfoDto.getEventId());
         });
     }
+
+
+    //모집마감일 알림 handler
+    @EventListener(RecruitmentDeadlineSoonNotificationEvent.class)
+    public void handle(RecruitmentDeadlineSoonNotificationEvent event) {
+        NotificationType type = NotificationType.RECRUITMENT_DEADLINE_SOON;
+        NotificationTargetType targetType = NotificationTargetType.EVENT_DETAIL;
+
+        List<MemberForEventFcmInfoDto>  memberFcmInfoDtos = eventRepository.findRecruitmentDeadlineSoonEventCreatorsFcmInfo();
+
+        memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
+            String content = type.format(Map.of(
+                    "행사명", memberFcmInfoDto.getEventName()
+            ));
+            System.out.println("notificationMessage : " + content);
+            notificationService.pushAlarmToToken(type, targetType.name(), content, memberFcmInfoDto.getFcmToken(), targetType, memberFcmInfoDto.getEventId());
+        });
+    }
 }

@@ -17,7 +17,6 @@ import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckManager
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
-import org.checkerframework.checker.units.qual.A;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -375,6 +374,62 @@ public class EventPushNotificatorTests {
 
             } finally {
                 System.setOut(originOut);
+            }
+        }
+
+        @DisplayName("모집마감일 알림 테스트")
+        @Nested
+        class sendRecruitmentDeadlineSoonPushNotificationTest {
+            @Test
+            @DisplayName("모집마감일 6시간 전일 경우 알림이 전송된다")
+            void sendNotification_When6HoursLeft_BeforeRecruitEndDate() {
+                EventRecruitDetail detail = EventRecruitDetail.builder()
+                        .event(event)
+                        .recruitEndDateTime(LocalDateTime.now().plusHours(6))
+                        .recruitingStatus(EventRecruitingStatus.RECRUITING)
+                        .isSelecting(false)
+                        .build();
+                detail = eventRecruitDetailRepository.save(detail);
+
+                PrintStream originOut = System.out;
+
+                ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+                System.setOut(new PrintStream(outContent));
+                try {
+                    eventPushNotificator.sendRecruitmentDeadlineSoonPushNotification();
+                    String output = outContent.toString();
+
+                    assertTrue(output.contains("추가 모집이 필요하다면 모집마감일을 연장해 주세요!"));
+
+                } finally {
+                    System.setOut(originOut);
+                }
+            }
+
+            @Test
+            @DisplayName("모집마감일 6시간 전이 아닐 경우 알림이 전송되지 않는다")
+            void doesNotSendNotification_When6HoursLeft_BeforeRecruitEndDate() {
+                EventRecruitDetail detail = EventRecruitDetail.builder()
+                        .event(event)
+                        .recruitEndDateTime(LocalDateTime.now().plusHours(6).plusMinutes(1))
+                        .recruitingStatus(EventRecruitingStatus.RECRUITING)
+                        .isSelecting(false)
+                        .build();
+                detail = eventRecruitDetailRepository.save(detail);
+
+                PrintStream originOut = System.out;
+
+                ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+                System.setOut(new PrintStream(outContent));
+                try {
+                    eventPushNotificator.sendRecruitmentDeadlineSoonPushNotification();
+                    String output = outContent.toString();
+
+                    assertFalse(output.contains("추가 모집이 필요하다면 모집마감일을 연장해 주세요!"));
+
+                } finally {
+                    System.setOut(originOut);
+                }
             }
         }
 

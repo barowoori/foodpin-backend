@@ -372,4 +372,17 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .having(eventDate.date.min().eq(tomorrow))
                 .fetch();
     }
+
+    @Override
+    public List<MemberForEventFcmInfoDto> findRecruitmentDeadlineSoonEventCreatorsFcmInfo(){
+        LocalDateTime standardTime = LocalDateTime.now().withSecond(0).withNano(0).plusHours(6);
+        return jpaQueryFactory
+                .select(Projections.constructor(MemberForEventFcmInfoDto.class, event.id, event.name, member.id, member.fcmToken))
+                .from(event)
+                .innerJoin(event.recruitDetail, eventRecruitDetail)
+                .innerJoin(member).on(event.createdBy.eq(member.id))
+                .where(eventRecruitDetail.recruitEndDateTime.between(standardTime.minusMinutes(1), standardTime.plusMinutes(1)
+                ))
+                .fetch();
+    }
 }

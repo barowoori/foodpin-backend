@@ -1,6 +1,7 @@
 package com.barowoori.foodpinbackend.event.command.application.service;
 
 import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.event.RecruitmentDeadlineSoonNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.event.ReplyRequestNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.event.SelectionEndedNotificationEvent;
 import lombok.RequiredArgsConstructor;
@@ -21,5 +22,9 @@ public class EventPushNotificator {
         NotificationEvent.raise(new SelectionEndedNotificationEvent());
     }
 
+    @Scheduled(cron = "0 0 * * * *")
+    public void sendRecruitmentDeadlineSoonPushNotification() {
+        NotificationEvent.raise(new RecruitmentDeadlineSoonNotificationEvent());
+    }
 
 }

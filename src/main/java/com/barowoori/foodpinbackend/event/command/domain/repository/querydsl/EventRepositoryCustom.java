@@ -28,4 +28,5 @@ public interface EventRepositoryCustom {
     MemberFcmInfoDto findEventCreatorFcmInfo(String eventId);
     List<Event> findAvailableEventListForProposal(String memberId);
     List<MemberForEventFcmInfoDto> findSelectionNotEndedEventCreatorsFcmInfo();
+    List<MemberForEventFcmInfoDto> findRecruitmentDeadlineSoonEventCreatorsFcmInfo();
 }

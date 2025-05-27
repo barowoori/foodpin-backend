@@ -21,7 +21,7 @@ public class AvailableEventListForProposalService {
     }
 
     @Transactional(readOnly = true)
-    public List<AvailableEventListForProposal> getAvailableEventListsForProposal(String memberId, String truckId) {
+    public List<AvailableEventListForProposal> getAvailableEventListForProposal(String memberId, String truckId) {
         List<Event> events = eventRepository.findAvailableEventListForProposal(memberId);
         List<String> proposalEventIds = eventProposalRepository.findEventIdsProposedToTruckByMember(truckId, memberId);
         return events.stream()

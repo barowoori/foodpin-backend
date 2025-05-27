@@ -1,9 +1,8 @@
 package com.barowoori.foodpinbackend.event.command.domain.repository.querydsl;
 
-import com.barowoori.foodpinbackend.category.command.domain.model.QCategory;
 import com.barowoori.foodpinbackend.common.dto.MemberFcmInfoDto;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
-import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventTruckManagerFcmInfoDto;
+import com.barowoori.foodpinbackend.event.command.domain.repository.dto.MemberForEventFcmInfoDto;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.CaseBuilder;
@@ -14,12 +13,10 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 
 import static com.barowoori.foodpinbackend.event.command.domain.model.EventTruckStatus.CONFIRMED;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEvent.event;
-import static com.barowoori.foodpinbackend.event.command.domain.model.QEventApplication.eventApplication;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventPhoto.eventPhoto;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventRecruitDetail.eventRecruitDetail;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventTruck.eventTruck;
@@ -171,11 +168,11 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
     }
 
     @Override
-    public List<EventTruckManagerFcmInfoDto> findPendingEventTruckManagersFcmInfo() {
+    public List<MemberForEventFcmInfoDto> findPendingEventTruckManagersFcmInfo() {
         LocalDateTime now = LocalDateTime.now();
 
         return jpaQueryFactory
-                .selectDistinct(Projections.constructor(EventTruckManagerFcmInfoDto.class,event.id, event.name, member.id, member.fcmToken))
+                .selectDistinct(Projections.constructor(MemberForEventFcmInfoDto.class,event.id, event.name, member.id, member.fcmToken))
                 .from(eventTruck)
                 .innerJoin(eventTruck.event, event)
                 .innerJoin(eventTruck.truck, truck)

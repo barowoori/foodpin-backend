@@ -3,12 +3,9 @@ package com.barowoori.foodpinbackend.notification.command.application.service;
 import com.barowoori.foodpinbackend.common.dto.MemberFcmInfoDto;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventTruckRepository;
-import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventTruckManagerFcmInfoDto;
+import com.barowoori.foodpinbackend.event.command.domain.repository.dto.MemberForEventFcmInfoDto;
 import com.barowoori.foodpinbackend.notification.command.domain.model.*;
-import com.barowoori.foodpinbackend.notification.command.domain.model.event.ApplicationReceivedNotificationEvent;
-import com.barowoori.foodpinbackend.notification.command.domain.model.event.ReplyRequestNotificationEvent;
-import com.barowoori.foodpinbackend.notification.command.domain.model.event.SelectionCanceledNotificationEvent;
-import com.barowoori.foodpinbackend.notification.command.domain.model.event.SelectionConfirmedNotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.event.*;
 import com.barowoori.foodpinbackend.notification.command.domain.service.NotificationService;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
@@ -89,11 +86,27 @@ public class EventNotificationEventHandler {
         NotificationTargetType targetType = NotificationTargetType.TRUCK_SELECTED_EVENT_LIST;
 
 
-        List<EventTruckManagerFcmInfoDto>  memberFcmInfoDtos = eventTruckRepository.findPendingEventTruckManagersFcmInfo();
+        List<MemberForEventFcmInfoDto>  memberFcmInfoDtos = eventTruckRepository.findPendingEventTruckManagersFcmInfo();
         memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
             String content = type.format(Map.of(
                     "행사명", memberFcmInfoDto.getEventName()
             ));
+            System.out.println("notificationMessage : " + content);
+
+            notificationService.pushAlarmToToken(type, targetType.name(), content, memberFcmInfoDto.getFcmToken(), targetType, memberFcmInfoDto.getEventId());
+        });
+    }
+
+    //선정종료 알림 handler
+    @EventListener(SelectionEndedNotificationEvent.class)
+    public void handle(SelectionEndedNotificationEvent event) {
+        NotificationType type = NotificationType.SELECTION_ENDED;
+        NotificationTargetType targetType = NotificationTargetType.EVENT_MANAGEMENT_LIST;
+
+        List<MemberForEventFcmInfoDto>  memberFcmInfoDtos = eventRepository.findSelectionNotEndedEventCreatorsFcmInfo();
+
+        memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
+            String content = type.getTemplate();
             System.out.println("notificationMessage : " + content);
 
             notificationService.pushAlarmToToken(type, targetType.name(), content, memberFcmInfoDto.getFcmToken(), targetType, memberFcmInfoDto.getEventId());

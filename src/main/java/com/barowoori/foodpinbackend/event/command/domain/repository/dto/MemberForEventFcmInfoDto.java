@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EventTruckManagerFcmInfoDto {
+public class MemberForEventFcmInfoDto {
     private String eventId;
     private String eventName;
     private String memberId;

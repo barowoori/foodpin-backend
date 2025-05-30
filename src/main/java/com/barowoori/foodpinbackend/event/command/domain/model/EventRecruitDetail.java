@@ -28,6 +28,9 @@ public class EventRecruitDetail {
     @Column(name = "recruiting_status")
     private EventRecruitingStatus recruitingStatus;
 
+    @Column(name = "is_full_attendance_required")
+    private Boolean isFullAttendanceRequired;
+
     @Column(name = "is_selecting")
     private Boolean isSelecting;
 
@@ -61,7 +64,7 @@ public class EventRecruitDetail {
     public EventRecruitDetail(LocalDateTime recruitEndDateTime, Integer recruitCount, Integer applicantCount, Integer selectedCount,
                               Boolean generatorRequirement, Boolean electricitySupportAvailability, Integer entryFee,
                               EventRecruitingStatus recruitingStatus, Boolean isSelecting,
-                              Event event) {
+                              Event event, Boolean isFullAttendanceRequired) {
         this.recruitEndDateTime = recruitEndDateTime;
         this.recruitCount = recruitCount;
         this.selectedCount = selectedCount;
@@ -72,6 +75,7 @@ public class EventRecruitDetail {
         this.entryFee = entryFee;
         this.recruitingStatus = recruitingStatus;
         this.isSelecting = isSelecting;
+        this.isFullAttendanceRequired = isFullAttendanceRequired;
     }
 
     public void update(LocalDateTime recruitEndDateTime, Integer recruitCount,

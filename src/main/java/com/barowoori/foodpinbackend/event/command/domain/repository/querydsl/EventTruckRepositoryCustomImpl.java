@@ -1,23 +1,22 @@
 package com.barowoori.foodpinbackend.event.command.domain.repository.querydsl;
 
-import com.barowoori.foodpinbackend.category.command.domain.model.QCategory;
 import com.barowoori.foodpinbackend.common.dto.MemberFcmInfoDto;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
+import com.barowoori.foodpinbackend.event.command.domain.repository.dto.MemberForEventFcmInfoDto;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 
 import static com.barowoori.foodpinbackend.event.command.domain.model.EventTruckStatus.CONFIRMED;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEvent.event;
-import static com.barowoori.foodpinbackend.event.command.domain.model.QEventApplication.eventApplication;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventPhoto.eventPhoto;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventRecruitDetail.eventRecruitDetail;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventTruck.eventTruck;
@@ -165,6 +164,30 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
                 .innerJoin(truckManager).on(truck.eq(truckManager.truck))
                 .innerJoin(truckManager.member, member)
                 .where(event.id.eq(eventId).and(eventTruck.status.eq(CONFIRMED)))
+                .fetch();
+    }
+
+    @Override
+    public List<MemberForEventFcmInfoDto> findPendingEventTruckManagersFcmInfo() {
+        LocalDateTime now = LocalDateTime.now();
+
+        return jpaQueryFactory
+                .selectDistinct(Projections.constructor(MemberForEventFcmInfoDto.class,event.id, event.name, member.id, member.fcmToken))
+                .from(eventTruck)
+                .innerJoin(eventTruck.event, event)
+                .innerJoin(eventTruck.truck, truck)
+                .innerJoin(truckManager).on(truck.eq(truckManager.truck))
+                .innerJoin(truckManager.member, member)
+                .where(
+                        eventTruck.status.eq(EventTruckStatus.PENDING),
+                        eventTruck.createdAt.isNotNull(),
+                        eventTruck.createdAt.loe(now.minusHours(24)),
+                        Expressions.numberTemplate(
+                                Long.class,
+                                "MOD(TIMESTAMPDIFF(HOUR, {0}, {1}), 24)",
+                                eventTruck.createdAt, now
+                        ).eq(0L)
+                )
                 .fetch();
     }
 }

@@ -3,6 +3,7 @@ package com.barowoori.foodpinbackend.event.command.domain.repository.querydsl;
 import com.barowoori.foodpinbackend.category.command.domain.model.QCategory;
 import com.barowoori.foodpinbackend.common.dto.MemberFcmInfoDto;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
+import com.barowoori.foodpinbackend.event.command.domain.repository.dto.MemberForEventFcmInfoDto;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Order;
@@ -347,13 +348,41 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
     }
 
     @Override
-    public List<Event> findAvailableEventListForProposal(String memberId){
+    public List<Event> findAvailableEventListForProposal(String memberId) {
         return jpaQueryFactory.selectDistinct(event)
                 .from(event)
                 .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .where(event.createdBy.eq(memberId)
                         .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING)))
                 .orderBy(eventRecruitDetail.recruitEndDateTime.asc())
+                .fetch();
+    }
+
+    @Override
+    public List<MemberForEventFcmInfoDto> findSelectionNotEndedEventCreatorsFcmInfo() {
+        LocalDate tomorrow = LocalDate.now().plusDays(1);
+        return jpaQueryFactory
+                .select(Projections.constructor(MemberForEventFcmInfoDto.class, event.id, event.name, member.id, member.fcmToken))
+                .from(event)
+                .innerJoin(event.recruitDetail, eventRecruitDetail)
+                .innerJoin(member).on(event.createdBy.eq(member.id))
+                .leftJoin(event.eventDates, eventDate)
+                .where(eventRecruitDetail.isSelecting.isTrue().and(event.createdAt.lt(LocalDate.now().atStartOfDay())))
+                .groupBy(event.id, event.name, member.id, member.fcmToken)
+                .having(eventDate.date.min().eq(tomorrow))
+                .fetch();
+    }
+
+    @Override
+    public List<MemberForEventFcmInfoDto> findRecruitmentDeadlineSoonEventCreatorsFcmInfo(){
+        LocalDateTime standardTime = LocalDateTime.now().withSecond(0).withNano(0).plusHours(6);
+        return jpaQueryFactory
+                .select(Projections.constructor(MemberForEventFcmInfoDto.class, event.id, event.name, member.id, member.fcmToken))
+                .from(event)
+                .innerJoin(event.recruitDetail, eventRecruitDetail)
+                .innerJoin(member).on(event.createdBy.eq(member.id))
+                .where(eventRecruitDetail.recruitEndDateTime.between(standardTime.minusMinutes(1), standardTime.plusMinutes(1)
+                ))
                 .fetch();
     }
 }

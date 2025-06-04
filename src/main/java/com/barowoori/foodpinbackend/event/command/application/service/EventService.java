@@ -33,8 +33,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -264,6 +267,17 @@ public class EventService {
             throw new CustomException(EventErrorCode.ALREADY_APPLIED_EVENT);
         Event event = getEvent(applyEventDto.getEventId());
         Truck truck = getTruck(applyEventDto.getTruckId());
+
+        if (Boolean.TRUE.equals(event.getRecruitDetail().getIsFullAttendanceRequired())) {
+            Set<String> allEventDateIds = event.getEventDates().stream()
+                    .map(EventDate::getId)
+                    .collect(Collectors.toSet());
+            Set<String> requestedDateIds = new HashSet<>(applyEventDto.getEventDateIdList());
+
+            if (!allEventDateIds.equals(requestedDateIds)) {
+                throw new CustomException(EventErrorCode.REQUIRE_FULL_ATTENDANCE);
+            }
+        }
 
         EventApplication eventApplication = applyEventDto.toEntity(truck, event);
         eventApplication = eventApplicationRepository.save(eventApplication);

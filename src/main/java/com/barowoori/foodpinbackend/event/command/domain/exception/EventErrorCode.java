@@ -1,6 +1,7 @@
 package com.barowoori.foodpinbackend.event.command.domain.exception;
 
 import com.barowoori.foodpinbackend.common.exception.ErrorCode;
+import com.google.api.Http;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
@@ -27,7 +28,8 @@ public enum EventErrorCode implements ErrorCode {
     ALREADY_SELECTION_CLOSED(HttpStatus.BAD_REQUEST, 40018, "ALREADY_SELECTION_CLOSED"),
     EVENT_APPLICATION_NOT_SELECTED(HttpStatus.BAD_REQUEST, 40019, "EVENT_APPLICATION_NOT_SELECTED"),
     ALREADY_CONFIRMED_EVENT_TRUCK(HttpStatus.BAD_REQUEST, 40020, "ALREADY_CONFIRMED_EVENT_TRUCK"),
-    ALREADY_SELECTED_EVENT_APPLICATION(HttpStatus.BAD_REQUEST, 40021, "ALREADY_SELECTED_EVENT_APPLICATION");
+    ALREADY_SELECTED_EVENT_APPLICATION(HttpStatus.BAD_REQUEST, 40021, "ALREADY_SELECTED_EVENT_APPLICATION"),
+    REQUIRE_FULL_ATTENDANCE(HttpStatus.BAD_REQUEST, 40022, "REQUIRE_FULL_ATTENDANCE");
 
     private final HttpStatus httpStatus;
     private final Integer code;

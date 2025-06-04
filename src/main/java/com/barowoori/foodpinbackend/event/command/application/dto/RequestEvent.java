@@ -88,6 +88,9 @@ public class RequestEvent {
         @Schema(description = "입점비")
         @NotEmpty
         private Integer entryFee;
+        @Schema(description = "일정 전체 참여 필수 여부")
+        @NotEmpty
+        private Boolean isFullAttendanceRequired;
 
         public EventRecruitDetail toEntity(Event event){
             return EventRecruitDetail.builder()
@@ -101,6 +104,7 @@ public class RequestEvent {
                     .entryFee(this.entryFee)
                     .isSelecting(Boolean.TRUE)
                     .recruitingStatus(EventRecruitingStatus.RECRUITING)
+                    .isFullAttendanceRequired(this.isFullAttendanceRequired)
                     .build();
         }
     }

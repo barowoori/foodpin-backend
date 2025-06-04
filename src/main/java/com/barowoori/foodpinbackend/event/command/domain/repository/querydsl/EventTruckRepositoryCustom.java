@@ -2,6 +2,7 @@ package com.barowoori.foodpinbackend.event.command.domain.repository.querydsl;
 
 import com.barowoori.foodpinbackend.common.dto.MemberFcmInfoDto;
 import com.barowoori.foodpinbackend.event.command.domain.model.EventTruck;
+import com.barowoori.foodpinbackend.event.command.domain.repository.dto.MemberForEventFcmInfoDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -14,4 +15,5 @@ public interface EventTruckRepositoryCustom {
     EventTruck findConfirmedEventTruck(String eventId, String truckId);
     List<MemberFcmInfoDto> findEventTruckManagersFcmInfo(String eventTruckId);
     List<MemberFcmInfoDto> findConfirmedEventTruckManagersFcmInfo(String eventId);
+    List<MemberForEventFcmInfoDto>  findPendingEventTruckManagersFcmInfo();
 }

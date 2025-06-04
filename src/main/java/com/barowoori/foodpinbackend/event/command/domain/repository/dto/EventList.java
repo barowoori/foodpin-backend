@@ -40,6 +40,7 @@ public class EventList {
                 .categories(event.getCategories().stream().map(EventCategory::getCategory).map(Category::getName).toList())
                 .recruitInfo(RecruitInfo.of(event.getRecruitDetail()))
                 .views(event.getView().getViews())
+
                 .build();
     }
 }

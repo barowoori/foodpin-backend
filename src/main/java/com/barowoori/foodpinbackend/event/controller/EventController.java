@@ -44,6 +44,7 @@ public class EventController {
     private final EventApplicationListService eventApplicationListService;
     private final TruckEventApplicationListService truckEventApplicationListService;
     private final EventApplicableTruckListService eventApplicableTruckListService;
+    private final AvailableEventListForProposalService availableEventListForProposalService;
 
     @Operation(summary = "행사 생성", description = "사진의 경우 파일 저장 api로 업로드 후 반환된 파일 id 리스트로 전달"
             + "\n\n서류 타입 : BUSINESS_REGISTRATION(사업자등록증), BUSINESS_LICENSE(영업신고증), VEHICLE_REGISTRATION(자동차등록증), SANITATION_EDUCATION(위생교육필증), HEALTH_CERTIFICATE(보건증), GAS_SAFETY_INSPECTION_CERTIFICATE(가스안전점검필증)")
@@ -293,6 +294,28 @@ public class EventController {
         eventService.proposeEvent(proposeEventDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Event proposed successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "제안 가능한 행사 목록 조회", description = "행사 주최자만 사용 가능")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "행사 주최자가 아닌 경우[40005], " +
+                    "이미 제안한 트럭인 경우[40011]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "행사를 못 찾을 경우[40000], " +
+                    "트럭을 못 찾을 경우[30000]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/trucks/{truckId}/available-events")
+    public ResponseEntity<CommonResponse<List<AvailableEventListForProposal>>> getAvailableEventListForProposal(@PathVariable(value = "truckId") String truckId) {
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        List<AvailableEventListForProposal> result = availableEventListForProposalService.getAvailableEventListForProposal(memberId, truckId);
+        CommonResponse<List<AvailableEventListForProposal>> commonResponse = CommonResponse.<List<AvailableEventListForProposal>>builder()
+                .data(result)
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }

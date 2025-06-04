@@ -33,6 +33,7 @@ public class EventDetail {
     private List<DocumentType> documents;
     private String description;
     private String guidelines;
+    private Boolean isFullAttendanceRequired;
 
     public static EventDetail of(Event event, String memberId, Boolean isLike, ImageManager imageManager, List<RegionCode> regions) {
         return EventDetail.builder()
@@ -53,6 +54,7 @@ public class EventDetail {
                 .description(event.getDescription())
                 .guidelines(event.getGuidelines())
                 .isLike(isLike)
+                .isFullAttendanceRequired(event.getRecruitDetail().getIsFullAttendanceRequired())
                 .build();
 
     }

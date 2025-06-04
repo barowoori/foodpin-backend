@@ -138,7 +138,7 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
                 .from(eventApplication)
                 .innerJoin(eventApplication.truck, truck)
                 .innerJoin(truckManager).on(truck.eq(truckManager.truck))
-                .innerJoin(truckManager.member)
+                .innerJoin(truckManager.member, member)
                 .where(eventApplication.event.id.eq(eventId))
                 .fetch();
     }
@@ -150,7 +150,7 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
                 .from(eventApplication)
                 .innerJoin(eventApplication.truck, truck)
                 .innerJoin(truckManager).on(truck.eq(truckManager.truck))
-                .innerJoin(truckManager.member)
+                .innerJoin(truckManager.member, member)
                 .where(eventApplication.id.eq(eventApplicationId))
                 .fetch();
     }

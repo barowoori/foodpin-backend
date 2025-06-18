@@ -59,6 +59,23 @@ public class MemberService {
     }
 
     @Transactional
+    public void registerTemporary(RequestMember.RegisterTemporaryDto registerTemporaryDto) {
+
+        Member member = memberRepository.findBySocialLoginInfo(registerTemporaryDto.getSocialInfoDto().toEntity());
+        if (member != null) {
+            throw new CustomException(MemberErrorCode.MEMBER_SOCIAL_LOGIN_INFO_EXISTS);
+        }
+        if (!registerTemporaryDto.getSocialInfoDto().getType().equals(SocialLoginType.UNREGISTERED)) {
+            throw new CustomException(MemberErrorCode.ONLY_UNREGISTERED_ALLOWED);
+        }
+
+        member = registerTemporaryDto.toEntity();
+        member.getTypes().remove(MemberType.NORMAL);
+        member.getTypes().add(MemberType.UNREGISTERED);
+        memberRepository.save(member);
+    }
+
+    @Transactional
     public ResponseMember.LoginMemberRsDto loginMember(RequestMember.LoginMemberRqDto loginMemberRqDto) {
         Member member = memberRepository.findBySocialLoginInfo(loginMemberRqDto.getSocialInfoDto().toEntity());
         if (member == null)

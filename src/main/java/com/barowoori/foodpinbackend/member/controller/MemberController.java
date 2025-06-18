@@ -50,6 +50,23 @@ public class MemberController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "임시 회원가입", description = "SocialLoginType은 UNREGISTERED 필수")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "이미 해당 소셜 정보로 가입한 경우[20003]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "SocialLoginType이 UNREGISTERED가 아닌 경우[20007]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping("/v1/register/temporary")
+    public ResponseEntity<CommonResponse<String>> registerTemporary(@Valid @RequestBody RequestMember.RegisterTemporaryDto registerTemporaryDto) {
+        memberService.registerTemporary(registerTemporaryDto);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Temporary registered successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
     @Operation(summary = "로그인", description = "반환되는 accessToken, refreshToken 전부 저장 후" +
             "\n\n모든 요청의 Authorization 헤더에 accessToken을 담아서 사용(/reissued-token, /logout API는 refreshToken)" +
             "\n\naccessToken(유효기간 1시간) 만료(401 에러) 시 /reissued-token API로 액세스 토큰 재발급" +

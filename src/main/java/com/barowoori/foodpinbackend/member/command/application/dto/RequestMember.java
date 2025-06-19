@@ -39,6 +39,22 @@ public class RequestMember {
 
     @Builder
     @Data
+    public static class RegisterTemporaryDto{
+        @Schema(description = "소셜 로그인 정보")
+        @NotEmpty(message = "소셜 로그인 정보가 비었습니다")
+        private CommonMember.SocialInfoDto socialInfoDto;
+
+        public Member toEntity(){
+            return Member.builder()
+                    .phone("temp")
+                    .socialLoginInfo(this.socialInfoDto.toEntity())
+                    .nickname("temp")
+                    .build();
+        }
+    }
+
+    @Builder
+    @Data
     public static class LoginMemberRqDto{
         @Schema(description = "소셜 로그인 정보")
         @NotEmpty(message = "소셜 로그인 정보가 비었습니다")

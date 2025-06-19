@@ -1,12 +1,18 @@
 package com.barowoori.foodpinbackend.notification.command.application.service;
 
 import com.barowoori.foodpinbackend.common.dto.MemberFcmInfoDto;
+import com.barowoori.foodpinbackend.common.exception.CustomException;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventTruckRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.MemberForEventFcmInfoDto;
+import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
+import com.barowoori.foodpinbackend.member.command.domain.model.Member;
+import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
 import com.barowoori.foodpinbackend.notification.command.domain.model.*;
 import com.barowoori.foodpinbackend.notification.command.domain.model.event.*;
 import com.barowoori.foodpinbackend.notification.command.domain.service.NotificationService;
+import com.barowoori.foodpinbackend.pushAlarmHistory.command.domain.model.PushAlarmHistory;
+import com.barowoori.foodpinbackend.pushAlarmHistory.command.domain.repository.PushAlarmHistoryRepository;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
@@ -18,12 +24,28 @@ public class EventNotificationEventHandler {
     private final NotificationService notificationService;
     private final EventRepository eventRepository;
     private final EventTruckRepository eventTruckRepository;
+    private final MemberRepository memberRepository;
+    private final PushAlarmHistoryRepository pushAlarmHistoryRepository;
 
-    public EventNotificationEventHandler(NotificationService notificationService, EventRepository eventRepository, EventTruckRepository eventTruckRepository) {
+    public EventNotificationEventHandler(NotificationService notificationService, EventRepository eventRepository, EventTruckRepository eventTruckRepository, MemberRepository memberRepository, PushAlarmHistoryRepository pushAlarmHistoryRepository) {
         this.notificationService = notificationService;
         this.eventRepository = eventRepository;
         this.eventTruckRepository = eventTruckRepository;
+        this.memberRepository = memberRepository;
+        this.pushAlarmHistoryRepository = pushAlarmHistoryRepository;
+    }
 
+    private void savePushAlarmHistory(String memberId, NotificationType notificationType, NotificationTargetType notificationTargetType, String targetId, String content) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+        PushAlarmHistory pushAlarmHistory = PushAlarmHistory.builder()
+                .member(member)
+                .notificationType(notificationType)
+                .notificationTargetType(notificationTargetType)
+                .targetId(targetId)
+                .content(content)
+                .build();
+        pushAlarmHistoryRepository.save(pushAlarmHistory);
     }
 
     //지원자 알림 handler
@@ -41,6 +63,8 @@ public class EventNotificationEventHandler {
             return;
         }
         notificationService.pushAlarmToToken(type, targetType.name(), content, eventCreatorFcmInfo.getFcmToken(), targetType, event.getEventApplicationId());
+
+        savePushAlarmHistory(eventCreatorFcmInfo.getMemberId(), type, targetType, event.getEventApplicationId(), content);
     }
 
     //선정 확정 알림 handler
@@ -59,6 +83,8 @@ public class EventNotificationEventHandler {
             return;
         }
         notificationService.pushAlarmToToken(type, targetType.name(), content, eventCreatorFcmInfo.getFcmToken(), targetType, event.getEventTruckId());
+
+        savePushAlarmHistory(eventCreatorFcmInfo.getMemberId(), type, targetType, event.getEventTruckId(), content);
     }
 
     //선정 취소 알림 handler
@@ -77,6 +103,8 @@ public class EventNotificationEventHandler {
             return;
         }
         notificationService.pushAlarmToToken(type, targetType.name(), content, eventCreatorFcmInfo.getFcmToken(), targetType, null);
+
+        savePushAlarmHistory(eventCreatorFcmInfo.getMemberId(), type, targetType, null, content);
     }
 
     //회신 요청 알림 handler
@@ -94,6 +122,8 @@ public class EventNotificationEventHandler {
             System.out.println("notificationMessage : " + content);
 
             notificationService.pushAlarmToToken(type, targetType.name(), content, memberFcmInfoDto.getFcmToken(), targetType, memberFcmInfoDto.getEventId());
+
+            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, memberFcmInfoDto.getEventId(), content);
         });
     }
 
@@ -110,6 +140,8 @@ public class EventNotificationEventHandler {
             System.out.println("notificationMessage : " + content);
 
             notificationService.pushAlarmToToken(type, targetType.name(), content, memberFcmInfoDto.getFcmToken(), targetType, memberFcmInfoDto.getEventId());
+
+            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, memberFcmInfoDto.getEventId(), content);
         });
     }
 
@@ -128,6 +160,8 @@ public class EventNotificationEventHandler {
             ));
             System.out.println("notificationMessage : " + content);
             notificationService.pushAlarmToToken(type, targetType.name(), content, memberFcmInfoDto.getFcmToken(), targetType, memberFcmInfoDto.getEventId());
+
+            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, memberFcmInfoDto.getEventId(), content);
         });
     }
 }

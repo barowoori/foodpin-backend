@@ -1,13 +1,18 @@
 package com.barowoori.foodpinbackend.notification.command.application.service;
 
 import com.barowoori.foodpinbackend.common.dto.MemberFcmInfoDto;
+import com.barowoori.foodpinbackend.common.exception.CustomException;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventApplicationRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventTruckRepository;
+import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
+import com.barowoori.foodpinbackend.member.command.domain.model.Member;
 import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
 import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationTargetType;
 import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationType;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.*;
 import com.barowoori.foodpinbackend.notification.command.domain.service.NotificationService;
+import com.barowoori.foodpinbackend.pushAlarmHistory.command.domain.model.PushAlarmHistory;
+import com.barowoori.foodpinbackend.pushAlarmHistory.command.domain.repository.PushAlarmHistoryRepository;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckManagerRepository;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
@@ -22,17 +27,33 @@ public class TruckNotificationEventHandler {
     private final EventApplicationRepository eventApplicationRepository;
     private final TruckManagerRepository truckManagerRepository;
     private final MemberRepository memberRepository;
+    private final PushAlarmHistoryRepository pushAlarmHistoryRepository;
 
     public TruckNotificationEventHandler(NotificationService notificationService,
                                          EventTruckRepository eventTruckRepository,
                                          EventApplicationRepository eventApplicationRepository,
                                          TruckManagerRepository truckManagerRepository,
-                                         MemberRepository memberRepository) {
+                                         MemberRepository memberRepository,
+                                         PushAlarmHistoryRepository pushAlarmHistoryRepository) {
         this.notificationService = notificationService;
         this.eventTruckRepository = eventTruckRepository;
         this.eventApplicationRepository = eventApplicationRepository;
         this.truckManagerRepository = truckManagerRepository;
         this.memberRepository = memberRepository;
+        this.pushAlarmHistoryRepository = pushAlarmHistoryRepository;
+    }
+
+    private void savePushAlarmHistory(String memberId, NotificationType notificationType, NotificationTargetType notificationTargetType, String targetId, String content) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+        PushAlarmHistory pushAlarmHistory = PushAlarmHistory.builder()
+                .member(member)
+                .notificationType(notificationType)
+                .notificationTargetType(notificationTargetType)
+                .targetId(targetId)
+                .content(content)
+                .build();
+        pushAlarmHistoryRepository.save(pushAlarmHistory);
     }
 
     //선정 알림 Handler
@@ -48,6 +69,8 @@ public class TruckNotificationEventHandler {
         System.out.println("notificationMessage : " + content);
         memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
             notificationService.pushAlarmToToken(type, targetType.name(), content, memberFcmInfoDto.getFcmToken(), targetType, event.getEventTruckId());
+
+            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, event.getEventTruckId(), content);
         });
     }
 
@@ -64,6 +87,8 @@ public class TruckNotificationEventHandler {
         System.out.println("notificationMessage : " + content);
         memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
             notificationService.pushAlarmToToken(type, targetType.name(), content, memberFcmInfoDto.getFcmToken(), targetType, event.getEventId());
+
+            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, event.getEventId(), content);
         });
     }
 
@@ -80,6 +105,8 @@ public class TruckNotificationEventHandler {
         System.out.println("notificationMessage : " + content);
         memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
             notificationService.pushAlarmToToken(type, targetType.name(), content, memberFcmInfoDto.getFcmToken(), targetType, null);
+
+            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, null, content);
         });
     }
 
@@ -94,6 +121,8 @@ public class TruckNotificationEventHandler {
         System.out.println("notificationMessage : " + content);
         memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
             notificationService.pushAlarmToToken(type, targetType.name(), content, memberFcmInfoDto.getFcmToken(), targetType, null);
+
+            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, null, content);
         });
     }
 
@@ -111,6 +140,8 @@ public class TruckNotificationEventHandler {
         System.out.println("notificationMessage : " + content);
         memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
             notificationService.pushAlarmToToken(type, targetType.name(), content, memberFcmInfoDto.getFcmToken(), targetType, event.getNoticeId());
+
+            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, event.getNoticeId(), content);
         });
     }
 
@@ -128,6 +159,8 @@ public class TruckNotificationEventHandler {
         System.out.println("notificationMessage : " + content);
         memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
             notificationService.pushAlarmToToken(type, targetType.name(), content, memberFcmInfoDto.getFcmToken(), targetType, event.getEventId());
+
+            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, event.getEventId(), content);
         });
     }
 
@@ -146,6 +179,8 @@ public class TruckNotificationEventHandler {
         System.out.println("notificationMessage : " + content);
         memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
             notificationService.pushAlarmToToken(type, targetType.name(), content, memberFcmInfoDto.getFcmToken(), targetType, event.getTruckId());
+
+            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, event.getTruckId(), content);
         });
     }
 
@@ -161,6 +196,8 @@ public class TruckNotificationEventHandler {
 
         MemberFcmInfoDto memberFcmInfoDto = memberRepository.findMemberFcmInfo(event.getMemberId());
         notificationService.pushAlarmToToken(type, targetType.name(), content, memberFcmInfoDto.getFcmToken(), targetType, null);
+
+        savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, null, content);
     }
 
     //소유자 변경 알림 Handler
@@ -178,8 +215,8 @@ public class TruckNotificationEventHandler {
         System.out.println("notificationMessage : " + content);
         memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
             notificationService.pushAlarmToToken(type, targetType.name(), content, memberFcmInfoDto.getFcmToken(), targetType, event.getTruckId());
+
+            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, event.getTruckId(), content);
         });
     }
-
-
 }

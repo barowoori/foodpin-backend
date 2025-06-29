@@ -218,11 +218,12 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
             Order direction = order.isAscending() ? Order.ASC : Order.DESC;
             if (order.getProperty().equals("createdAt")) { //최신순
                 orders.add(new OrderSpecifier(direction, eventPathBuilder.get(order.getProperty())));
-            } else if (order.getProperty().equals("applicant")) { //지원순
-                orders.add(new OrderSpecifier(direction, eventRecruitDetailPathBuilder.get("applicantCount")));
-            } else if (order.getProperty().equals("deadline")) { //마감순
-                orders.add(new OrderSpecifier(direction, eventRecruitDetailPathBuilder.get("recruitEndDateTime")));
             }
+//            else if (order.getProperty().equals("applicant")) { //지원순
+//                orders.add(new OrderSpecifier(direction, eventRecruitDetailPathBuilder.get("applicantCount")));
+//            } else if (order.getProperty().equals("deadline")) { //마감순
+//                orders.add(new OrderSpecifier(direction, eventRecruitDetailPathBuilder.get("recruitEndDateTime")));
+//            }
         });
 
         return orders;

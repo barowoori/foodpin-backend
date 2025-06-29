@@ -5,6 +5,7 @@ import com.barowoori.foodpinbackend.common.dto.MemberFcmInfoDto;
 import com.barowoori.foodpinbackend.event.command.domain.model.EventApplication;
 import com.barowoori.foodpinbackend.event.command.domain.model.EventApplicationStatus;
 import com.barowoori.foodpinbackend.event.command.domain.model.EventRecruitingStatus;
+import com.barowoori.foodpinbackend.event.command.domain.model.EventTruck;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -20,6 +21,7 @@ import static com.barowoori.foodpinbackend.event.command.domain.model.QEventAppl
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventApplicationDate.eventApplicationDate;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventPhoto.eventPhoto;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventRecruitDetail.eventRecruitDetail;
+import static com.barowoori.foodpinbackend.event.command.domain.model.QEventTruck.eventTruck;
 import static com.barowoori.foodpinbackend.file.command.domain.model.QFile.file;
 import static com.barowoori.foodpinbackend.member.command.domain.model.QMember.member;
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruck.truck;
@@ -152,6 +154,17 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
                 .innerJoin(truckManager).on(truck.eq(truckManager.truck))
                 .innerJoin(truckManager.member, member)
                 .where(eventApplication.id.eq(eventApplicationId))
+                .fetch();
+    }
+
+    @Override
+    public List<EventApplication> findEventApplicationsByMemberAndEvent(String memberId, String eventId) {
+        return jpaQueryFactory.selectDistinct(eventApplication)
+                .from(eventApplication)
+                .innerJoin(eventApplication.truck, truck)
+                .innerJoin(truckManager).on(truckManager.truck.eq(truck).and(truckManager.member.id.eq(memberId)))
+                .innerJoin(eventApplication.event, event).on(event.id.eq(eventId))
+                .where(truck.isDeleted.isFalse())
                 .fetch();
     }
 }

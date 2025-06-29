@@ -62,7 +62,8 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
     public Page<Event> findEventListByFilter(String searchTerm, Map<RegionType, List<String>> regionIds,
                                              LocalDate startDate, LocalDate endDate,
                                              List<String> categoryCodes, Pageable pageable) {
-        List<Event> events = jpaQueryFactory.selectFrom(event)
+        List<Event> events = jpaQueryFactory.selectDistinct(event)
+                .from(event)
                 .leftJoin(event.eventRegion, eventRegion)
                 .leftJoin(event.eventDates, eventDate)
                 .leftJoin(event.categories, eventCategory)
@@ -107,7 +108,8 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
     public Page<Event> findLikeEventListByFilter(String memberId, String searchTerm, Map<RegionType, List<String>> regionIds,
                                                  LocalDate startDate, LocalDate endDate,
                                                  List<String> categoryCodes, Pageable pageable) {
-        List<Event> events = jpaQueryFactory.selectFrom(event)
+        List<Event> events = jpaQueryFactory.selectDistinct(event)
+                .from(event)
                 .innerJoin(eventLike).on(eventLike.event.eq(event).and(eventLike.member.id.eq(memberId)))
                 .leftJoin(event.eventRegion, eventRegion)
                 .leftJoin(event.eventDates, eventDate)

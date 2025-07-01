@@ -339,58 +339,6 @@ public class TruckService {
     }
 
     @Transactional
-    public void setTruckDocument(String truckId, RequestTruck.TruckDocumentDto truckDocumentDto) {
-        String memberId = getMemberId();
-        Truck truck = getTruck(truckId);
-
-        if (truckDocumentDto.getType().equals(DocumentType.BUSINESS_REGISTRATION)) {
-            if (!Objects.equals(truckDocumentDto.getCreateBusinessRegistrationDto(), null)) {
-
-                TruckDocument originalTruckDocument = truckDocumentRepository.findByTruckIdAndType(truckId, truckDocumentDto.getType());
-                if (originalTruckDocument == null) {
-                    BusinessRegistration businessRegistration = truckDocumentDto.getCreateBusinessRegistrationDto().toEntity(memberId);
-                    businessRegistration = businessRegistrationRepository.save(businessRegistration);
-                    TruckDocument truckDocument = truckDocumentDto.toEntity(memberId, businessRegistration.getId(), truck);
-                    truckDocumentRepository.save(truckDocument);
-                } else {
-                    BusinessRegistration businessRegistration = truckDocumentRepository.getBusinessRegistrationDocumentByTruckId(truckId);
-                    businessRegistration.update(memberId, truckDocumentDto.getCreateBusinessRegistrationDto().getBusinessNumber(), truckDocumentDto.getCreateBusinessRegistrationDto().getBusinessName(),
-                            truckDocumentDto.getCreateBusinessRegistrationDto().getRepresentativeName(), truckDocumentDto.getCreateBusinessRegistrationDto().getOpeningDate());
-                    businessRegistrationRepository.save(businessRegistration);
-                    originalTruckDocument.update(LocalDateTime.now(), memberId, truckDocumentDto.getApproval());
-                    truckDocumentRepository.save(originalTruckDocument);
-                }
-            } else throw new CustomException(TruckErrorCode.BUSINESS_INFO_MISSED);
-        } else if (!Objects.equals(truckDocumentDto.getFileIdList(), null) && !truckDocumentDto.getFileIdList().isEmpty()) {
-
-            TruckDocument originalTruckDocument = truckDocumentRepository.findByTruckIdAndType(truckId, truckDocumentDto.getType());
-            if (originalTruckDocument == null) {
-                TruckDocument truckDocument = truckDocumentDto.toEntity(memberId, truck);
-                truckDocumentRepository.save(truckDocument);
-
-                for (String fileId : truckDocumentDto.getFileIdList()) {
-                    File file = fileRepository.findById(fileId)
-                            .orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_DOCUMENT_PHOTO_NOT_FOUND));
-                    TruckDocumentPhoto truckDocumentPhoto = TruckDocumentPhoto.builder().file(file).updatedBy(memberId).truckDocument(truckDocument).build();
-                    truckDocumentPhotoRepository.save(truckDocumentPhoto);
-                }
-            } else {
-                List<TruckDocumentPhoto> truckDocumentPhotoList = truckDocumentPhotoRepository.findByTruckDocumentId(originalTruckDocument.getId());
-                truckDocumentPhotoList.forEach(truckDocumentPhotoRepository::delete);
-
-                for (String fileId : truckDocumentDto.getFileIdList()) {
-                    File file = fileRepository.findById(fileId)
-                            .orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_DOCUMENT_PHOTO_NOT_FOUND));
-                    TruckDocumentPhoto truckDocumentPhoto = TruckDocumentPhoto.builder().file(file).updatedBy(memberId).truckDocument(originalTruckDocument).build();
-                    truckDocumentPhotoRepository.save(truckDocumentPhoto);
-                }
-                originalTruckDocument.update(LocalDateTime.now(), memberId, truckDocumentDto.getApproval());
-                truckDocumentRepository.save(originalTruckDocument);
-            }
-        } else throw new CustomException(TruckErrorCode.DOCUMENT_PHOTO_MISSED);
-    }
-
-    @Transactional
     public void changeOwner(String managerId, String truckId) {
         String memberId = getMemberId();
 

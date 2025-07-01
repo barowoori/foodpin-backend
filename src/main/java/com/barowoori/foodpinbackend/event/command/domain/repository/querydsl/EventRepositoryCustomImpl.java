@@ -62,7 +62,8 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
     public Page<Event> findEventListByFilter(String searchTerm, Map<RegionType, List<String>> regionIds,
                                              LocalDate startDate, LocalDate endDate,
                                              List<String> categoryCodes, Pageable pageable) {
-        List<Event> events = jpaQueryFactory.selectFrom(event)
+        List<Event> events = jpaQueryFactory.selectDistinct(event)
+                .from(event)
                 .leftJoin(event.eventRegion, eventRegion)
                 .leftJoin(event.eventDates, eventDate)
                 .leftJoin(event.categories, eventCategory)
@@ -107,7 +108,8 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
     public Page<Event> findLikeEventListByFilter(String memberId, String searchTerm, Map<RegionType, List<String>> regionIds,
                                                  LocalDate startDate, LocalDate endDate,
                                                  List<String> categoryCodes, Pageable pageable) {
-        List<Event> events = jpaQueryFactory.selectFrom(event)
+        List<Event> events = jpaQueryFactory.selectDistinct(event)
+                .from(event)
                 .innerJoin(eventLike).on(eventLike.event.eq(event).and(eventLike.member.id.eq(memberId)))
                 .leftJoin(event.eventRegion, eventRegion)
                 .leftJoin(event.eventDates, eventDate)
@@ -216,11 +218,12 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
             Order direction = order.isAscending() ? Order.ASC : Order.DESC;
             if (order.getProperty().equals("createdAt")) { //최신순
                 orders.add(new OrderSpecifier(direction, eventPathBuilder.get(order.getProperty())));
-            } else if (order.getProperty().equals("applicant")) { //지원순
-                orders.add(new OrderSpecifier(direction, eventRecruitDetailPathBuilder.get("applicantCount")));
-            } else if (order.getProperty().equals("deadline")) { //마감순
-                orders.add(new OrderSpecifier(direction, eventRecruitDetailPathBuilder.get("recruitEndDateTime")));
             }
+//            else if (order.getProperty().equals("applicant")) { //지원순
+//                orders.add(new OrderSpecifier(direction, eventRecruitDetailPathBuilder.get("applicantCount")));
+//            } else if (order.getProperty().equals("deadline")) { //마감순
+//                orders.add(new OrderSpecifier(direction, eventRecruitDetailPathBuilder.get("recruitEndDateTime")));
+//            }
         });
 
         return orders;

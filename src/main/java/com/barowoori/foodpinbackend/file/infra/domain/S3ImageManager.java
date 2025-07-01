@@ -18,6 +18,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Date;
 import java.util.UUID;
 
@@ -65,6 +67,18 @@ public class S3ImageManager implements ImageManager {
         } catch (Exception e) {
             System.out.println("Error while decoding or deleting the file: " + e.getMessage());
         }
+    }
+    @Override
+    public File downloadFile(String fileUrl) {
+        String objectKey = getObjectKey(fileUrl);
+        try {
+            Path tempFile = Files.createTempFile("s3-", "-" + objectKey.replace("/", "_"));
+            amazonS3.getObject(new GetObjectRequest(bucket, objectKey), tempFile.toFile());
+            return tempFile.toFile();
+        }catch (Exception e){
+            System.out.println("Error while decoding or deleting the file: " + e.getMessage());
+        }
+        return null;
     }
 
     private String upload(MultipartFile multipartFile, String dirName) throws IOException {

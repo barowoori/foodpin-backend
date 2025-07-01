@@ -13,5 +13,5 @@ public interface EventApplicationRepositoryCustom {
     Page<EventApplication> findAppliedApplications(String status, String truckId, Pageable pageable);
     List<MemberFcmInfoDto> findAllFcmInfoOfTruckManagersByEventId(String eventId);
     List<MemberFcmInfoDto> findFcmInfoOfTruckManagers(String eventApplicationId);
-
+    List<EventApplication> findEventApplicationsByMemberAndEvent(String memberId, String eventId);
 }

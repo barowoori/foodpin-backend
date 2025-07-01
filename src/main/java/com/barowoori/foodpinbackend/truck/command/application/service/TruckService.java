@@ -275,6 +275,70 @@ public class TruckService {
     }
 
     @Transactional
+    public void setTruckDocuments(String truckId, List<RequestTruck.TruckDocumentDto> documentDtoList) {
+        String memberId = getMemberId();
+        Truck truck = getTruck(truckId);
+
+        for (RequestTruck.TruckDocumentDto dto : documentDtoList) {
+            DocumentType type = dto.getType();
+
+            if (type == DocumentType.BUSINESS_REGISTRATION) {
+                if (dto.getCreateBusinessRegistrationDto() == null) {
+                    throw new CustomException(TruckErrorCode.BUSINESS_INFO_MISSED);
+                }
+
+                TruckDocument existingDoc = truckDocumentRepository.findByTruckIdAndType(truck.getId(), dto.getType());
+                if (existingDoc == null) {
+                    BusinessRegistration br = dto.getCreateBusinessRegistrationDto().toEntity(memberId);
+                    br = businessRegistrationRepository.save(br);
+                    TruckDocument newDoc = dto.toEntity(memberId, br.getId(), truck);
+                    truckDocumentRepository.save(newDoc);
+                } else {
+                    BusinessRegistration br = truckDocumentRepository.getBusinessRegistrationDocumentByTruckId(truck.getId());
+                    br.update(memberId,
+                            dto.getCreateBusinessRegistrationDto().getBusinessNumber(),
+                            dto.getCreateBusinessRegistrationDto().getBusinessName(),
+                            dto.getCreateBusinessRegistrationDto().getRepresentativeName(),
+                            dto.getCreateBusinessRegistrationDto().getOpeningDate());
+                    businessRegistrationRepository.save(br);
+                    existingDoc.update(LocalDateTime.now(), memberId, dto.getApproval());
+                    truckDocumentRepository.save(existingDoc);
+                }
+            } else if (dto.getFileIdList() != null && !dto.getFileIdList().isEmpty()) {
+                TruckDocument existingDoc = truckDocumentRepository.findByTruckIdAndType(truck.getId(), dto.getType());
+
+                if (existingDoc == null) {
+                    TruckDocument newDoc = dto.toEntity(memberId, truck);
+                    truckDocumentRepository.save(newDoc);
+                    saveTruckDocumentPhotos(dto.getFileIdList(), newDoc, memberId);
+                } else {
+                    List<TruckDocumentPhoto> existingPhotos = truckDocumentPhotoRepository.findByTruckDocumentId(existingDoc.getId());
+                    existingPhotos.forEach(truckDocumentPhotoRepository::delete);
+                    saveTruckDocumentPhotos(dto.getFileIdList(), existingDoc, memberId);
+                    existingDoc.update(LocalDateTime.now(), memberId, dto.getApproval());
+                    truckDocumentRepository.save(existingDoc);
+                }
+            }
+            else {
+                throw new CustomException(TruckErrorCode.DOCUMENT_PHOTO_MISSED);
+            }
+        }
+    }
+
+    private void saveTruckDocumentPhotos(List<String> fileIds, TruckDocument doc, String memberId) {
+        for (String fileId : fileIds) {
+            File file = fileRepository.findById(fileId)
+                    .orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_DOCUMENT_PHOTO_NOT_FOUND));
+            TruckDocumentPhoto photo = TruckDocumentPhoto.builder()
+                    .file(file)
+                    .updatedBy(memberId)
+                    .truckDocument(doc)
+                    .build();
+            truckDocumentPhotoRepository.save(photo);
+        }
+    }
+
+    @Transactional
     public void setTruckDocument(String truckId, RequestTruck.TruckDocumentDto truckDocumentDto) {
         String memberId = getMemberId();
         Truck truck = getTruck(truckId);

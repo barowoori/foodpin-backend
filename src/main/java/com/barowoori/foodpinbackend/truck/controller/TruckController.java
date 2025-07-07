@@ -296,8 +296,8 @@ public class TruckController {
     })
     @PutMapping(value = "/v1/{truckId}/owner")
     public ResponseEntity<CommonResponse<String>> changeOwner(@Valid @PathVariable("truckId") String truckId,
-                                                              @Valid @RequestParam String managerId) {
-        truckService.changeOwner(managerId, truckId);
+                                                              @Valid @RequestBody RequestTruck.GetTruckManagerIdDto requestDto) {
+        truckService.changeOwner(requestDto.getTruckManagerId(), truckId);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Truck owner changed successfully.")
                 .build();
@@ -313,9 +313,9 @@ public class TruckController {
                     "멤버를 못 찾을 경우[20004], 트럭 소유자를 못 찾을(아닐) 경우[30005]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @DeleteMapping(value = "/v1/{truckId}/manager")
+    @DeleteMapping(value = "/v1/{truckId}/managers/{managerId}")
     public ResponseEntity<CommonResponse<String>> deleteManager(@Valid @PathVariable("truckId") String truckId,
-                                                                @Valid @RequestParam String managerId) {
+                                                                @Valid @PathVariable("managerId") String managerId) {
         truckService.deleteManager(managerId, truckId);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Truck manager deleted successfully.")

@@ -3,7 +3,7 @@ package com.barowoori.foodpinbackend.event.command.application.service;
 import com.barowoori.foodpinbackend.category.command.domain.model.Category;
 import com.barowoori.foodpinbackend.category.command.domain.repository.CategoryRepository;
 import com.barowoori.foodpinbackend.common.exception.CustomException;
-import com.barowoori.foodpinbackend.document.command.application.service.emailEvent.TruckDocumentSubmissionEvent;
+import com.barowoori.foodpinbackend.document.command.application.service.emailEvent.EventAppliedTruckDocumentSubmissionEvent;
 import com.barowoori.foodpinbackend.event.command.application.dto.RequestEvent;
 import com.barowoori.foodpinbackend.event.command.application.dto.ResponseEvent;
 import com.barowoori.foodpinbackend.event.command.domain.exception.EventErrorCode;
@@ -292,7 +292,7 @@ public class EventService {
         }
 
         NotificationEvent.raise(new ApplicationReceivedNotificationEvent(event.getId(), event.getName(), eventApplication.getId()));
-        NotificationEvent.raise(new TruckDocumentSubmissionEvent(event,truck));
+        NotificationEvent.raise(new EventAppliedTruckDocumentSubmissionEvent(event,truck));
     }
 
     @Transactional

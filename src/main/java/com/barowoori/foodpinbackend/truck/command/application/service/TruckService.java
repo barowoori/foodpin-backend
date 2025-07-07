@@ -370,4 +370,11 @@ public class TruckService {
         Page<TruckManagerSummary> truckManagerSummaries = truckManagerRepository.findTruckManagerPages(truckId, getMemberId(), pageable);
         return truckManagerSummaries.map(truckManagerSummary -> truckManagerSummary.convertToPreSignedUrl(imageManager));
     }
+
+    @Transactional(readOnly = true)
+    public ResponseTruck.GetBusinessRegistrationInfo getTruckBusinessRegistrationDocumentInfo(String truckId) {
+        Truck truck = getTruck(truckId);
+        BusinessRegistration businessRegistration = truckDocumentRepository.getBusinessRegistrationDocumentByTruckId(truck.getId());
+        return ResponseTruck.GetBusinessRegistrationInfo.of(businessRegistration);
+    }
 }

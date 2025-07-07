@@ -6,11 +6,11 @@ import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
 import lombok.Getter;
 
 @Getter
-public class TruckDocumentSubmissionEvent {
+public class EventSelectedTruckDocumentSubmissionEvent {
     private final Event event;
     private final Truck truck;
 
-    public TruckDocumentSubmissionEvent(Event event, Truck truck) {
+    public EventSelectedTruckDocumentSubmissionEvent(Event event, Truck truck) {
         this.event = event;
         this.truck = truck;
     }

@@ -327,11 +327,13 @@ public class TruckService {
     }
 
     @Transactional
-    public void changeOwner(String managerId, String truckId) {
+    public void changeOwner(String truckManagerId, String truckId) {
         String memberId = getMemberId();
 
         TruckManager truckOwner = truckManagerRepository.findByTruckIdAndMemberId(truckId, memberId);
-        TruckManager truckMember = truckManagerRepository.findByTruckIdAndMemberId(truckId, managerId);
+        TruckManager truckMember = truckManagerRepository.findById(truckManagerId).orElseThrow(()-> new CustomException(TruckErrorCode.TRUCK_MANAGER_NOT_FOUND));
+
+        System.out.println(Objects.equals(truckOwner.getRole(), TruckManagerRole.OWNER));
         if (truckOwner != null && truckMember != null && Objects.equals(truckOwner.getRole(), TruckManagerRole.OWNER)) {
             truckMember.updateRole(TruckManagerRole.OWNER);
             truckManagerRepository.save(truckMember);

@@ -71,6 +71,7 @@ dependencies {
 
 	//firebase
 	implementation group: 'com.google.firebase', name: 'firebase-admin', version: '7.1.1'
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
 }
 
 tasks.named('test') {

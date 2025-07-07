@@ -14,6 +14,7 @@ import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -22,7 +23,7 @@ import java.time.LocalTime;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @SpringBootTest
-@Transactional
+@ActiveProfiles("test")
 public class EventStatusUpdaterTests {
 
     @Autowired private EventRepository eventRepository;
@@ -33,6 +34,7 @@ public class EventStatusUpdaterTests {
     @Autowired private EventStatusUpdater eventStatusUpdater;
 
     @Test
+    @Transactional
     void testCloseRecruitingEventsByDeadline() {
         // given
         Event event = saveBasicEvent();
@@ -60,6 +62,7 @@ public class EventStatusUpdaterTests {
     }
 
     @Test
+    @Transactional
     void testCloseSelectingEventsByEndDate() {
         // given
         Member member = memberRepository.save(Member.builder()

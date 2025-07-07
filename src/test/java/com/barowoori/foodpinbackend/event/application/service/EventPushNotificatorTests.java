@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -33,7 +34,7 @@ import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-@Transactional
+@ActiveProfiles("test")
 public class EventPushNotificatorTests {
     @Autowired
     EntityManager em;
@@ -116,6 +117,7 @@ public class EventPushNotificatorTests {
     class ReplyRequestNotificationTest {
 
         @Test
+        @Transactional
         @DisplayName("24시간 미만 경과 시 알림이 전송되지 않는다")
         void doesNotSendNotificationIfLessThan24HoursPassed() {
             PrintStream originalOut = System.out;
@@ -139,6 +141,7 @@ public class EventPushNotificatorTests {
         }
 
         @Test
+        @Transactional
         @DisplayName("정확히 24시간 경과 시 알림이 전송된다")
         void sendsNotificationExactlyAt24Hours() {
             PrintStream originalOut = System.out;
@@ -162,6 +165,7 @@ public class EventPushNotificatorTests {
         }
 
         @Test
+        @Transactional
         @DisplayName("48시간 경과 시 반복 알림이 전송된다")
         void sendsRepeatedNotificationAt48Hours() {
             PrintStream originalOut = System.out;
@@ -209,6 +213,7 @@ public class EventPushNotificatorTests {
     @Nested
     class sendSelectionEndPushNotificationTest {
         @Test
+        @Transactional
         @DisplayName("행사 하루 전에 등록한 행사이면 알림이 전송되지 않는다")
         void doesNotSendNotificationIfEventCreatedAtDayBefore() {
             EventRecruitDetail detail = EventRecruitDetail.builder()
@@ -239,6 +244,7 @@ public class EventPushNotificatorTests {
         }
 
         @Test
+        @Transactional
         @DisplayName("행사 시작일 전 날이고 선정 종료 처리가 되지 않았으면 알림이 전송된다")
         void sendsNotificationIfDayBeforeEventAndNotSelectionEnded() {
             EventRecruitDetail detail = EventRecruitDetail.builder()
@@ -272,6 +278,7 @@ public class EventPushNotificatorTests {
         }
 
         @Test
+        @Transactional
         @DisplayName("행사가 진행중이면 알림이 전송되지 않는다")
         void doesNotSendNotificationIfEventIsOngoing() {
             EventRecruitDetail detail = EventRecruitDetail.builder()
@@ -310,6 +317,7 @@ public class EventPushNotificatorTests {
         }
 
         @Test
+        @Transactional
         @DisplayName("행사 시작일 전 날이어도 선정 종료 처리되었으면 알림이 전송되지 않는다")
         void doesNotSendNotificationIfSelectionAlreadyEnded() {
             EventRecruitDetail detail = EventRecruitDetail.builder()
@@ -344,6 +352,7 @@ public class EventPushNotificatorTests {
         }
 
         @Test
+        @Transactional
         @DisplayName("행사 시작일 전 날이 아니고 선정 종료 처리가 되어있으면 알림이 전송되지 않는다")
         void doesNotSendNotificationIfNotDayBeforeAndSelectionEnded() {
             EventRecruitDetail detail = EventRecruitDetail.builder()
@@ -381,6 +390,7 @@ public class EventPushNotificatorTests {
         @Nested
         class sendRecruitmentDeadlineSoonPushNotificationTest {
             @Test
+            @Transactional
             @DisplayName("모집마감일 6시간 전일 경우 알림이 전송된다")
             void sendNotification_When6HoursLeft_BeforeRecruitEndDate() {
                 EventRecruitDetail detail = EventRecruitDetail.builder()
@@ -407,6 +417,7 @@ public class EventPushNotificatorTests {
             }
 
             @Test
+            @Transactional
             @DisplayName("모집마감일 6시간 전이 아닐 경우 알림이 전송되지 않는다")
             void doesNotSendNotification_When6HoursLeft_BeforeRecruitEndDate() {
                 EventRecruitDetail detail = EventRecruitDetail.builder()

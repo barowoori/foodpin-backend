@@ -92,6 +92,17 @@ jobs:
           echo "    generate-ddl: false" >> ${APP_CONFIG_FILE}
           echo "    hibernate:" >> ${APP_CONFIG_FILE}
           echo "      ddl-auto: none" >> ${APP_CONFIG_FILE}
+          echo "  mail:" >> ${APP_CONFIG_FILE}
+          echo "    host: smtp.gmail.com" >> ${APP_CONFIG_FILE}
+          echo "    port: 587" >> ${APP_CONFIG_FILE}
+          echo "    username: ${{ secrets.MAIL_USERNAME }}" >> ${APP_CONFIG_FILE}
+          echo "    password: ${{ secrets.MAIL_PASSWORD }}" >> ${APP_CONFIG_FILE}
+          echo "    properties:" >> ${APP_CONFIG_FILE}
+          echo "      mail:" >> ${APP_CONFIG_FILE}
+          echo "        smtp:" >> ${APP_CONFIG_FILE}
+          echo "          auth: true" >> ${APP_CONFIG_FILE}
+          echo "          starttls:" >> ${APP_CONFIG_FILE}
+          echo "            enable: true" >> ${APP_CONFIG_FILE}
 
       # application-S3.properties 생성
       - name: Create aws-s3-config.yml

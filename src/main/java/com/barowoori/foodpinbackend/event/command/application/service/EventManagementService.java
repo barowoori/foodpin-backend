@@ -1,6 +1,7 @@
 package com.barowoori.foodpinbackend.event.command.application.service;
 
 import com.barowoori.foodpinbackend.common.exception.CustomException;
+import com.barowoori.foodpinbackend.document.command.application.service.emailEvent.EventSelectedTruckDocumentSubmissionEvent;
 import com.barowoori.foodpinbackend.event.command.application.dto.RequestEvent;
 import com.barowoori.foodpinbackend.event.command.domain.exception.EventErrorCode;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
@@ -84,6 +85,7 @@ public class EventManagementService {
         eventApplication.select();
         eventApplicationRepository.save(eventApplication);
         NotificationEvent.raise(new SelectionCompletedNotificationEvent(event.getId(), eventTruck.getId(), event.getName()));
+        NotificationEvent.raise(new EventSelectedTruckDocumentSubmissionEvent(event, eventTruck.getTruck()));
     }
 
     @Transactional

@@ -195,7 +195,7 @@ public class TruckNotificationEventHandler {
         ));
 
         MemberFcmInfoDto memberFcmInfoDto = memberRepository.findMemberFcmInfo(event.getMemberId());
-        notificationService.pushAlarmToToken(type, targetType.name(), content, memberFcmInfoDto.getFcmToken(), targetType, null);
+        notificationService.pushAlarmToToken(type, targetType.name(), content, memberFcmInfoDto.getFcmToken(), targetType, "null");
 
         savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, null, content);
     }

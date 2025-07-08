@@ -169,5 +169,13 @@ public class RequestTruck {
         @NotEmpty
         private String code;
     }
+
+    @Getter
+    @Data
+    public static class GetTruckManagerIdDto{
+        @Schema(description = "트럭 관리자 id")
+        @NotEmpty
+        private String truckManagerId;
+    }
 }
 

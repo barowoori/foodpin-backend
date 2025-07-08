@@ -124,6 +124,25 @@ public class TruckController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+
+    @Operation(summary = "트럭 사업자등록증 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/{truckId}/business-registration/info")
+    public ResponseEntity<CommonResponse<ResponseTruck.GetBusinessRegistrationInfo>> getTruckBusinessRegistrationDocumentInfo(@Valid @PathVariable("truckId") String truckId) {
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        ResponseTruck.GetBusinessRegistrationInfo response = truckService.getTruckBusinessRegistrationDocumentInfo(truckId);
+        CommonResponse<ResponseTruck.GetBusinessRegistrationInfo> commonResponse = CommonResponse.<ResponseTruck.GetBusinessRegistrationInfo>builder()
+                .data(response)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
     @Operation(summary = "트럭 목록 조회", description = "정렬 : 최신순(createdAt, DESC), 조회순(views, DESC)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
@@ -277,8 +296,8 @@ public class TruckController {
     })
     @PutMapping(value = "/v1/{truckId}/owner")
     public ResponseEntity<CommonResponse<String>> changeOwner(@Valid @PathVariable("truckId") String truckId,
-                                                              @Valid @RequestParam String managerId) {
-        truckService.changeOwner(managerId, truckId);
+                                                              @Valid @RequestBody RequestTruck.GetTruckManagerIdDto requestDto) {
+        truckService.changeOwner(requestDto.getTruckManagerId(), truckId);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Truck owner changed successfully.")
                 .build();
@@ -294,9 +313,9 @@ public class TruckController {
                     "멤버를 못 찾을 경우[20004], 트럭 소유자를 못 찾을(아닐) 경우[30005]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @DeleteMapping(value = "/v1/{truckId}/manager")
+    @DeleteMapping(value = "/v1/{truckId}/managers/{managerId}")
     public ResponseEntity<CommonResponse<String>> deleteManager(@Valid @PathVariable("truckId") String truckId,
-                                                                @Valid @RequestParam String managerId) {
+                                                                @Valid @PathVariable("managerId") String managerId) {
         truckService.deleteManager(managerId, truckId);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Truck manager deleted successfully.")

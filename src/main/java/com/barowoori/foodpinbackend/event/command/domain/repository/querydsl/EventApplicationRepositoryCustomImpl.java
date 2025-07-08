@@ -94,7 +94,6 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
                 .innerJoin(eventApplication.event, event)
                 .leftJoin(event.recruitDetail, eventRecruitDetail)
                 .leftJoin(eventApplication.dates, eventApplicationDate)
-                .innerJoin(eventApplication.event, event)
                 .leftJoin(event.photos, eventPhoto)
                 .leftJoin(eventPhoto.file, file)
                 .where(truck.id.eq(truckId)
@@ -109,7 +108,6 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
                 .innerJoin(eventApplication.event, event)
                 .leftJoin(event.recruitDetail, eventRecruitDetail)
                 .leftJoin(eventApplication.dates, eventApplicationDate)
-                .innerJoin(eventApplication.event, event)
                 .where(truck.id.eq(truckId)
                         .and(createStatusBuilder(status)))
                 .fetchOne();

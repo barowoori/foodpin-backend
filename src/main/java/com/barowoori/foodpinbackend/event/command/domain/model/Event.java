@@ -1,5 +1,6 @@
 package com.barowoori.foodpinbackend.event.command.domain.model;
 
+import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckPhoto;
@@ -176,5 +177,9 @@ public class Event {
         return this.eventTrucks.stream()
                 .filter(truck -> truck.getStatus().equals(EventTruckStatus.CONFIRMED))
                 .toList();
+    }
+
+    public List<DocumentType> getEventDocumentTypes(){
+        return this.documents.stream().map(EventDocument::getType).toList();
     }
 }

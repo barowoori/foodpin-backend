@@ -361,7 +361,7 @@ public class TruckService {
         String memberId = getMemberId();
 
         TruckManager truckOwner = truckManagerRepository.findByTruckIdAndMemberId(truckId, memberId);
-        TruckManager truckMember = truckManagerRepository.findByTruckIdAndMemberId(truckId, managerId);
+        TruckManager truckMember = truckManagerRepository.findById(managerId).orElseThrow(()-> new CustomException(TruckErrorCode.TRUCK_MANAGER_NOT_FOUND));
         if (truckOwner != null && truckMember != null && Objects.equals(truckOwner.getRole(), TruckManagerRole.OWNER)) {
             truckManagerRepository.delete(truckMember);
         } else throw new CustomException(TruckErrorCode.TRUCK_OWNER_NOT_FOUND);

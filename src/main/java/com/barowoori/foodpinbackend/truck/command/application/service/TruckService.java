@@ -36,6 +36,7 @@ import com.barowoori.foodpinbackend.truck.command.application.dto.ResponseTruck;
 import com.barowoori.foodpinbackend.truck.command.domain.exception.TruckErrorCode;
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.*;
+import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckDocumentManager;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckManagerSummary;
 import com.barowoori.foodpinbackend.truck.command.domain.service.TruckManagerInvitationGenerator;
 import lombok.RequiredArgsConstructor;
@@ -326,8 +327,7 @@ public class TruckService {
                     existingDoc.update(LocalDateTime.now(), memberId, dto.getApproval());
                     truckDocumentRepository.save(existingDoc);
                 }
-            }
-            else {
+            } else {
                 throw new CustomException(TruckErrorCode.DOCUMENT_PHOTO_MISSED);
             }
         }
@@ -351,7 +351,7 @@ public class TruckService {
         String memberId = getMemberId();
 
         TruckManager truckOwner = truckManagerRepository.findByTruckIdAndMemberId(truckId, memberId);
-        TruckManager truckMember = truckManagerRepository.findById(truckManagerId).orElseThrow(()-> new CustomException(TruckErrorCode.TRUCK_MANAGER_NOT_FOUND));
+        TruckManager truckMember = truckManagerRepository.findById(truckManagerId).orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_MANAGER_NOT_FOUND));
 
         System.out.println(Objects.equals(truckOwner.getRole(), TruckManagerRole.OWNER));
         if (truckOwner != null && truckMember != null && Objects.equals(truckOwner.getRole(), TruckManagerRole.OWNER)) {
@@ -369,7 +369,7 @@ public class TruckService {
         String memberId = getMemberId();
 
         TruckManager truckOwner = truckManagerRepository.findByTruckIdAndMemberId(truckId, memberId);
-        TruckManager truckMember = truckManagerRepository.findById(managerId).orElseThrow(()-> new CustomException(TruckErrorCode.TRUCK_MANAGER_NOT_FOUND));
+        TruckManager truckMember = truckManagerRepository.findById(managerId).orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_MANAGER_NOT_FOUND));
         if (truckOwner != null && truckMember != null && Objects.equals(truckOwner.getRole(), TruckManagerRole.OWNER)) {
             truckManagerRepository.delete(truckMember);
         } else throw new CustomException(TruckErrorCode.TRUCK_OWNER_NOT_FOUND);
@@ -407,5 +407,14 @@ public class TruckService {
         Truck truck = getTruck(truckId);
         BusinessRegistration businessRegistration = truckDocumentRepository.getBusinessRegistrationDocumentByTruckId(truck.getId());
         return ResponseTruck.GetBusinessRegistrationInfo.of(businessRegistration);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ResponseTruck.GetTruckDocumentFile> getTruckDocumentFiles(String truckId) {
+        Truck truck = getTruck(truckId);
+        List<TruckDocument> truckDocuments = truckDocumentRepository.getTruckDocumentFiles(truck.getId());
+        return truckDocuments.stream()
+                .map(truckDocument -> ResponseTruck.GetTruckDocumentFile.of(truckDocument, imageManager))
+                .toList();
     }
 }

@@ -143,6 +143,24 @@ public class TruckController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "트럭 서류 파일 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/{truckId}/document/file")
+    public ResponseEntity<CommonResponse<List<ResponseTruck.GetTruckDocumentFile>>> getTruckDocumentFiles(@Valid @PathVariable("truckId") String truckId) {
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        List<ResponseTruck.GetTruckDocumentFile> response = truckService.getTruckDocumentFiles(truckId);
+        CommonResponse<List<ResponseTruck.GetTruckDocumentFile>> commonResponse = CommonResponse.<List<ResponseTruck.GetTruckDocumentFile>>builder()
+                .data(response)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
     @Operation(summary = "트럭 목록 조회", description = "정렬 : 최신순(createdAt, DESC), 조회순(views, DESC)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),

@@ -248,7 +248,8 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
 
     @Override
     public Page<Event> findProgressEventManageList(String memberId, String status, Pageable pageable) {
-        List<Event> events = jpaQueryFactory.selectFrom(event)
+        List<Event> events = jpaQueryFactory.selectDistinct(event)
+                .from(event)
                 .leftJoin(event.eventRegion, eventRegion)
                 .leftJoin(event.eventDates, eventDate)
                 .leftJoin(event.categories, eventCategory)
@@ -268,6 +269,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .fetch();
 
         Long total = jpaQueryFactory.select(event.countDistinct()).from(event)
+                .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .where(
                         event.isDeleted.isFalse()
                                 .and(event.createdBy.eq(memberId))
@@ -300,6 +302,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .fetch();
 
         Long total = jpaQueryFactory.select(event.countDistinct()).from(event)
+                .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .where(
                         event.isDeleted.isFalse()
                                 .and(event.createdBy.eq(memberId))

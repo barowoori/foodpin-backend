@@ -7,5 +7,6 @@ import java.util.List;
 
 public interface EventLikeRepository extends JpaRepository<EventLike, String> {
     EventLike findByMemberIdAndEventId(String memberId, String eventId);
-    List<EventLike> findByEventId(String eventId);
+    List<EventLike> findAllByEventId(String eventId);
+    List<EventLike> findAllByMemberId(String memberId);
 }

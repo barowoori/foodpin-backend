@@ -6,12 +6,17 @@ import com.barowoori.foodpinbackend.common.exception.CustomException;
 import com.barowoori.foodpinbackend.document.command.domain.model.BusinessRegistration;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.document.command.domain.repository.BusinessRegistrationRepository;
+import com.barowoori.foodpinbackend.event.command.application.service.EventService;
+import com.barowoori.foodpinbackend.event.command.domain.model.EventApplication;
+import com.barowoori.foodpinbackend.event.command.domain.repository.EventApplicationRepository;
 import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepository;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
+import com.barowoori.foodpinbackend.member.command.domain.model.TruckLike;
 import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
+import com.barowoori.foodpinbackend.member.command.domain.repository.TruckLikeRepository;
 import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.ManagerAddedNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.ManagerRemovedNotificationEvent;
@@ -68,6 +73,9 @@ public class TruckService {
     private final RegionSiRepository regionSiRepository;
     private final RegionGuRepository regionGuRepository;
     private final RegionGunRepository regionGunRepository;
+    private final EventApplicationRepository eventApplicationRepository;
+    private final EventService eventService;
+    private final TruckLikeRepository truckLikeRepository;
 
     private String getMemberId() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
@@ -374,6 +382,15 @@ public class TruckService {
     public void deleteTruck(String truckId) {
         TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(truckId, getMemberId());
         if (truckManager != null && Objects.equals(truckManager.getRole(), TruckManagerRole.OWNER)) {
+            List<EventApplication> eventApplicationList = eventApplicationRepository.findAllByTruckId(truckId);
+            if (eventApplicationList != null) {
+                eventApplicationList.forEach(eventApplication -> eventService.cancelEventApplication(eventApplication.getId()));
+            }
+            List<TruckLike> truckLikeList = truckLikeRepository.findAllByTruckId(truckId);
+            if (truckLikeList != null) {
+                truckLikeList.forEach(truckLikeRepository::delete);
+            }
+
             Truck truck = getTruck(truckId);
             truck.delete();
         } else throw new CustomException(TruckErrorCode.TRUCK_OWNER_NOT_FOUND);

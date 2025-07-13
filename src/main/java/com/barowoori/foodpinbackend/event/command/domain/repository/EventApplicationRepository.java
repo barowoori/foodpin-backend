@@ -11,4 +11,5 @@ import java.util.List;
 public interface EventApplicationRepository extends JpaRepository<EventApplication, String>, EventApplicationRepositoryCustom {
     EventApplication findByTruckIdAndEventId(String truckId, String EventId);
     List<EventApplication> findAllByEventAndStatus(Event event, EventApplicationStatus status);
+    List<EventApplication> findAllByTruckId(String truckId);
 }

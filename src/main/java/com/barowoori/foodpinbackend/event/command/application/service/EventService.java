@@ -9,6 +9,7 @@ import com.barowoori.foodpinbackend.event.command.application.dto.ResponseEvent;
 import com.barowoori.foodpinbackend.event.command.domain.exception.EventErrorCode;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.event.command.domain.repository.*;
+import com.barowoori.foodpinbackend.event.command.domain.service.EventDateCalculator;
 import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepository;
 import com.barowoori.foodpinbackend.member.command.domain.model.EventLike;
@@ -33,6 +34,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -105,7 +107,7 @@ public class EventService {
         eventRegionRepository.save(eventRegion);
         event.initEventRegion(eventRegion);
 
-        if (Objects.equals(createEventDto.getEventRecruitDto().getRecruitEndDateTime(), null)){
+        if (Objects.equals(createEventDto.getEventRecruitDto().getRecruitEndDateTime(), null)) {
             LocalDateTime lastEndDateTime = createEventDto.getEventDateDtoList().stream()
                     .map(dto -> LocalDateTime.of(dto.getDate(), dto.getEndTime()))
                     .max(LocalDateTime::compareTo)
@@ -234,12 +236,19 @@ public class EventService {
         if (!event.isCreator(memberId)) {
             throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
         }
-        if (event.isCreator(memberId)) {
-            event.delete();
-            List<EventLike> eventLikeList = eventLikeRepository.findByEventId(eventId);
-            if (eventLikeList != null)
-                eventLikeList.forEach(eventLikeRepository::delete);
+        if (EventDateCalculator.getMinDate(event).isAfter(LocalDate.now())){
+            throw new CustomException(EventErrorCode.ALREADY_IN_PROGRESS_EVENT);
         }
+
+        List<EventLike> eventLikeList = eventLikeRepository.findAllByEventId(eventId);
+        if (eventLikeList != null) {
+            eventLikeList.forEach(eventLikeRepository::delete);
+        }
+        EventRecruitDetail eventRecruitDetail = eventRecruitDetailRepository.findByEvent(event);
+        if (eventRecruitDetail != null && eventRecruitDetail.getRecruitingStatus().equals(EventRecruitingStatus.RECRUITING)) {
+            eventRecruitDetail.closeSelection();
+        }
+        event.delete();
     }
 
     @Transactional
@@ -292,7 +301,7 @@ public class EventService {
         }
 
         NotificationEvent.raise(new ApplicationReceivedNotificationEvent(event.getId(), event.getName(), eventApplication.getId()));
-        NotificationEvent.raise(new EventAppliedTruckDocumentSubmissionEvent(event,truck));
+        NotificationEvent.raise(new EventAppliedTruckDocumentSubmissionEvent(event, truck));
     }
 
     @Transactional
@@ -327,7 +336,7 @@ public class EventService {
             throw new CustomException(TruckErrorCode.TRUCK_MANAGER_NOT_FOUND);
         }
 
-        if (!eventTruck.getStatus().equals(EventTruckStatus.PENDING)){
+        if (!eventTruck.getStatus().equals(EventTruckStatus.PENDING)) {
             throw new CustomException(EventErrorCode.ALREADY_HANDLED_EVENT_TRUCK);
         }
 

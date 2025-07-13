@@ -2,6 +2,7 @@ package com.barowoori.foodpinbackend.member.command.application.service;
 
 import com.barowoori.foodpinbackend.common.exception.CustomException;
 import com.barowoori.foodpinbackend.common.security.JwtTokenProvider;
+import com.barowoori.foodpinbackend.event.command.application.service.EventService;
 import com.barowoori.foodpinbackend.event.command.domain.exception.EventErrorCode;
 import com.barowoori.foodpinbackend.event.command.domain.model.Event;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventRepository;
@@ -16,14 +17,20 @@ import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepos
 import com.barowoori.foodpinbackend.member.command.domain.repository.TruckLikeRepository;
 import com.barowoori.foodpinbackend.member.command.domain.service.GenerateNicknameService;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
+import com.barowoori.foodpinbackend.truck.command.application.service.TruckService;
 import com.barowoori.foodpinbackend.truck.command.domain.exception.TruckErrorCode;
 import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
+import com.barowoori.foodpinbackend.truck.command.domain.model.TruckManager;
+import com.barowoori.foodpinbackend.truck.command.domain.model.TruckManagerRole;
+import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckManagerRepository;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +45,9 @@ public class MemberService {
     private final FileRepository fileRepository;
     private final EventRepository eventRepository;
     private final EventLikeRepository eventLikeRepository;
+    private final TruckManagerRepository truckManagerRepository;
+    private final TruckService truckService;
+    private final EventService eventService;
 
     private Member getMember() {
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -169,6 +179,27 @@ public class MemberService {
     @Transactional
     public void deleteMember() {
         Member member = getMember();
+        List<TruckLike> truckLikeList = truckLikeRepository.findAllByMemberId(member.getId());
+        if (truckLikeList != null) {
+            truckLikeList.forEach(truckLikeRepository::delete);
+        }
+        List<EventLike> eventLikeList = eventLikeRepository.findAllByMemberId(member.getId());
+        if (eventLikeList != null) {
+            eventLikeList.forEach(eventLikeRepository::delete);
+        }
+        List<TruckManager> truckManagerList = truckManagerRepository.findAllByMember(member);
+        if (truckManagerList != null) {
+            truckManagerList.forEach(truckManager -> {
+                if (truckManager.getRole().equals(TruckManagerRole.OWNER)) {
+                    truckService.deleteTruck(truckManager.getTruck().getId());
+                }
+                truckManagerRepository.delete(truckManager);
+            });
+        }
+        List<Event> eventList = eventRepository.findAllByCreatedBy(member.getId());
+        if (eventList != null) {
+            eventList.forEach(event -> eventService.deleteEvent(event.getId()));
+        }
         memberRepository.delete(member);
     }
 

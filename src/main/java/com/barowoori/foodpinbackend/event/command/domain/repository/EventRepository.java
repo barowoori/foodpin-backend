@@ -11,4 +11,5 @@ import java.util.List;
 public interface EventRepository extends JpaRepository<Event, String>, EventRepositoryCustom {
     List<Event> findByRecruitDetail_RecruitingStatusIn(List<EventRecruitingStatus> statuses);
     List<Event> findByRecruitDetail_RecruitingStatusAndRecruitDetail_RecruitEndDateTimeLessThanEqual(EventRecruitingStatus recruitingStatus, LocalDateTime time);
+    List<Event> findAllByCreatedBy(String createdBy);
 }

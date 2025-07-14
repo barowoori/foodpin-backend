@@ -219,7 +219,7 @@ public class MemberController {
     }
 
 
-    @Operation(summary = "임시 회원삭제", description = "Authorization 헤더에 RefreshToken 입력, 임시 회원 삭제 기능")
+    @Operation(summary = "회원탈퇴", description = "Authorization 헤더에 RefreshToken 입력")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(리프레쉬 토큰 만료), 리프레시 토큰이 일치하지 않는 경우[20005]",
@@ -227,11 +227,28 @@ public class MemberController {
             @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @DeleteMapping("/v1/test")
+    @DeleteMapping("/v1/delete")
     public ResponseEntity<CommonResponse<String>> deleteMember(HttpServletRequest request) {
         memberService.deleteMember();
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Member deleted successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "fcm token 설정")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(리프레쉬 토큰 만료), 리프레시 토큰이 일치하지 않는 경우[20005]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping("/v1/fcm-token")
+    public ResponseEntity<CommonResponse<String>> setFcmToken(@RequestParam String fcmToken) {
+        memberService.setFcmToken(fcmToken);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Member fcm token set successfully.")
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }

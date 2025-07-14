@@ -8,6 +8,8 @@ import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.document.command.domain.repository.BusinessRegistrationRepository;
 import com.barowoori.foodpinbackend.event.command.application.service.EventService;
 import com.barowoori.foodpinbackend.event.command.domain.model.EventApplication;
+import com.barowoori.foodpinbackend.event.command.domain.model.EventApplicationStatus;
+import com.barowoori.foodpinbackend.event.command.domain.model.EventRecruitingStatus;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventApplicationRepository;
 import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepository;
@@ -378,13 +380,18 @@ public class TruckService {
         NotificationEvent.raise(new ManagerRemovedNotificationEvent(truck.getName(), memberId));
     }
 
+    //TODO 참여 행사 중 진행 중인 것 있는 지 확인 로직 추가 필요
     @Transactional
     public void deleteTruck(String truckId) {
         TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(truckId, getMemberId());
         if (truckManager != null && Objects.equals(truckManager.getRole(), TruckManagerRole.OWNER)) {
             List<EventApplication> eventApplicationList = eventApplicationRepository.findAllByTruckId(truckId);
             if (eventApplicationList != null) {
-                eventApplicationList.forEach(eventApplication -> eventService.cancelEventApplication(eventApplication.getId()));
+                eventApplicationList.forEach(eventApplication -> {
+                    if (eventApplication.getStatus().equals(EventApplicationStatus.PENDING)) {
+                        eventService.cancelEventApplication(eventApplication.getId());
+                    }
+                });
             }
             List<TruckLike> truckLikeList = truckLikeRepository.findAllByTruckId(truckId);
             if (truckLikeList != null) {

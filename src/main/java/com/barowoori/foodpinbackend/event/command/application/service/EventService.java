@@ -236,7 +236,7 @@ public class EventService {
         if (!event.isCreator(memberId)) {
             throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
         }
-        if (EventDateCalculator.getMinDate(event).isAfter(LocalDate.now())){
+        if (EventDateCalculator.getMinDate(event).isAfter(LocalDate.now()) && EventDateCalculator.getMaxDate(event).isBefore(LocalDate.now())){
             throw new CustomException(EventErrorCode.ALREADY_IN_PROGRESS_EVENT);
         }
 

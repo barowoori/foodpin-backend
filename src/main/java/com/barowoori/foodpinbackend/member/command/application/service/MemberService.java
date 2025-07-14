@@ -200,7 +200,15 @@ public class MemberService {
         if (eventList != null) {
             eventList.forEach(event -> eventService.deleteEvent(event.getId()));
         }
-        memberRepository.delete(member);
+        member.delete();
+        memberRepository.save(member);
+    }
+
+    @Transactional
+    public void setFcmToken(String fcmToken) {
+        Member member = getMember();
+        member.updateFcmToken(fcmToken);
+        memberRepository.save(member);
     }
 
     @Transactional

@@ -8,6 +8,7 @@ import com.barowoori.foodpinbackend.file.infra.domain.ImageDirectory;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
@@ -64,6 +65,10 @@ public class Member implements UserDetails {
     @Column(name = "fcm_token", length = 1000)
     private String fcmToken;
 
+    @ColumnDefault("0")
+    @Column(name = "is_deleted")
+    private Boolean isDeleted = false;
+
     protected Member() {
     }
 
@@ -76,6 +81,15 @@ public class Member implements UserDetails {
         this.types.add(MemberType.NORMAL);
         this.socialLoginInfo = socialLoginInfo;
         this.refreshToken = refreshToken;
+    }
+
+    public void delete() {
+        this.phone = "";
+        this.nickname = "";
+        this.refreshToken = null;
+        this.socialLoginInfo = null;
+        this.fcmToken = null;
+        this.isDeleted = true;
     }
 
     public void updateProfile(String nickname, File image) {

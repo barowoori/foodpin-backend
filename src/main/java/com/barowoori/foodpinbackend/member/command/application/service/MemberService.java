@@ -171,6 +171,7 @@ public class MemberService {
         Member member = getMember();
         if (member.matchRefreshToken(refreshToken)) {
             member.updateRefreshToken(null);
+            member.updateFcmToken(null);
             memberRepository.save(member);
         } else
             throw new CustomException(MemberErrorCode.REFRESH_TOKEN_MATCH_FAILED);

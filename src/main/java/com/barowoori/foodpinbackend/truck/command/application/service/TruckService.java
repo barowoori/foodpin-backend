@@ -7,10 +7,11 @@ import com.barowoori.foodpinbackend.document.command.domain.model.BusinessRegist
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.document.command.domain.repository.BusinessRegistrationRepository;
 import com.barowoori.foodpinbackend.event.command.application.service.EventService;
-import com.barowoori.foodpinbackend.event.command.domain.model.EventApplication;
-import com.barowoori.foodpinbackend.event.command.domain.model.EventApplicationStatus;
-import com.barowoori.foodpinbackend.event.command.domain.model.EventRecruitingStatus;
+import com.barowoori.foodpinbackend.event.command.domain.exception.EventErrorCode;
+import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventApplicationRepository;
+import com.barowoori.foodpinbackend.event.command.domain.repository.EventTruckRepository;
+import com.barowoori.foodpinbackend.event.command.domain.service.EventDateCalculator;
 import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepository;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
@@ -48,6 +49,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -78,6 +80,7 @@ public class TruckService {
     private final EventApplicationRepository eventApplicationRepository;
     private final EventService eventService;
     private final TruckLikeRepository truckLikeRepository;
+    private final EventTruckRepository eventTruckRepository;
 
     private String getMemberId() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
@@ -380,11 +383,11 @@ public class TruckService {
         NotificationEvent.raise(new ManagerRemovedNotificationEvent(truck.getName(), memberId));
     }
 
-    //TODO 참여 행사 중 진행 중인 것 있는 지 확인 로직 추가 필요
     @Transactional
     public void deleteTruck(String truckId) {
         TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(truckId, getMemberId());
         if (truckManager != null && Objects.equals(truckManager.getRole(), TruckManagerRole.OWNER)) {
+            Truck truck = getTruck(truckId);
             List<EventApplication> eventApplicationList = eventApplicationRepository.findAllByTruckId(truckId);
             if (eventApplicationList != null) {
                 eventApplicationList.forEach(eventApplication -> {
@@ -393,12 +396,19 @@ public class TruckService {
                     }
                 });
             }
+            List<EventTruck> eventTruckList = eventTruckRepository.findAllByTruck(truck);
+            if (eventTruckList != null) {
+                eventTruckList.forEach(eventTruck -> {
+                    Event event = eventTruck.getEvent();
+                    if (EventDateCalculator.getMinDate(event).isBefore(LocalDate.now()) && EventDateCalculator.getMaxDate(event).isAfter(LocalDate.now())){
+                        throw new CustomException(EventErrorCode.ALREADY_IN_PROGRESS_EVENT);
+                    }
+                });
+            }
             List<TruckLike> truckLikeList = truckLikeRepository.findAllByTruckId(truckId);
             if (truckLikeList != null) {
                 truckLikeList.forEach(truckLikeRepository::delete);
             }
-
-            Truck truck = getTruck(truckId);
             truck.delete();
         } else throw new CustomException(TruckErrorCode.TRUCK_OWNER_NOT_FOUND);
     }

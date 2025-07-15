@@ -225,11 +225,14 @@ public class MemberController {
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(리프레쉬 토큰 만료), 리프레시 토큰이 일치하지 않는 경우[20005]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "400", description = "사용자 소유 트럭이 현재 진행중인 행사에 참여중인 경우, 사용자 주최 행사가 진행중인 경우[40023]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @DeleteMapping("/v1/delete")
     public ResponseEntity<CommonResponse<String>> deleteMember(HttpServletRequest request) {
-        memberService.deleteMember();
+        String refreshToken = jwtTokenProvider.resolveToken(request);
+        memberService.deleteMember(refreshToken);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Member deleted successfully.")
                 .build();
@@ -242,6 +245,8 @@ public class MemberController {
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(리프레쉬 토큰 만료), 리프레시 토큰이 일치하지 않는 경우[20005]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "400", description = "해당 회원 정보가 없을 경우[20004]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/v1/fcm-token")

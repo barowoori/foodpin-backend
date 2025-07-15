@@ -178,8 +178,11 @@ public class MemberService {
     }
 
     @Transactional
-    public void deleteMember() {
+    public void deleteMember(String refreshToken) {
         Member member = getMember();
+        if (!member.matchRefreshToken(refreshToken)) {
+            throw new CustomException(MemberErrorCode.REFRESH_TOKEN_MATCH_FAILED);
+        }
         List<TruckLike> truckLikeList = truckLikeRepository.findAllByMemberId(member.getId());
         if (truckLikeList != null) {
             truckLikeList.forEach(truckLikeRepository::delete);

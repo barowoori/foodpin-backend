@@ -366,7 +366,7 @@ public class EventService {
         if (eventNotice == null) {
             throw new CustomException(EventErrorCode.EVENT_NOTICE_NOT_FOUND);
         }
-        if (eventNotice.getEvent().isCreator(memberId)) {
+        if (!eventNotice.getEvent().isCreator(memberId)) {
             throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
         }
         return ResponseEvent.GetEventNoticeDetailForCreatorDto.of(eventNotice);

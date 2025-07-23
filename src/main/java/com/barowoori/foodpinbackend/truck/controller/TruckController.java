@@ -230,7 +230,7 @@ public class TruckController {
     })
     @PutMapping(value = "/v1/{truckId}/info")
     public ResponseEntity<CommonResponse<String>> updateTruckInfo(@Valid @PathVariable("truckId") String truckId,
-                                                                  @RequestBody RequestTruck.UpdateTruckInfoDto updateTruckInfoDto) {
+                                                                  @Valid @RequestBody RequestTruck.UpdateTruckInfoDto updateTruckInfoDto) {
         truckService.updateTruckInfo(truckId, updateTruckInfoDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Truck info updated successfully.")

@@ -138,7 +138,7 @@ public class EventController {
     })
     @PutMapping(value = "/v1/{eventId}/info")
     public ResponseEntity<CommonResponse<String>> updateEventInfo(@Valid @PathVariable("eventId") String eventId,
-                                                                  @RequestBody RequestEvent.UpdateEventInfoDto updateEventInfoDto) {
+                                                                  @Valid @RequestBody RequestEvent.UpdateEventInfoDto updateEventInfoDto) {
         eventService.updateEventInfo(eventId, updateEventInfoDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Event info updated successfully.")
@@ -174,7 +174,7 @@ public class EventController {
     })
     @PutMapping(value = "/v1/{eventId}/detail")
     public ResponseEntity<CommonResponse<String>> updateEventDetail(@Valid @PathVariable("eventId") String eventId,
-                                                                    @RequestBody RequestEvent.UpdateEventDetailDto updateEventDetailDto) {
+                                                                    @Valid @RequestBody RequestEvent.UpdateEventDetailDto updateEventDetailDto) {
         eventService.updateEventDetail(eventId, updateEventDetailDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Event detail info updated successfully.")

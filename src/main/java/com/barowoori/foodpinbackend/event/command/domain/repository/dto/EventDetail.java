@@ -11,6 +11,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
@@ -36,6 +37,7 @@ public class EventDetail {
     private Boolean isFullAttendanceRequired;
     private EventDocumentSubmissionTarget documentSubmissionTarget;
     private String submissionEmail;
+    private LocalDateTime recruitEndDateTime;
 
     public static EventDetail of(Event event, String memberId, Boolean isLike, ImageManager imageManager, List<RegionCode> regions) {
         return EventDetail.builder()
@@ -59,6 +61,7 @@ public class EventDetail {
                 .isFullAttendanceRequired(event.getRecruitDetail().getIsFullAttendanceRequired())
                 .documentSubmissionTarget(event.getDocumentSubmissionTarget())
                 .submissionEmail(event.getSubmissionEmail())
+                .recruitEndDateTime(event.getRecruitDetail().getRecruitEndDateTime())
                 .build();
 
     }

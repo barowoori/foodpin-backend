@@ -37,6 +37,18 @@ public class ResponseTruck {
 
     @Builder
     @Data
+    public static class GetAppliedEventCountDto {
+        private Integer count;
+
+        public static GetAppliedEventCountDto of(Integer count) {
+            return GetAppliedEventCountDto.builder()
+                    .count(count)
+                    .build();
+        }
+    }
+
+    @Builder
+    @Data
     public static class GetBusinessRegistrationInfo {
         private String businessNumber;
         private String businessName;

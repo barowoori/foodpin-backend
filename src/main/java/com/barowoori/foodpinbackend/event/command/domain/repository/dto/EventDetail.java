@@ -34,6 +34,8 @@ public class EventDetail {
     private String description;
     private String guidelines;
     private Boolean isFullAttendanceRequired;
+    private EventDocumentSubmissionTarget documentSubmissionTarget;
+    private String submissionEmail;
 
     public static EventDetail of(Event event, String memberId, Boolean isLike, ImageManager imageManager, List<RegionCode> regions) {
         return EventDetail.builder()
@@ -55,6 +57,8 @@ public class EventDetail {
                 .guidelines(event.getGuidelines())
                 .isLike(isLike)
                 .isFullAttendanceRequired(event.getRecruitDetail().getIsFullAttendanceRequired())
+                .documentSubmissionTarget(event.getDocumentSubmissionTarget())
+                .submissionEmail(event.getSubmissionEmail())
                 .build();
 
     }

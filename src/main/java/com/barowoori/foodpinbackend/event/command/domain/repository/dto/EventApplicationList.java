@@ -27,6 +27,7 @@ public class EventApplicationList {
                     .id(truck.getId())
                     .name(truck.getName())
                     .photo(truck.getTruckMainPhotoUrl(imageManager))
+                    .menuNames(truck.getSortedTruckMenuNames())
                     .approval(truck.approval())
                     .build();
         }

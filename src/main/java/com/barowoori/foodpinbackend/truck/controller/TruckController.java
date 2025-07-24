@@ -219,6 +219,24 @@ public class TruckController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "지원한 행사 갯수 조회", description = "소유자 뿐만 아니라 운영자도 트럭 조회 가능")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
+                    "멤버를 못 찾을 경우[20004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/{truckId}/applications/applied/count")
+    public ResponseEntity<CommonResponse<ResponseTruck.GetAppliedEventCountDto>> getAppliedEventCount(@Valid @PathVariable("truckId") String truckId) {
+        ResponseTruck.GetAppliedEventCountDto response = truckQueryService.getTruckAppliedEventCount(truckId);
+        CommonResponse<ResponseTruck.GetAppliedEventCountDto> commonResponse = CommonResponse.<ResponseTruck.GetAppliedEventCountDto>builder()
+                .data(response)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
     @Operation(summary = "트럭 기본 정보 수정")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),

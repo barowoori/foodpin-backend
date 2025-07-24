@@ -62,6 +62,7 @@ public class TruckEventApplicationList {
         private String photo;
         private String name;
         private String region;
+        private Boolean isDeleted;
 
         public static EventInfo of(Event event, List<String> regions, ImageManager imageManager) {
             return EventInfo.builder()
@@ -71,6 +72,7 @@ public class TruckEventApplicationList {
                             .findFirst().orElse(null))
                     .name(event.getName())
                     .region(regions.isEmpty() ? null : regions.getFirst())
+                    .isDeleted(event.getIsDeleted())
                     .build();
         }
     }

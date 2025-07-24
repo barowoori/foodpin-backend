@@ -299,7 +299,7 @@ public class EventService {
             EventApplicationDate eventApplicationDate = EventApplicationDate.builder().eventDate(eventDate).eventApplication(eventApplication).build();
             eventApplicationDateRepository.save(eventApplicationDate);
         }
-
+        event.getRecruitDetail().addApplicantCount();
         NotificationEvent.raise(new ApplicationReceivedNotificationEvent(event.getId(), event.getName(), eventApplication.getId()));
         NotificationEvent.raise(new EventAppliedTruckDocumentSubmissionEvent(event, truck));
     }

@@ -96,9 +96,9 @@ public class EventManagementController {
             @ApiResponse(responseCode = "404", description = "지원 정보를 못 찾을 경우[40009], 트럭 정보를 못 찾을 경우[40012]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PutMapping("/v1/selections/{eventApplicationId}/cancel")
-    public ResponseEntity<CommonResponse<String>> cancelEventSelection(@PathVariable("eventApplicationId") String eventApplicationId) {
-        eventManagementService.cancelEventSelection(eventApplicationId);
+    @PutMapping("/v1/selections/{eventTruckId}/cancel")
+    public ResponseEntity<CommonResponse<String>> cancelEventSelection(@PathVariable("eventTruckId") String eventTruckId) {
+        eventManagementService.cancelEventSelection(eventTruckId);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Event selection canceled successfully.")
                 .build();

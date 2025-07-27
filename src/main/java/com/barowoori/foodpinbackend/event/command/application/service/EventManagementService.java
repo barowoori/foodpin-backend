@@ -132,9 +132,13 @@ public class EventManagementService {
     }
 
     @Transactional
-    public void cancelEventSelection(String eventApplicationId) {
-        EventApplication application = eventApplicationRepository.findById(eventApplicationId)
-                .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_APPLICATION_NOT_FOUND));
+    public void cancelEventSelection(String eventTruckId) {
+        EventTruck eventTruck = eventTruckRepository.findById(eventTruckId)
+                .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_TRUCK_NOT_FOUND));
+        EventApplication application = eventApplicationRepository.findByTruckIdAndEventId(eventTruck.getTruck().getId(), eventTruck.getEvent().getId());
+        if (application == null) {
+            throw new CustomException(EventErrorCode.EVENT_APPLICATION_NOT_FOUND);
+        }
 
         Event event = application.getEvent();
         if (!event.isCreator(getMemberId())) {
@@ -144,10 +148,6 @@ public class EventManagementService {
             throw new CustomException(EventErrorCode.EVENT_APPLICATION_NOT_SELECTED);
         }
 
-        EventTruck eventTruck = eventTruckRepository.findByEventAndTruck(event, application.getTruck());
-        if (eventTruck == null) {
-            throw new CustomException(EventErrorCode.EVENT_TRUCK_NOT_FOUND);
-        }
         if (eventTruck.getStatus() == EventTruckStatus.CONFIRMED) {
             throw new CustomException(EventErrorCode.ALREADY_CONFIRMED_EVENT_TRUCK);
         }

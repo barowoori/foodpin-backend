@@ -23,6 +23,11 @@ public class FileController {
     @Operation(summary = "파일 저장", description = "파일 업로드 시 파일 아이디 반환")
     @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CommonResponse<ResponseFile.FileId>> uploadFile(@Valid @RequestPart(name = "file") MultipartFile file){
+        System.out.println("받은 파일 크기: " + file.getSize() + " bytes");
+        System.out.println("파일 크기 (MB): " + (file.getSize() / 1024.0 / 1024.0));
+        System.out.println("파일명: " + file.getOriginalFilename());
+
+
         ResponseFile.FileId response = fileService.upload(file);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(CommonResponse.<ResponseFile.FileId>builder()

@@ -227,4 +227,15 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
 
         return new PageImpl<>(trucks, pageable, total);
     }
+
+    @Override
+    public List<Truck> findAllApplicableTrucks(String memberId) {
+        return jpaQueryFactory.selectDistinct(truck)
+                .from(truck)
+                .innerJoin(truckManager).on(truckManager.truck.eq(truck).and(truckManager.member.id.eq(memberId)))
+                .leftJoin(truck.documents, truckDocument).fetchJoin()
+                .where(truck.isDeleted.isFalse())
+                .orderBy(truck.name.asc())
+                .fetch();
+    }
 }

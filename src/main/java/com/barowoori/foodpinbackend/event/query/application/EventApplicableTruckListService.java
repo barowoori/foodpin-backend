@@ -1,6 +1,8 @@
 package com.barowoori.foodpinbackend.event.query.application;
 
+import com.barowoori.foodpinbackend.common.exception.CustomException;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
+import com.barowoori.foodpinbackend.event.command.domain.exception.EventErrorCode;
 import com.barowoori.foodpinbackend.event.command.domain.model.EventApplication;
 import com.barowoori.foodpinbackend.event.command.domain.model.EventDocument;
 import com.barowoori.foodpinbackend.event.command.domain.model.EventTruck;
@@ -41,7 +43,21 @@ public class EventApplicableTruckListService {
             return trucks.map(truck -> EventApplicableTruckList.of(truck,eventApplications, new ArrayList<>()));
         }
         List<DocumentType> eventDocuments = eventDocumentRepository.findByEventId(eventId).stream().map(EventDocument::getType).toList();
-        return trucks.map(truck -> EventApplicableTruckList.of(truck,eventApplications, findMissingDocuments(eventDocuments, truck.getDocuments().stream().toList())));
+        
+        // 전체 트럭 지원 가능 여부 확인 (페이지네이션 무시)
+        List<Truck> allTrucks = truckRepository.findAllApplicableTrucks(memberId);
+        boolean allTrucksIneligible = allTrucks.stream()
+                .allMatch(truck -> !findMissingDocuments(eventDocuments, truck.getDocuments().stream().toList()).isEmpty());
+        
+        if (allTrucksIneligible) {
+            throw new CustomException(EventErrorCode.NO_APPLICABLE_TRUCKS);
+        }
+        
+        // 페이지네이션된 결과 반환
+        return trucks.map(truck -> {
+            List<DocumentType> missingDocuments = findMissingDocuments(eventDocuments, truck.getDocuments().stream().toList());
+            return EventApplicableTruckList.of(truck, eventApplications, missingDocuments);
+        });
     }
 
     private List<DocumentType> findMissingDocuments(List<DocumentType> eventDocuments, List<TruckDocument> truckDocuments) {

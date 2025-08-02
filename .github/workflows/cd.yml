@@ -74,8 +74,8 @@ jobs:
           echo "spring:" >> ${APP_CONFIG_FILE}
           echo "  servlet:" >> ${APP_CONFIG_FILE}
           echo "    multipart:" >> ${APP_CONFIG_FILE}
-          echo "      max-file-size: 30MB" >> ${APP_CONFIG_FILE}
-          echo "      max-request-size: 30MB" >> ${APP_CONFIG_FILE}
+          echo "      max-file-size: 50MB" >> ${APP_CONFIG_FILE}
+          echo "      max-request-size: 50MB" >> ${APP_CONFIG_FILE}
           echo "      enabled: true" >> ${APP_CONFIG_FILE}
           echo "  data:" >> ${APP_CONFIG_FILE}
           echo "    web:" >> ${APP_CONFIG_FILE}
@@ -103,7 +103,10 @@ jobs:
           echo "          auth: true" >> ${APP_CONFIG_FILE}
           echo "          starttls:" >> ${APP_CONFIG_FILE}
           echo "            enable: true" >> ${APP_CONFIG_FILE}
-
+          echo "server:" >> ${APP_CONFIG_FILE}
+          echo "  tomcat:" >> ${APP_CONFIG_FILE}
+          echo "    max-swallow-size: 50MB" >> ${APP_CONFIG_FILE}
+          echo "    max-http-post-size: 50MB" >> ${APP_CONFIG_FILE}
       # application-S3.properties 생성
       - name: Create aws-s3-config.yml
         env: # 환경 변수로 GitHub Secrets 값을 읽어옵니다.

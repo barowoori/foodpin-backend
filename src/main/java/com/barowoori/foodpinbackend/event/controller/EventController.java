@@ -450,6 +450,8 @@ public class EventController {
     @Operation(summary = "행사 지원할 푸드트럭 목록 조회", description = "")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "지원 가능한 트럭이 없을 경우[40024]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })

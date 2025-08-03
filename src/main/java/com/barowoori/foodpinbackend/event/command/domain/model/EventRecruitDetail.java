@@ -58,7 +58,8 @@ public class EventRecruitDetail {
     @JoinColumn(name = "events_id")
     private Event event;
 
-    protected EventRecruitDetail(){}
+    protected EventRecruitDetail() {
+    }
 
     @Builder
     public EventRecruitDetail(LocalDateTime recruitEndDateTime, Integer recruitCount, Integer applicantCount, Integer selectedCount,
@@ -79,7 +80,7 @@ public class EventRecruitDetail {
     }
 
     public void update(LocalDateTime recruitEndDateTime, Integer recruitCount,
-                       Boolean generatorRequirement, Boolean electricitySupportAvailability, Integer entryFee){
+                       Boolean generatorRequirement, Boolean electricitySupportAvailability, Integer entryFee) {
         this.recruitEndDateTime = recruitEndDateTime;
         this.recruitCount = recruitCount;
         this.generatorRequirement = generatorRequirement;
@@ -87,11 +88,15 @@ public class EventRecruitDetail {
         this.entryFee = entryFee;
     }
 
-    public void updateStatus(EventRecruitingStatus status){
+    public void updateStatus(EventRecruitingStatus status) {
         this.recruitingStatus = status;
     }
 
     public void closeSelection() {
         this.isSelecting = Boolean.FALSE;
+    }
+
+    public void addApplicantCount() {
+        this.applicantCount += 1;
     }
 }

@@ -13,4 +13,5 @@ public interface TruckRepositoryCustom {
     Page<Truck> findTruckListByFilter(String searchTerm, List<String> categoryNames, Map<RegionType, List<String>> regionIds, Pageable pageable);
     Page<Truck> findLikeTruckListByFilter(String memberId, String searchTerm, List<String> categoryCodes, Map<RegionType, List<String>> regionIds, Pageable pageable);
     Page<Truck> findApplicableTrucks(String memberId, Pageable pageable);
+    List<Truck> findAllApplicableTrucks(String memberId);
 }

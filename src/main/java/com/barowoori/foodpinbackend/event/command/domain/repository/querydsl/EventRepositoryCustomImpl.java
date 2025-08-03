@@ -68,7 +68,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .leftJoin(event.eventDates, eventDate)
                 .leftJoin(event.categories, eventCategory)
                 .leftJoin(eventCategory.category, category)
-                .innerJoin(event.recruitDetail, eventRecruitDetail)
+                .innerJoin(event.recruitDetail, eventRecruitDetail).fetchJoin()
                 .leftJoin(event.view, eventView)
                 .leftJoin(event.photos, eventPhoto)
                 .leftJoin(eventPhoto.file, file)
@@ -115,7 +115,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .leftJoin(event.eventDates, eventDate)
                 .leftJoin(event.categories, eventCategory)
                 .leftJoin(eventCategory.category, category)
-                .innerJoin(event.recruitDetail, eventRecruitDetail)
+                .innerJoin(event.recruitDetail, eventRecruitDetail).fetchJoin()
                 .leftJoin(event.view, eventView)
                 .leftJoin(event.photos, eventPhoto)
                 .leftJoin(eventPhoto.file, file)
@@ -211,19 +211,16 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
 
     private List<OrderSpecifier> getOrderSpecifier(Sort sort) {
         List<OrderSpecifier> orders = new ArrayList<>();
-        PathBuilder<Event> eventPathBuilder = new PathBuilder<>(Event.class, "event");
-        PathBuilder<EventRecruitDetail> eventRecruitDetailPathBuilder = new PathBuilder<>(EventRecruitDetail.class, "eventRecruitDetail");
 
         sort.stream().forEach(order -> {
             Order direction = order.isAscending() ? Order.ASC : Order.DESC;
             if (order.getProperty().equals("createdAt")) { //최신순
-                orders.add(new OrderSpecifier(direction, eventPathBuilder.get(order.getProperty())));
+                orders.add(new OrderSpecifier(direction, event.createdAt));
+            } else if (order.getProperty().equals("applicant")) { //지원순
+                orders.add(new OrderSpecifier(direction, eventRecruitDetail.applicantCount));
+            } else if (order.getProperty().equals("deadline")) { //마감순
+                orders.add(new OrderSpecifier(direction, eventRecruitDetail.recruitEndDateTime));
             }
-//            else if (order.getProperty().equals("applicant")) { //지원순
-//                orders.add(new OrderSpecifier(direction, eventRecruitDetailPathBuilder.get("applicantCount")));
-//            } else if (order.getProperty().equals("deadline")) { //마감순
-//                orders.add(new OrderSpecifier(direction, eventRecruitDetailPathBuilder.get("recruitEndDateTime")));
-//            }
         });
 
         return orders;
@@ -231,15 +228,15 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
 
     private List<OrderSpecifier> getLikeOrderSpecifier(Sort sort) {
         List<OrderSpecifier> orders = new ArrayList<>();
-        PathBuilder<Event> eventPathBuilder = new PathBuilder<>(Event.class, "event");
-        PathBuilder<EventRecruitDetail> eventRecruitDetailPathBuilder = new PathBuilder<>(EventRecruitDetail.class, "eventRecruitDetail");
 
         sort.stream().forEach(order -> {
             Order direction = order.isAscending() ? Order.ASC : Order.DESC;
             if (order.getProperty().equals("createdAt")) { //최신순
-                orders.add(new OrderSpecifier(direction, eventPathBuilder.get(order.getProperty())));
+                orders.add(new OrderSpecifier(direction, event.createdAt));
+            } else if (order.getProperty().equals("applicant")) { //지원순
+                orders.add(new OrderSpecifier(direction, eventRecruitDetail.applicantCount));
             } else if (order.getProperty().equals("deadline")) { //마감순
-                orders.add(new OrderSpecifier(direction, eventRecruitDetailPathBuilder.get("recruitEndDateTime")));
+                orders.add(new OrderSpecifier(direction, eventRecruitDetail.recruitEndDateTime));
             }
         });
 
@@ -322,8 +319,13 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                             .or(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITMENT_CLOSED)
                                     .and(eventRecruitDetail.isSelecting.isTrue()))
                     );
-        } else {
-            filterBuilder.and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.valueOf(status)));
+        }
+        if (status.equals(EventRecruitingStatus.RECRUITING.toString())) {
+            filterBuilder.and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING));
+        }
+        if (status.equals(EventRecruitingStatus.RECRUITMENT_CLOSED.toString())) {
+            filterBuilder.and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITMENT_CLOSED)
+                    .and(eventRecruitDetail.isSelecting.isTrue()));
         }
         return filterBuilder;
     }
@@ -380,7 +382,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
     }
 
     @Override
-    public List<MemberForEventFcmInfoDto> findRecruitmentDeadlineSoonEventCreatorsFcmInfo(){
+    public List<MemberForEventFcmInfoDto> findRecruitmentDeadlineSoonEventCreatorsFcmInfo() {
         LocalDateTime standardTime = LocalDateTime.now().withSecond(0).withNano(0).plusHours(6);
         return jpaQueryFactory
                 .select(Projections.constructor(MemberForEventFcmInfoDto.class, event.id, event.name, member.id, member.fcmToken))

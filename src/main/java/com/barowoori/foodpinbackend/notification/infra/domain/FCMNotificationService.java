@@ -45,24 +45,34 @@ public class FCMNotificationService implements NotificationService {
         }
     }
 
-    public void pushAlarmToToken(NotificationType type,  String title, String content, String token, NotificationTargetType targetType, String targetId) {
-        if (token == null || token.isEmpty()) {
-            return;
+    public void pushAlarmToToken(NotificationType type, String title, String content, String token, NotificationTargetType targetType, String targetId) {
+        try {
+
+            if (token == null || token.isEmpty()) {
+                return;
+            }
+            if (targetId == null) {
+                targetId = "";
+            }
+
+            Notification notification = Notification.builder()
+                    .setTitle(title)
+                    .setBody(content)
+                    .build();
+            Message.Builder builder = Message.builder();
+            Message message = builder
+                    .setToken(token)
+                    .setNotification(notification)
+                    .putData("type", type.name())
+                    .putData("targetType", targetType.toString())
+                    .putData("targetId", targetId)
+                    .build();
+            sendMessage(message);
+            log.info("fcm content : {}", content);
+        } catch (Exception e) {
+            log.info("token : {}, title : {}, content : {}", token, title, content);
+
         }
-        Notification notification = Notification.builder()
-                .setTitle(title)
-                .setBody(content)
-                .build();
-        Message.Builder builder = Message.builder();
-        Message message = builder
-                .setToken(token)
-                .setNotification(notification)
-                .putData("type", type.name())
-                .putData("targetType", targetType.toString())
-                .putData("targetId", targetId)
-                .build();
-        sendMessage(message);
-        log.info("fcm content : {}", content);
     }
 
     public void sendMessage(Message message) {

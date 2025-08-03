@@ -1,5 +1,6 @@
 package com.barowoori.foodpinbackend.event.query;
 
+import com.barowoori.foodpinbackend.common.exception.CustomException;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.event.command.domain.model.Event;
 import com.barowoori.foodpinbackend.event.command.domain.model.EventDocument;
@@ -31,6 +32,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -112,15 +114,15 @@ public class EventApplicationTruckListServiceTests {
     }
 
     @Test
-    @DisplayName("행사에 필요한 서류가 없을 경우 해당 서류 리스트를 반환한다")
+    @DisplayName("행사에 필요한 서류가 없을 경우 에러 반환")
     void When_MissingDocumentExist_Then_ReturnThatList() {
         EventDocument businessLicense = createEventDocument(event, DocumentType.BUSINESS_LICENSE);
         EventDocument businessRegistration = createEventDocument(event, DocumentType.BUSINESS_REGISTRATION);
 
         Pageable pageable = PageRequest.of(0, 10, Sort.unsorted());
-        Page<EventApplicableTruckList> result = eventApplicableTruckListService.findApplicableTrucks(event.getId(), member.getId(), pageable);
-        assertEquals(1, result.stream().findFirst().get().getMissingDocuments().size());
-        System.out.println(result.stream().findFirst().get().getMissingDocuments());
+        CustomException exception = assertThrows(CustomException.class, () -> {
+            eventApplicableTruckListService.findApplicableTrucks(event.getId(), member.getId(), pageable);
+        });
     }
 
 

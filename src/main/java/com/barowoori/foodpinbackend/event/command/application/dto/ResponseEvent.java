@@ -43,6 +43,7 @@ public class ResponseEvent {
             return GetEventNoticeDetailForCreatorDto.builder()
                     .id(eventNotice.getId())
                     .title(eventNotice.getTitle())
+                    .content(eventNotice.getContent())
                     .createdAt(eventNotice.getCreatedAt())
                     .isAvailableUpdate(eventNotice.getReadEventTrucks().isEmpty())
                     .isAvailableDelete(eventNotice.getReadEventTrucks().isEmpty())
@@ -65,6 +66,7 @@ public class ResponseEvent {
             return GetEventNoticeDetailForTruckDto.builder()
                     .id(eventNotice.getId())
                     .title(eventNotice.getTitle())
+                    .content(eventNotice.getContent())
                     .createdAt(eventNotice.getCreatedAt())
                     .build();
         }

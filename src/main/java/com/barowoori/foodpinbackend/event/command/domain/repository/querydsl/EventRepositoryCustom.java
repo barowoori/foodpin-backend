@@ -23,6 +23,8 @@ public interface EventRepositoryCustom {
 
     List<Event> findEventsEndedAndStillSelecting(LocalDateTime now);
 
+    List<Event> findEventsEnded(LocalDateTime now);
+
     Page<Event> findProgressEventManageList(String memberId, String status, Pageable pageable);
     Page<Event> findCompletedEventManageList(String memberId, String status, Pageable pageable);
     MemberFcmInfoDto findEventCreatorFcmInfo(String eventId);

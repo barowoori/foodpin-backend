@@ -63,6 +63,7 @@ public class FCMNotificationService implements NotificationService {
             Message message = builder
                     .setToken(token)
                     .setNotification(notification)
+                    .putData("title", type.getName())
                     .putData("type", type.name())
                     .putData("targetType", targetType.toString())
                     .putData("targetId", targetId)

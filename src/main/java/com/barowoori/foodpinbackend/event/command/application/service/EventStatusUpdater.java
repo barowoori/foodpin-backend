@@ -92,7 +92,7 @@ public class EventStatusUpdater {
 
     @Scheduled(cron = "0 0 0 * * *")
     @Transactional
-    public void cancelEventTruckByEndDate() {
+    public void cancelEventTruckSelectionByEndDate() {
         LocalDateTime now = LocalDateTime.now();
         List<Event> expiredEvents = eventRepository.findEndedEventsByIsSelecting(now, false);
 

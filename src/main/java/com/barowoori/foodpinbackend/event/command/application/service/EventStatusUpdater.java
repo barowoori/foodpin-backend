@@ -3,7 +3,10 @@ package com.barowoori.foodpinbackend.event.command.application.service;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventApplicationRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventRepository;
+import com.barowoori.foodpinbackend.event.command.domain.repository.EventTruckDateRepository;
+import com.barowoori.foodpinbackend.event.command.domain.repository.EventTruckRepository;
 import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.event.SelectionCanceledNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.SelectionNotSelectedNotificationEvent;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +21,9 @@ import java.util.List;
 public class EventStatusUpdater {
     private final EventRepository eventRepository;
     private final EventApplicationRepository eventApplicationRepository;
+    private final EventTruckRepository eventTruckRepository;
+    private final EventTruckDateRepository eventTruckDateRepository;
+
     @Scheduled(cron = "0 0 0 * * *")
     @Transactional
     public void closeRecruitingEventsByDeadline() {
@@ -27,6 +33,17 @@ public class EventStatusUpdater {
                         EventRecruitingStatus.RECRUITING, now);
         for (Event event : eventsToClose) {
             event.updateStatus(EventRecruitingStatus.RECRUITMENT_CLOSED);
+            List<EventApplication> pendingApplications = eventApplicationRepository.findAllByEventAndStatus(event, EventApplicationStatus.PENDING);
+            for (EventApplication application : pendingApplications) {
+                application.reject();
+                eventApplicationRepository.save(application);
+
+                NotificationEvent.raise(new SelectionNotSelectedNotificationEvent(
+                        event.getId(),
+                        event.getName(),
+                        application.getId()
+                ));
+            }
         }
     }
 
@@ -55,6 +72,41 @@ public class EventStatusUpdater {
                         event.getId(),
                         event.getName(),
                         application.getId()
+                ));
+            }
+
+            List<EventTruck> eventTrucks = eventTruckRepository.findAllByEventAndStatus(event, EventTruckStatus.PENDING);
+            for (EventTruck eventTruck : eventTrucks) {
+                List<EventTruckDate> eventTruckDates = eventTruck.getDates();
+                eventTruckDateRepository.deleteAll(eventTruckDates);
+                eventTruckRepository.delete(eventTruck);
+
+                NotificationEvent.raise(new SelectionCanceledNotificationEvent(
+                        event.getId(),
+                        event.getName(),
+                        eventTruck.getTruck().getName()
+                ));
+            }
+        }
+    }
+
+    @Scheduled(cron = "0 0 0 * * *")
+    @Transactional
+    public void cancelEventTruckByEndDate() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Event> expiredEvents = eventRepository.findEventsEnded(now);
+
+        for (Event event : expiredEvents) {
+            List<EventTruck> eventTrucks = eventTruckRepository.findAllByEventAndStatus(event, EventTruckStatus.PENDING);
+            for (EventTruck eventTruck : eventTrucks) {
+                List<EventTruckDate> eventTruckDates = eventTruck.getDates();
+                eventTruckDateRepository.deleteAll(eventTruckDates);
+                eventTruckRepository.delete(eventTruck);
+
+                NotificationEvent.raise(new SelectionCanceledNotificationEvent(
+                        event.getId(),
+                        event.getName(),
+                        eventTruck.getTruck().getName()
                 ));
             }
         }

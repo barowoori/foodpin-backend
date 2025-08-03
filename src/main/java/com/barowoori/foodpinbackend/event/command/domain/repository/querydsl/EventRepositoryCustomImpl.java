@@ -10,7 +10,6 @@ import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -163,6 +162,20 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .where(event.isDeleted.isFalse()
                         .and(eventRecruitDetail.isSelecting.isTrue())
                 )
+                .groupBy(event.id)
+                .having(eventDate.date.max().loe(now.toLocalDate()))
+                .fetch();
+    }
+
+    @Override
+    public List<Event> findEventsEnded(LocalDateTime now) {
+        QEvent event = QEvent.event;
+        QEventDate eventDate = QEventDate.eventDate;
+
+        return jpaQueryFactory.select(event)
+                .from(event)
+                .join(event.eventDates, eventDate)
+                .where(event.isDeleted.isFalse())
                 .groupBy(event.id)
                 .having(eventDate.date.max().loe(now.toLocalDate()))
                 .fetch();

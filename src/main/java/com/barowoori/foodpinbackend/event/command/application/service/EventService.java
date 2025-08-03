@@ -187,11 +187,14 @@ public class EventService {
         EventRecruitDetail eventRecruitDetail = eventRecruitDetailRepository.findByEvent(event);
         if (eventRecruitDetail == null)
             throw new CustomException(EventErrorCode.EVENT_RECRUIT_DETAIL_NOT_FOUND);
-        eventRecruitDetailRepository.delete(eventRecruitDetail);
-        EventRecruitDetail updatedEventRecruitDetail = eventRecruitDto.toEntity(event);
-        eventRecruitDetailRepository.save(updatedEventRecruitDetail);
-        event.initEventRecruitDetail(updatedEventRecruitDetail);
-
+        eventRecruitDetail.update(
+                eventRecruitDto.getRecruitEndDateTime(),
+                eventRecruitDto.getRecruitCount(),
+                eventRecruitDto.getGeneratorRequirement(),
+                eventRecruitDto.getElectricitySupportAvailability(),
+                eventRecruitDto.getEntryFee()
+        );
+        eventRecruitDetailRepository.save(eventRecruitDetail);
         eventRepository.save(event);
     }
 

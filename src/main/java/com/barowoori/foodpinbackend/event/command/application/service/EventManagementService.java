@@ -98,8 +98,20 @@ public class EventManagementService {
             event.updateStatus(EventRecruitingStatus.RECRUITMENT_CLOSED);
         } else if (handleEventRecruitmentDto.getRecruitmentStatus().equals(EventRecruitingStatus.RECRUITMENT_CANCELLED)) {
             event.updateStatus(EventRecruitingStatus.RECRUITMENT_CANCELLED);
+            NotificationEvent.raise(new EventRecruitmentCanceledNotificationEvent(event.getId(), event.getName()));
         } else throw new CustomException(EventErrorCode.WRONG_EVENT_RECRUITMENT_STATUS);
-//        NotificationEvent.raise(new EventRecruitmentCanceledNotificationEvent(event.getId(), event.getName()));
+
+        List<EventApplication> pendingApplications = eventApplicationRepository.findAllByEventAndStatus(event, EventApplicationStatus.PENDING);
+        for (EventApplication application : pendingApplications) {
+            application.reject();
+            eventApplicationRepository.save(application);
+
+            NotificationEvent.raise(new SelectionNotSelectedNotificationEvent(
+                    event.getId(),
+                    event.getName(),
+                    application.getId()
+            ));
+        }
         eventRepository.save(event);
     }
 

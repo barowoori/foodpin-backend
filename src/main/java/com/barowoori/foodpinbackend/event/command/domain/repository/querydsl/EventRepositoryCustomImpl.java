@@ -150,7 +150,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
     }
 
     @Override
-    public List<Event> findEventsEndedAndStillSelecting(LocalDateTime now) {
+    public List<Event> findEndedEventsByIsSelecting(LocalDateTime now, Boolean isSelecting) {
         QEvent event = QEvent.event;
         QEventDate eventDate = QEventDate.eventDate;
         QEventRecruitDetail eventRecruitDetail = QEventRecruitDetail.eventRecruitDetail;
@@ -160,22 +160,8 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .join(event.eventDates, eventDate)
                 .join(event.recruitDetail, eventRecruitDetail)
                 .where(event.isDeleted.isFalse()
-                        .and(eventRecruitDetail.isSelecting.isTrue())
+                        .and(eventRecruitDetail.isSelecting.eq(isSelecting))
                 )
-                .groupBy(event.id)
-                .having(eventDate.date.max().loe(now.toLocalDate()))
-                .fetch();
-    }
-
-    @Override
-    public List<Event> findEventsEnded(LocalDateTime now) {
-        QEvent event = QEvent.event;
-        QEventDate eventDate = QEventDate.eventDate;
-
-        return jpaQueryFactory.select(event)
-                .from(event)
-                .join(event.eventDates, eventDate)
-                .where(event.isDeleted.isFalse())
                 .groupBy(event.id)
                 .having(eventDate.date.max().loe(now.toLocalDate()))
                 .fetch();

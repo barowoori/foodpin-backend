@@ -51,7 +51,7 @@ public class EventStatusUpdater {
     @Transactional
     public void closeSelectingEventsByEndDate() {
         LocalDateTime now = LocalDateTime.now();
-        List<Event> expiredEvents = eventRepository.findEventsEndedAndStillSelecting(now);
+        List<Event> expiredEvents = eventRepository.findEndedEventsByIsSelecting(now, true);
 
         for (Event event : expiredEvents) {
             EventRecruitDetail detail = event.getRecruitDetail();
@@ -92,9 +92,9 @@ public class EventStatusUpdater {
 
     @Scheduled(cron = "0 0 0 * * *")
     @Transactional
-    public void cancelEventTruckByEndDate() {
+    public void cancelEventTruckSelectionByEndDate() {
         LocalDateTime now = LocalDateTime.now();
-        List<Event> expiredEvents = eventRepository.findEventsEnded(now);
+        List<Event> expiredEvents = eventRepository.findEndedEventsByIsSelecting(now, false);
 
         for (Event event : expiredEvents) {
             List<EventTruck> eventTrucks = eventTruckRepository.findAllByEventAndStatus(event, EventTruckStatus.PENDING);

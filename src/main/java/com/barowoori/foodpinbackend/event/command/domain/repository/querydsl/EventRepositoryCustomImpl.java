@@ -319,8 +319,13 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                             .or(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITMENT_CLOSED)
                                     .and(eventRecruitDetail.isSelecting.isTrue()))
                     );
-        } else {
-            filterBuilder.and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.valueOf(status)));
+        }
+        if (status.equals(EventRecruitingStatus.RECRUITING.toString())) {
+            filterBuilder.and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING));
+        }
+        if (status.equals(EventRecruitingStatus.RECRUITMENT_CLOSED.toString())) {
+            filterBuilder.and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITMENT_CLOSED)
+                    .and(eventRecruitDetail.isSelecting.isTrue()));
         }
         return filterBuilder;
     }
@@ -377,7 +382,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
     }
 
     @Override
-    public List<MemberForEventFcmInfoDto> findRecruitmentDeadlineSoonEventCreatorsFcmInfo(){
+    public List<MemberForEventFcmInfoDto> findRecruitmentDeadlineSoonEventCreatorsFcmInfo() {
         LocalDateTime standardTime = LocalDateTime.now().withSecond(0).withNano(0).plusHours(6);
         return jpaQueryFactory
                 .select(Projections.constructor(MemberForEventFcmInfoDto.class, event.id, event.name, member.id, member.fcmToken))

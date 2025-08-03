@@ -62,7 +62,7 @@ public class EventNotificationEventHandler {
         if (eventCreatorFcmInfo == null) {
             return;
         }
-        notificationService.pushAlarmToToken(type, targetType.name(), content, eventCreatorFcmInfo.getFcmToken(), targetType, event.getEventApplicationId());
+        notificationService.pushAlarmToToken(type, type.getName(), content, eventCreatorFcmInfo.getFcmToken(), targetType, event.getEventApplicationId());
 
         savePushAlarmHistory(eventCreatorFcmInfo.getMemberId(), type, targetType, event.getEventApplicationId(), content);
     }
@@ -82,7 +82,7 @@ public class EventNotificationEventHandler {
         if (eventCreatorFcmInfo == null) {
             return;
         }
-        notificationService.pushAlarmToToken(type, targetType.name(), content, eventCreatorFcmInfo.getFcmToken(), targetType, event.getEventTruckId());
+        notificationService.pushAlarmToToken(type, type.getName(), content, eventCreatorFcmInfo.getFcmToken(), targetType, event.getEventTruckId());
 
         savePushAlarmHistory(eventCreatorFcmInfo.getMemberId(), type, targetType, event.getEventTruckId(), content);
     }
@@ -102,7 +102,7 @@ public class EventNotificationEventHandler {
         if (eventCreatorFcmInfo == null) {
             return;
         }
-        notificationService.pushAlarmToToken(type, targetType.name(), content, eventCreatorFcmInfo.getFcmToken(), targetType, null);
+        notificationService.pushAlarmToToken(type, type.getName(), content, eventCreatorFcmInfo.getFcmToken(), targetType, null);
 
         savePushAlarmHistory(eventCreatorFcmInfo.getMemberId(), type, targetType, null, content);
     }
@@ -121,7 +121,7 @@ public class EventNotificationEventHandler {
             ));
             System.out.println("notificationMessage : " + content);
 
-            notificationService.pushAlarmToToken(type, targetType.name(), content, memberFcmInfoDto.getFcmToken(), targetType, memberFcmInfoDto.getEventId());
+            notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, memberFcmInfoDto.getEventId());
 
             savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, memberFcmInfoDto.getEventId(), content);
         });
@@ -139,7 +139,7 @@ public class EventNotificationEventHandler {
             String content = type.getTemplate();
             System.out.println("notificationMessage : " + content);
 
-            notificationService.pushAlarmToToken(type, targetType.name(), content, memberFcmInfoDto.getFcmToken(), targetType, memberFcmInfoDto.getEventId());
+            notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, memberFcmInfoDto.getEventId());
 
             savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, memberFcmInfoDto.getEventId(), content);
         });
@@ -159,7 +159,7 @@ public class EventNotificationEventHandler {
                     "행사명", memberFcmInfoDto.getEventName()
             ));
             System.out.println("notificationMessage : " + content);
-            notificationService.pushAlarmToToken(type, targetType.name(), content, memberFcmInfoDto.getFcmToken(), targetType, memberFcmInfoDto.getEventId());
+            notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, memberFcmInfoDto.getEventId());
 
             savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, memberFcmInfoDto.getEventId(), content);
         });

@@ -21,9 +21,7 @@ public interface EventRepositoryCustom {
                                           LocalDate startDate, LocalDate endDate,
                                           List<String> categoryCodes, Pageable pageable);
 
-    List<Event> findEventsEndedAndStillSelecting(LocalDateTime now);
-
-    List<Event> findEventsEnded(LocalDateTime now);
+    List<Event> findEndedEventsByIsSelecting(LocalDateTime now, Boolean isSelecting);
 
     Page<Event> findProgressEventManageList(String memberId, String status, Pageable pageable);
     Page<Event> findCompletedEventManageList(String memberId, String status, Pageable pageable);

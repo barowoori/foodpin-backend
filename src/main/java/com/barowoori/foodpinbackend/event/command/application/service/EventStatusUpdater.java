@@ -24,7 +24,7 @@ public class EventStatusUpdater {
     private final EventTruckRepository eventTruckRepository;
     private final EventTruckDateRepository eventTruckDateRepository;
 
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 * * * * *")
     @Transactional
     public void closeRecruitingEventsByDeadline() {
         LocalDateTime now = LocalDateTime.now();
@@ -47,7 +47,7 @@ public class EventStatusUpdater {
         }
     }
 
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 * * * * *")
     @Transactional
     public void closeSelectingEventsByEndDate() {
         LocalDateTime now = LocalDateTime.now();
@@ -90,7 +90,7 @@ public class EventStatusUpdater {
         }
     }
 
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 * * * * *")
     @Transactional
     public void cancelEventTruckSelectionByEndDate() {
         LocalDateTime now = LocalDateTime.now();

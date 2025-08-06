@@ -4,11 +4,13 @@ import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventApplicationRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventTruckRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.TruckEventApplicationList;
+import com.barowoori.foodpinbackend.event.command.domain.service.EventDateCalculator;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +64,8 @@ public class TruckEventApplicationListService {
         if (eventTruck.getStatus().equals(EventTruckStatus.REJECTED)) {
             return EventTruckStatus.REJECTED.toString();
         }
-        if (eventTruck.getEvent().getRecruitDetail().getRecruitEndDateTime().isBefore(LocalDateTime.now())) {
+
+        if (EventDateCalculator.getMaxDate(eventTruck.getEvent()).isBefore(LocalDate.now())) {
             return "COMPLETED";
         }
         return EventTruckStatus.CONFIRMED.toString();

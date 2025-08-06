@@ -12,11 +12,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.barowoori.foodpinbackend.event.command.domain.model.EventTruckStatus.CONFIRMED;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEvent.event;
+import static com.barowoori.foodpinbackend.event.command.domain.model.QEventDate.eventDate;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventPhoto.eventPhoto;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventRecruitDetail.eventRecruitDetail;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventTruck.eventTruck;
@@ -120,7 +122,22 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
             return filterBuilder.and(eventTruck.status.eq(EventTruckStatus.CONFIRMED));
         }
         if (status.equals("COMPLETED")) {
-            return filterBuilder.and(eventTruck.status.eq(EventTruckStatus.CONFIRMED).and(eventRecruitDetail.recruitEndDateTime.before(LocalDateTime.now())));
+            // 이벤트 날짜 기준 또는 모집 종료 시간 기준으로 완료된 경우
+            BooleanBuilder completedBuilder = new BooleanBuilder();
+            completedBuilder.and(eventTruck.status.eq(EventTruckStatus.CONFIRMED));
+
+            // 이벤트 날짜 기준 (서브쿼리 사용)
+            BooleanBuilder eventDateBuilder = new BooleanBuilder();
+            eventDateBuilder.and(event.id.in(
+                jpaQueryFactory.select(event.id)
+                    .from(event)
+                    .leftJoin(event.eventDates, eventDate)
+                    .groupBy(event.id)
+                    .having(eventDate.date.max().before(LocalDate.now()))
+            ));
+            
+            completedBuilder.and(eventDateBuilder);
+            return filterBuilder.and(completedBuilder);
         }
         return filterBuilder;
     }

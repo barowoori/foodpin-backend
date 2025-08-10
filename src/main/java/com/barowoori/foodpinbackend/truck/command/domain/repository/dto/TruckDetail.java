@@ -8,13 +8,14 @@ import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionC
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 
 @Getter
-@Builder
+@SuperBuilder
 public class TruckDetail {
     private Boolean isTruckManager;
     private Boolean isAvailableUpdate;

@@ -36,6 +36,9 @@ public class EventTruck {
     @ColumnDefault("'PENDING'")
     private EventTruckStatus status;
 
+    @Column(name = "status_updated_at")
+    private LocalDateTime statusUpdatedAt;
+
     @OneToMany(mappedBy = "eventTruck")
     private List<EventTruckDate> dates = new ArrayList<>();
 
@@ -51,9 +54,11 @@ public class EventTruck {
 
     public void confirm(){
         this.status = EventTruckStatus.CONFIRMED;
+        this.statusUpdatedAt = LocalDateTime.now();
     }
 
     public void reject(){
         this.status = EventTruckStatus.REJECTED;
+        this.statusUpdatedAt = LocalDateTime.now();
     }
 }

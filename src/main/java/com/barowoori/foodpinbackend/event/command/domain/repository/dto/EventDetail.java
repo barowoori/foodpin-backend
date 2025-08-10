@@ -37,6 +37,7 @@ public class EventDetail {
     private Boolean isFullAttendanceRequired;
     private EventDocumentSubmissionTarget documentSubmissionTarget;
     private String submissionEmail;
+    private Boolean isRecruitEndOnSelection;
     private LocalDateTime recruitEndDateTime;
 
     public static EventDetail of(Event event, String memberId, Boolean isLike, ImageManager imageManager, List<RegionCode> regions) {
@@ -62,6 +63,7 @@ public class EventDetail {
                 .documentSubmissionTarget(event.getDocumentSubmissionTarget())
                 .submissionEmail(event.getSubmissionEmail())
                 .recruitEndDateTime(event.getRecruitDetail().getRecruitEndDateTime())
+                .isRecruitEndOnSelection(event.getRecruitDetail().getIsRecruitEndOnSelection())
                 .build();
 
     }

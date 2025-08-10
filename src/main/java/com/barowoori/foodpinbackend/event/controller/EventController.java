@@ -8,8 +8,6 @@ import com.barowoori.foodpinbackend.event.command.application.dto.ResponseEvent;
 import com.barowoori.foodpinbackend.event.command.application.service.EventService;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.*;
 import com.barowoori.foodpinbackend.event.query.application.*;
-import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckDetail;
-import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckList;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -28,7 +26,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.constraints.NotEmpty;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -45,6 +42,8 @@ public class EventController {
     private final TruckEventApplicationListService truckEventApplicationListService;
     private final EventApplicableTruckListService eventApplicableTruckListService;
     private final AvailableEventListForProposalService availableEventListForProposalService;
+    private final EventAppliedTruckDetailService eventAppliedTruckDetailService;
+    private final EventTruckDetailService eventTruckDetailService;
 
     @Operation(summary = "행사 생성", description = "사진의 경우 파일 저장 api로 업로드 후 반환된 파일 id 리스트로 전달"
             + "\n\n서류 타입 : BUSINESS_REGISTRATION(사업자등록증), BUSINESS_LICENSE(영업신고증), VEHICLE_REGISTRATION(자동차등록증), SANITATION_EDUCATION(위생교육필증), HEALTH_CERTIFICATE(보건증), GAS_SAFETY_INSPECTION_CERTIFICATE(가스안전점검필증)")
@@ -353,6 +352,40 @@ public class EventController {
         Page<EventManageList> eventLists = eventManageListService.findCompletedEventManageList(memberId, status, pageable);
         CommonResponse<Page<EventManageList>> commonResponse = CommonResponse.<Page<EventManageList>>builder()
                 .data(eventLists)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "지원한 트럭 상세 정보 조회", description = "")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/applications/{eventApplicationId}")
+    public ResponseEntity<CommonResponse<EventAppliedTruckDetail>> getEventAppliedTruckInfo(@PathVariable(value = "eventApplicationId") String eventApplicationId) {
+
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+       EventAppliedTruckDetail response = eventAppliedTruckDetailService.getEventAppliedTruckDetail(eventApplicationId);
+        CommonResponse<EventAppliedTruckDetail> commonResponse = CommonResponse.<EventAppliedTruckDetail>builder()
+                .data(response)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "선정된 트럭 상세 정보 조회", description = "")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/trucks/{eventTruckId}")
+    public ResponseEntity<CommonResponse<EventSelectedTruckDetail>> getEventSelectedTruckInfo(@PathVariable(value = "eventTruckId") String eventTruckId) {
+
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        EventSelectedTruckDetail response = eventTruckDetailService.getEventSelectedTruckInfo(eventTruckId);
+        CommonResponse<EventSelectedTruckDetail> commonResponse = CommonResponse.<EventSelectedTruckDetail>builder()
+                .data(response)
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }

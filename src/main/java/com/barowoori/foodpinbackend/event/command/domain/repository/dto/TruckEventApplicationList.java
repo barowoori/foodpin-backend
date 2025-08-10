@@ -40,6 +40,7 @@ public class TruckEventApplicationList {
         private String status;
         private List<LocalDate> dates;
         private EventInfo event;
+        private EventTruckInfo eventTruckInfo;
 
         public static SelectedInfo of(EventTruck eventTruck, String status, List<String> regions, ImageManager imageManager) {
             return SelectedInfo.builder()
@@ -50,6 +51,7 @@ public class TruckEventApplicationList {
                             .sorted(Comparator.comparing(EventDate::getDate))
                             .map(EventDate::getDate).toList())
                     .event(EventInfo.of(eventTruck.getEvent(), regions, imageManager))
+                    .eventTruckInfo(EventTruckInfo.of(eventTruck))
                     .build();
         }
     }
@@ -73,6 +75,23 @@ public class TruckEventApplicationList {
                     .name(event.getName())
                     .region(regions.isEmpty() ? null : regions.getFirst())
                     .isDeleted(event.getIsDeleted())
+                    .build();
+        }
+    }
+
+
+    @Getter
+    @Builder
+    public static class EventTruckInfo {
+        private LocalDate selectedAt;
+        private EventTruckStatus status;
+        private LocalDate statusUpdatedAt;
+
+        public static EventTruckInfo of(EventTruck eventTruck) {
+            return EventTruckInfo.builder()
+                    .selectedAt(eventTruck.getCreatedAt().toLocalDate())
+                    .status(eventTruck.getStatus())
+                    .statusUpdatedAt(eventTruck.getStatusUpdatedAt().toLocalDate())
                     .build();
         }
     }

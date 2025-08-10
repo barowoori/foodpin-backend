@@ -3,6 +3,7 @@ package com.barowoori.foodpinbackend.event.command.domain.repository.querydsl;
 import com.barowoori.foodpinbackend.common.dto.MemberFcmInfoDto;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.MemberForEventFcmInfoDto;
+import com.barowoori.foodpinbackend.event.command.domain.repository.dto.MemberForEventTruckFcmInfoDto;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.CaseBuilder;
@@ -185,11 +186,11 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
     }
 
     @Override
-    public List<MemberForEventFcmInfoDto> findPendingEventTruckManagersFcmInfo() {
+    public List<MemberForEventTruckFcmInfoDto> findPendingEventTruckManagersFcmInfo() {
         LocalDateTime now = LocalDateTime.now();
 
         return jpaQueryFactory
-                .selectDistinct(Projections.constructor(MemberForEventFcmInfoDto.class,event.id, event.name, member.id, member.fcmToken))
+                .selectDistinct(Projections.constructor(MemberForEventTruckFcmInfoDto.class,event.id, event.name, member.id, member.fcmToken, truck.id))
                 .from(eventTruck)
                 .innerJoin(eventTruck.event, event)
                 .innerJoin(eventTruck.truck, truck)

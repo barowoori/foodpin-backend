@@ -57,7 +57,6 @@ public class RequestEvent {
         @NotEmpty
         private String guidelines;
         @Schema(description = "서류 제출 이메일")
-        @NotEmpty
         private String submissionEmail;
         @Schema(description = "서류 제출 대상(지원자 전체 / 선정자만)")
         @NotNull

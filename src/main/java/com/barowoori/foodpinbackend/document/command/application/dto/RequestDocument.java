@@ -2,11 +2,12 @@ package com.barowoori.foodpinbackend.document.command.application.dto;
 
 import com.barowoori.foodpinbackend.document.command.domain.model.BusinessRegistration;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 
-import javax.validation.constraints.NotEmpty;
 import java.time.LocalDate;
 
 public class RequestDocument {
@@ -24,7 +25,7 @@ public class RequestDocument {
         @NotEmpty
         private String representativeName;
         @Schema(description = "개업일자")
-        @NotEmpty
+        @NotNull
         private LocalDate openingDate;
 
         public BusinessRegistration toEntity(String updatedBy){

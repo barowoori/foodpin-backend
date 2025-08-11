@@ -1,6 +1,5 @@
 package com.barowoori.foodpinbackend.event.controller;
 
-
 import com.barowoori.foodpinbackend.common.dto.CommonResponse;
 import com.barowoori.foodpinbackend.common.exception.ErrorResponse;
 import com.barowoori.foodpinbackend.event.command.application.dto.RequestEvent;
@@ -155,7 +154,7 @@ public class EventController {
     })
     @PutMapping(value = "/v1/{eventId}/recruit")
     public ResponseEntity<CommonResponse<String>> updateEventRecruit(@Valid @PathVariable("eventId") String eventId,
-                                                                     @RequestBody RequestEvent.EventRecruitDto eventRecruitDto) {
+                                                                     @Valid @RequestBody RequestEvent.EventRecruitDto eventRecruitDto) {
         eventService.updateEventRecruit(eventId, eventRecruitDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Event recruit info updated successfully.")
@@ -228,7 +227,7 @@ public class EventController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping(value = "/v1/applications")
-    public ResponseEntity<CommonResponse<String>> applyEvent(@RequestBody RequestEvent.ApplyEventDto applyEventDto) {
+    public ResponseEntity<CommonResponse<String>> applyEvent(@Valid @RequestBody RequestEvent.ApplyEventDto applyEventDto) {
         eventService.applyEvent(applyEventDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Event applied successfully.")
@@ -269,7 +268,7 @@ public class EventController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping(value = "/v1/trucks/pending")
-    public ResponseEntity<CommonResponse<String>> handleEventTruck(@RequestBody RequestEvent.HandleEventTruckDto handleEventTruckDto) {
+    public ResponseEntity<CommonResponse<String>> handleEventTruck(@Valid @RequestBody RequestEvent.HandleEventTruckDto handleEventTruckDto) {
         eventService.handleEventTruck(handleEventTruckDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Event truck handled successfully.")
@@ -290,7 +289,7 @@ public class EventController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping(value = "/v1/proposal")
-    public ResponseEntity<CommonResponse<String>> proposeEvent(@RequestBody RequestEvent.ProposeEventDto proposeEventDto) {
+    public ResponseEntity<CommonResponse<String>> proposeEvent(@Valid @RequestBody RequestEvent.ProposeEventDto proposeEventDto) {
         eventService.proposeEvent(proposeEventDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Event proposed successfully.")

@@ -6,9 +6,6 @@ import com.barowoori.foodpinbackend.common.security.JwtTokenProvider;
 import com.barowoori.foodpinbackend.member.command.application.dto.RequestMember;
 import com.barowoori.foodpinbackend.member.command.application.dto.ResponseMember;
 import com.barowoori.foodpinbackend.member.command.application.service.MemberService;
-import com.barowoori.foodpinbackend.region.command.domain.model.Region;
-import com.barowoori.foodpinbackend.region.command.domain.model.RegionDo;
-import com.barowoori.foodpinbackend.region.command.domain.model.RegionSi;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -19,12 +16,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.Date;
 
 @Tag(name = "회원 API", description = "회원 관련 API")
 @RequiredArgsConstructor

@@ -192,7 +192,8 @@ public class EventService {
                 eventRecruitDto.getRecruitCount(),
                 eventRecruitDto.getGeneratorRequirement(),
                 eventRecruitDto.getElectricitySupportAvailability(),
-                eventRecruitDto.getEntryFee()
+                eventRecruitDto.getEntryFee(),
+                eventRecruitDto.getIsRecruitEndOnSelection()
         );
         eventRecruitDetailRepository.save(eventRecruitDetail);
         eventRepository.save(event);
@@ -281,21 +282,19 @@ public class EventService {
         Event event = getEvent(applyEventDto.getEventId());
         Truck truck = getTruck(applyEventDto.getTruckId());
 
+        List<String> eventDateIdList;
         if (Boolean.TRUE.equals(event.getRecruitDetail().getIsFullAttendanceRequired())) {
-            Set<String> allEventDateIds = event.getEventDates().stream()
+            eventDateIdList = event.getEventDates().stream()
                     .map(EventDate::getId)
-                    .collect(Collectors.toSet());
-            Set<String> requestedDateIds = new HashSet<>(applyEventDto.getEventDateIdList());
-
-            if (!allEventDateIds.equals(requestedDateIds)) {
-                throw new CustomException(EventErrorCode.REQUIRE_FULL_ATTENDANCE);
-            }
+                    .toList();
+        } else {
+            eventDateIdList = applyEventDto.getEventDateIdList();
         }
 
         EventApplication eventApplication = applyEventDto.toEntity(truck, event);
         eventApplication = eventApplicationRepository.save(eventApplication);
 
-        for (String eventDateId : applyEventDto.getEventDateIdList()) {
+        for (String eventDateId : eventDateIdList) {
             EventDate eventDate = eventDateRepository.findById(eventDateId)
                     .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_DATE_NOT_FOUND));
 

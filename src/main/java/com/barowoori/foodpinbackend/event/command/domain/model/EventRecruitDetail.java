@@ -84,12 +84,13 @@ public class EventRecruitDetail {
     }
 
     public void update(LocalDateTime recruitEndDateTime, Integer recruitCount,
-                       Boolean generatorRequirement, Boolean electricitySupportAvailability, Integer entryFee) {
+                       Boolean generatorRequirement, Boolean electricitySupportAvailability, Integer entryFee, Boolean isRecruitEndOnSelection) {
         this.recruitEndDateTime = recruitEndDateTime;
         this.recruitCount = recruitCount;
         this.generatorRequirement = generatorRequirement;
         this.electricitySupportAvailability = electricitySupportAvailability;
         this.entryFee = entryFee;
+        this.isRecruitEndOnSelection = isRecruitEndOnSelection;
     }
 
     public void updateStatus(EventRecruitingStatus status) {

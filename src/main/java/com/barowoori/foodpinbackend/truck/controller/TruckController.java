@@ -25,14 +25,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Map;
 
 @Tag(name = "트럭 API")
 @RequiredArgsConstructor
@@ -77,7 +74,7 @@ public class TruckController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping(value = "/v1/manager")
-    public ResponseEntity<CommonResponse<String>> addManager(@RequestBody RequestTruck.AddManagerDto addManagerDto) {
+    public ResponseEntity<CommonResponse<String>> addManager(@Valid @RequestBody RequestTruck.AddManagerDto addManagerDto) {
         truckService.addManager(addManagerDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Truck manager added successfully.")
@@ -269,7 +266,7 @@ public class TruckController {
     })
     @PutMapping(value = "/v1/{truckId}/operation")
     public ResponseEntity<CommonResponse<String>> updateTruckOperation(@Valid @PathVariable("truckId") String truckId,
-                                                                       @RequestBody RequestTruck.UpdateTruckOperationDto updateTruckOperationDto) {
+                                                                       @Valid @RequestBody RequestTruck.UpdateTruckOperationDto updateTruckOperationDto) {
         truckService.updateTruckOperation(truckId, updateTruckOperationDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Truck operation updated successfully.")
@@ -289,7 +286,7 @@ public class TruckController {
     })
     @PutMapping(value = "/v1/{truckId}/menu")
     public ResponseEntity<CommonResponse<String>> updateTruckMenu(@Valid @PathVariable("truckId") String truckId,
-                                                                  @RequestBody RequestTruck.UpdateTruckMenuDto updateTruckMenuDto) {
+                                                                  @Valid @RequestBody RequestTruck.UpdateTruckMenuDto updateTruckMenuDto) {
         truckService.updateTruckMenu(truckId, updateTruckMenuDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Truck menu updated successfully.")
@@ -313,7 +310,7 @@ public class TruckController {
     })
     @PostMapping(value = "/v1/{truckId}/documents")
     public ResponseEntity<CommonResponse<String>> setTruckDocuments(@Valid @PathVariable("truckId") String truckId,
-                                                                    @RequestBody List<RequestTruck.TruckDocumentDto> truckDocumentDtoList) {
+                                                                    @Valid @RequestBody List<RequestTruck.TruckDocumentDto> truckDocumentDtoList) {
         truckService.setTruckDocuments(truckId, truckDocumentDtoList);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Truck document set successfully.")

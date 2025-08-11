@@ -1,19 +1,18 @@
 package com.barowoori.foodpinbackend.event.command.application.dto;
 
-import com.barowoori.foodpinbackend.category.command.domain.model.Category;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
-import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionInfo;
 import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.validation.constraints.NotEmpty;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -24,15 +23,17 @@ public class RequestEvent {
     @Data
     @Getter
     public static class CreateEventDto{
-        @NotEmpty
+        @NotNull
         @Valid
         private EventInfoDto eventInfoDto;
         @Schema(description = "행사 지역 코드", example = "GU85")
         @NotEmpty
         private String regionCode;
-        @NotEmpty
+        @Valid
+        @NotNull
         private EventRecruitDto eventRecruitDto;
         @NotEmpty
+        @Valid
         private List<EventDateDto> eventDateDtoList;
         @NotEmpty
         @Schema(description = "카테고리 코드 리스트")
@@ -59,7 +60,7 @@ public class RequestEvent {
         @NotEmpty
         private String submissionEmail;
         @Schema(description = "서류 제출 대상(지원자 전체 / 선정자만)")
-        @NotEmpty
+        @NotNull
         private EventDocumentSubmissionTarget documentSubmissionTarget;
         @Schema(description = "행사 사진 파일 id 리스트")
         private List<String> fileIdList;
@@ -83,20 +84,23 @@ public class RequestEvent {
         @Setter
         private LocalDateTime recruitEndDateTime;
         @Schema(description = "모집 인원")
-        @NotEmpty
+        @NotNull
         private Integer recruitCount;
         @Schema(description = "발전기 필요 여부")
-        @NotEmpty
+        @NotNull
         private Boolean generatorRequirement;
         @Schema(description = "전기 지원 여부")
-        @NotEmpty
+        @NotNull
         private Boolean electricitySupportAvailability;
         @Schema(description = "입점비")
-        @NotEmpty
+        @NotNull
         private Integer entryFee;
         @Schema(description = "일정 전체 참여 필수 여부")
-        @NotEmpty
+        @NotNull
         private Boolean isFullAttendanceRequired;
+        @Schema(description = "선정 시 모집 종료 여부")
+        @NotNull
+        private Boolean isRecruitEndOnSelection;
 
         public EventRecruitDetail toEntity(Event event){
             return EventRecruitDetail.builder()
@@ -111,6 +115,7 @@ public class RequestEvent {
                     .isSelecting(Boolean.TRUE)
                     .recruitingStatus(EventRecruitingStatus.RECRUITING)
                     .isFullAttendanceRequired(this.isFullAttendanceRequired)
+                    .isRecruitEndOnSelection(this.isRecruitEndOnSelection)
                     .build();
         }
     }
@@ -118,13 +123,13 @@ public class RequestEvent {
     @Getter
     public static class EventDateDto{
         @Schema(description = "행사 진행 일자", example = "2025-03-06")
-        @NotEmpty
+        @NotNull
         private LocalDate date;
         @Schema(description = "시작 시간", example = "09:00:00")
-        @NotEmpty
+        @NotNull
         private LocalTime startTime;
         @Schema(description = "종료 시간", example = "20:00:00")
-        @NotEmpty
+        @NotNull
         private LocalTime endTime;
 
         public EventDate toEntity(Event event){
@@ -175,7 +180,7 @@ public class RequestEvent {
         @NotEmpty
         private String submissionEmail;
         @Schema(description = "서류 제출 대상(지원자 전체 / 선정자만)")
-        @NotEmpty
+        @NotNull
         private EventDocumentSubmissionTarget documentSubmissionTarget;
     }
 
@@ -225,7 +230,7 @@ public class RequestEvent {
     @Getter
     public static class HandleEventApplicationDto{
         @Schema(description = "선정 여부")
-        @NotEmpty
+        @NotNull
         private Boolean isSelected;
         @Schema(description = "선정할 날짜(EventDate) id 리스트, 선정인 경우 필수")
         private List<String> eventDateIdList;
@@ -238,7 +243,7 @@ public class RequestEvent {
         @NotEmpty
         private String eventId;
         @Schema(description = "모집 종료/취소 여부")
-        @NotEmpty
+        @NotNull
         private EventRecruitingStatus recruitmentStatus;
     }
 
@@ -249,7 +254,7 @@ public class RequestEvent {
         @NotEmpty
         private String eventTruckId;
         @Schema(description = "행사 참여 여부")
-        @NotEmpty
+        @NotNull
         private EventTruckStatus eventTruckStatus;
     }
 

@@ -5,6 +5,7 @@ import com.barowoori.foodpinbackend.common.exception.CustomException;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventTruckRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.MemberForEventFcmInfoDto;
+import com.barowoori.foodpinbackend.event.command.domain.repository.dto.MemberForEventTruckFcmInfoDto;
 import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
 import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
@@ -114,16 +115,16 @@ public class EventNotificationEventHandler {
         NotificationTargetType targetType = NotificationTargetType.TRUCK_SELECTED_EVENT_LIST;
 
 
-        List<MemberForEventFcmInfoDto>  memberFcmInfoDtos = eventTruckRepository.findPendingEventTruckManagersFcmInfo();
+        List<MemberForEventTruckFcmInfoDto>  memberFcmInfoDtos = eventTruckRepository.findPendingEventTruckManagersFcmInfo();
         memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
             String content = type.format(Map.of(
                     "행사명", memberFcmInfoDto.getEventName()
             ));
             System.out.println("notificationMessage : " + content);
 
-            notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, memberFcmInfoDto.getEventId());
+            notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, memberFcmInfoDto.getTruckId());
 
-            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, memberFcmInfoDto.getEventId(), content);
+            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, memberFcmInfoDto.getTruckId(), content);
         });
     }
 

@@ -20,7 +20,6 @@ public class RequestMember {
         @NotEmpty(message = "핸드폰 번호가 비었습니다")
         private String phone;
         @Schema(description = "이메일")
-        @NotEmpty(message = "이메일이 비었습니다")
         private String email;
         @Schema(description = "닉네임", example = "용감한 호랑이#1856")
         @NotEmpty(message = "닉네임이 비었습니다")

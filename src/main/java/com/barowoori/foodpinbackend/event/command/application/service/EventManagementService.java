@@ -81,6 +81,8 @@ public class EventManagementService {
             EventTruckDate eventTruckDate = EventTruckDate.builder().eventDate(eventDate).eventTruck(eventTruck).build();
             eventTruckDateRepository.save(eventTruckDate);
         });
+        EventRecruitDetail eventRecruitDetail = eventApplication.getEvent().getRecruitDetail();
+        eventRecruitDetail.addSelectedCount();
 
         eventApplication.select();
         eventApplicationRepository.save(eventApplication);
@@ -163,6 +165,8 @@ public class EventManagementService {
         if (eventTruck.getStatus() == EventTruckStatus.CONFIRMED) {
             throw new CustomException(EventErrorCode.ALREADY_CONFIRMED_EVENT_TRUCK);
         }
+        EventRecruitDetail eventRecruitDetail = event.getRecruitDetail();
+        eventRecruitDetail.decreaseSelectedCount();
 
         application.reject();
         eventApplicationRepository.save(application);

@@ -190,6 +190,7 @@ public class EventService {
         eventRecruitDetail.update(
                 eventRecruitDto.getRecruitEndDateTime(),
                 eventRecruitDto.getRecruitCount(),
+                eventRecruitDto.getIsFullAttendanceRequired(),
                 eventRecruitDto.getGeneratorRequirement(),
                 eventRecruitDto.getElectricitySupportAvailability(),
                 eventRecruitDto.getEntryFee(),
@@ -322,6 +323,8 @@ public class EventService {
         if (application.getStatus() == EventApplicationStatus.SELECTED) {
             throw new CustomException(EventErrorCode.ALREADY_SELECTED_EVENT_APPLICATION);
         }
+        EventRecruitDetail eventRecruitDetail = application.getEvent().getRecruitDetail();
+        eventRecruitDetail.decreaseApplicantCount();
 
         eventApplicationDateRepository.deleteAll(application.getDates());
         eventApplicationRepository.delete(application);
@@ -346,6 +349,8 @@ public class EventService {
             eventTruck.confirm();
             NotificationEvent.raise(new SelectionConfirmedNotificationEvent(event.getId(), event.getName(), eventTruck.getTruck().getName(), eventTruck.getId()));
         } else if (handleEventTruckDto.getEventTruckStatus().equals(EventTruckStatus.REJECTED)) {
+            EventRecruitDetail eventRecruitDetail = eventTruck.getEvent().getRecruitDetail();
+            eventRecruitDetail.decreaseSelectedCount();
             eventTruck.reject();
             NotificationEvent.raise(new SelectionCanceledNotificationEvent(event.getId(), event.getName(), eventTruck.getTruck().getName()));
         } else throw new CustomException(EventErrorCode.WRONG_EVENT_TRUCK_STATUS);

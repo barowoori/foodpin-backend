@@ -83,10 +83,11 @@ public class EventRecruitDetail {
         this.isRecruitEndOnSelection = isRecruitEndOnSelection;
     }
 
-    public void update(LocalDateTime recruitEndDateTime, Integer recruitCount,
+    public void update(LocalDateTime recruitEndDateTime, Integer recruitCount, Boolean isFullAttendanceRequired,
                        Boolean generatorRequirement, Boolean electricitySupportAvailability, Integer entryFee, Boolean isRecruitEndOnSelection) {
         this.recruitEndDateTime = recruitEndDateTime;
         this.recruitCount = recruitCount;
+        this.isFullAttendanceRequired = isFullAttendanceRequired;
         this.generatorRequirement = generatorRequirement;
         this.electricitySupportAvailability = electricitySupportAvailability;
         this.entryFee = entryFee;
@@ -103,5 +104,17 @@ public class EventRecruitDetail {
 
     public void addApplicantCount() {
         this.applicantCount += 1;
+    }
+
+    public void decreaseApplicantCount() {
+        this.applicantCount -= 1;
+    }
+
+    public void addSelectedCount() {
+        this.applicantCount += 1;
+    }
+
+    public void decreaseSelectedCount() {
+        this.applicantCount -= 1;
     }
 }

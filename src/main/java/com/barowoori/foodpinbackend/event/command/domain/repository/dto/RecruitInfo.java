@@ -10,6 +10,7 @@ import lombok.Getter;
 @Builder
 public class RecruitInfo {
     private EventRecruitingStatus status;
+    private Boolean isRecruitEndOnSelection;
     private Integer applicantCount;
     private Integer selectedCount;
     private Integer recruitCount;
@@ -17,6 +18,7 @@ public class RecruitInfo {
     public static RecruitInfo of(EventRecruitDetail eventRecruitDetail) {
         return RecruitInfo.builder()
                 .status(eventRecruitDetail.getRecruitingStatus())
+                .isRecruitEndOnSelection(eventRecruitDetail.getIsRecruitEndOnSelection())
                 .applicantCount(eventRecruitDetail.getApplicantCount())
                 .selectedCount(eventRecruitDetail.getSelectedCount())
                 .recruitCount(eventRecruitDetail.getRecruitCount())

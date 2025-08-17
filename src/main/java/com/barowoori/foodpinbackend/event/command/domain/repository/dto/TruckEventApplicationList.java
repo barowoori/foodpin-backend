@@ -88,6 +88,12 @@ public class TruckEventApplicationList {
         private LocalDate statusUpdatedAt;
 
         public static EventTruckInfo of(EventTruck eventTruck) {
+            if (eventTruck.getStatusUpdatedAt() == null){
+                return EventTruckInfo.builder()
+                        .selectedAt(eventTruck.getCreatedAt().toLocalDate())
+                        .status(eventTruck.getStatus())
+                        .build();
+            }
             return EventTruckInfo.builder()
                     .selectedAt(eventTruck.getCreatedAt().toLocalDate())
                     .status(eventTruck.getStatus())

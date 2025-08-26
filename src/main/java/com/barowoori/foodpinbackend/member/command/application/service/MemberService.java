@@ -31,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -48,6 +49,9 @@ public class MemberService {
     private final TruckManagerRepository truckManagerRepository;
     private final TruckService truckService;
     private final EventService eventService;
+    private final SocialTokenVerifier socialTokenVerifier;
+    private final AuthCodeExchanger authCodeExchanger;
+    private final OAuthRevokeService oauthRevokeService;
 
     private Member getMember() {
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -90,6 +94,33 @@ public class MemberService {
         Member member = memberRepository.findBySocialLoginInfo(loginMemberRqDto.getSocialInfoDto().toEntity());
         if (member == null)
             throw new CustomException(MemberErrorCode.MEMBER_NOT_FOUND);
+        String accessToken = jwtTokenProvider.createAccessToken(member.getId());
+        String refreshToken = jwtTokenProvider.createRefreshToken(member.getId());
+        member.updateRefreshToken(refreshToken);
+        memberRepository.save(member);
+        return ResponseMember.LoginMemberRsDto.toDto(accessToken, refreshToken);
+    }
+
+    @Transactional
+    public ResponseMember.LoginMemberRsDto v2loginMember(RequestMember.V2LoginMemberRqDto loginMemberRqDto) {
+        Member member = memberRepository.findBySocialLoginInfo(loginMemberRqDto.getSocialInfoDto().toEntity());
+        if (member == null)
+            throw new CustomException(MemberErrorCode.MEMBER_NOT_FOUND);
+
+        String verifiedSocialId = socialTokenVerifier.verify(loginMemberRqDto.getSocialInfoDto().getType(), loginMemberRqDto.getIdentityToken());
+        if (!Objects.equals(verifiedSocialId, loginMemberRqDto.getSocialInfoDto().getId())) {
+            throw new CustomException(MemberErrorCode.INVALID_IDENTITY_TOKEN);
+        }
+
+        if (loginMemberRqDto.getSocialInfoDto().getType().equals(SocialLoginType.APPLE)) {
+            if (Objects.equals(loginMemberRqDto.getAuthorizationCode(), null) || loginMemberRqDto.getAuthorizationCode().isEmpty()) {
+                throw new CustomException(MemberErrorCode.AUTH_CODE_EMPTY);
+            }
+            String oauthRefreshToken = authCodeExchanger.exchangeToken(loginMemberRqDto.getAuthorizationCode());
+            SocialLoginInfo socialLoginInfo = member.getSocialLoginInfo();
+            socialLoginInfo.setAppleRefreshToken(oauthRefreshToken);
+        }
+
         String accessToken = jwtTokenProvider.createAccessToken(member.getId());
         String refreshToken = jwtTokenProvider.createRefreshToken(member.getId());
         member.updateRefreshToken(refreshToken);
@@ -145,9 +176,9 @@ public class MemberService {
     }
 
     @Transactional
-    public void updatePhone(String phone){
+    public void updatePhone(String phone) {
         Member member = getMember();
-        if (phone != null && !phone.isEmpty()){
+        if (phone != null && !phone.isEmpty()) {
             member.updatePhone(phone);
         } else throw new CustomException(MemberErrorCode.MEMBER_PHONE_EMPTY);
         memberRepository.save(member);
@@ -204,6 +235,48 @@ public class MemberService {
         if (eventList != null) {
             eventList.forEach(event -> eventService.deleteEvent(event.getId()));
         }
+        member.delete();
+        memberRepository.save(member);
+    }
+
+    @Transactional
+    public void v2deleteMember(String refreshToken) {
+        Member member = getMember();
+        if (!member.matchRefreshToken(refreshToken)) {
+            throw new CustomException(MemberErrorCode.REFRESH_TOKEN_MATCH_FAILED);
+        }
+        List<TruckLike> truckLikeList = truckLikeRepository.findAllByMemberId(member.getId());
+        if (truckLikeList != null) {
+            truckLikeList.forEach(truckLikeRepository::delete);
+        }
+        List<EventLike> eventLikeList = eventLikeRepository.findAllByMemberId(member.getId());
+        if (eventLikeList != null) {
+            eventLikeList.forEach(eventLikeRepository::delete);
+        }
+        List<TruckManager> truckManagerList = truckManagerRepository.findAllByMember(member);
+        if (truckManagerList != null) {
+            truckManagerList.forEach(truckManager -> {
+                if (truckManager.getRole().equals(TruckManagerRole.OWNER)) {
+                    truckService.deleteTruck(truckManager.getTruck().getId());
+                }
+                truckManagerRepository.delete(truckManager);
+            });
+        }
+        List<Event> eventList = eventRepository.findAllByCreatedBy(member.getId());
+        if (eventList != null) {
+            eventList.forEach(event -> eventService.deleteEvent(event.getId()));
+        }
+
+        try {
+            SocialLoginInfo socialLoginInfo = member.getSocialLoginInfo();
+            switch (socialLoginInfo.getType()) {
+                case APPLE -> oauthRevokeService.revokeAppleAccess(socialLoginInfo.getAppleRefreshToken());
+                case KAKAO -> oauthRevokeService.unlinkKakaoAccess(socialLoginInfo.getId());
+            }
+        } catch (Exception e) {
+            System.err.println("[WITHDRAW] revoke failed: " + member.getSocialLoginInfo().getType() + " / " + e.getMessage());
+        }
+
         member.delete();
         memberRepository.save(member);
     }

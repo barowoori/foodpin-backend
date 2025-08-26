@@ -63,6 +63,20 @@ public class RequestMember {
 
     @Builder
     @Data
+    public static class V2LoginMemberRqDto{
+        @Schema(description = "소셜 로그인 정보")
+        @NotNull(message = "소셜 로그인 정보가 비었습니다")
+        @Valid
+        private CommonMember.SocialInfoDto socialInfoDto;
+        @Schema(description = "소셜 인증 토큰")
+        @NotEmpty(message = "소셜 인증 토큰이 비었습니다.")
+        private String identityToken;
+        @Schema(description = "소셜 인증 코드")
+        private String authorizationCode;
+    }
+
+    @Builder
+    @Data
     public static class UpdateProfileRqDto{
         @Schema(description = "닉네임")
         @NotEmpty(message = "닉네임이 비었습니다")

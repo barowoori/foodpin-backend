@@ -127,6 +127,17 @@ jobs:
           mkdir -p $(dirname ${APP_CONFIG_FILE}) # 디렉토리가 없으면 생성
           echo "jwt.secret=${{ secrets.JWT_SECRET_KEY }}" >> ${APP_CONFIG_FILE}
 
+      - name: Create oauth-key.properties
+        env:
+          APP_CONFIG_FILE: src/main/resources/secrets/oauth-key.properties
+        run: |
+          mkdir -p $(dirname ${APP_CONFIG_FILE}) # 디렉토리가 없으면 생성
+          echo "oauth.apple.teamId=${{ secrets.APPLE_TEAM_ID }}" >> ${APP_CONFIG_FILE}
+          echo "oauth.apple.keyId=${{ secrets.APPLE_KEY_ID }}" >> ${APP_CONFIG_FILE}
+          echo "oauth.apple.clientId=${{ secrets.APPLE_CLIENT_ID }}" >> ${APP_CONFIG_FILE}
+          echo "oauth.apple.privateKeyPem=${{ secrets.APPLE_PRIVATE_KEY_PEM }}" >> ${APP_CONFIG_FILE}
+          echo "oauth.kakao.adminKey=${{ secrets.KAKAO_ADMIN_KEY }}" >> ${APP_CONFIG_FILE}
+
       - name: Create odcloud-config.yml
         env: # 환경 변수로 GitHub Secrets 값을 읽어옵니다.
           APP_CONFIG_FILE: src/main/resources/secrets/odcloud-config.yml

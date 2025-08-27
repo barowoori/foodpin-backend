@@ -47,6 +47,7 @@ public class AuthCodeExchanger {
             return body.refresh_token;
         } catch (HttpClientErrorException e) {
             String responseBody = e.getResponseBodyAsString();
+            System.err.println("Apple token exchange error: {}" + responseBody);
             if (responseBody.contains("invalid_grant")) {
                 throw new CustomException(MemberErrorCode.AUTH_CODE_EXPIRED);
             }

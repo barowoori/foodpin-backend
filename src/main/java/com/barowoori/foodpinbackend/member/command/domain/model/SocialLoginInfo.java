@@ -20,7 +20,7 @@ public class SocialLoginInfo {
     @Column(name = "social_login_id")
     private String id;
 
-    @Column(name = "apple_refresh_token")
+    @Column(name = "apple_refresh_token", length = 1000)
     private String appleRefreshToken;
 
     protected SocialLoginInfo(){

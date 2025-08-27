@@ -63,7 +63,8 @@ public class MemberService {
     @Transactional
     public void registerMember(RequestMember.RegisterMemberDto registerMemberDto) {
 
-        Member member = memberRepository.findBySocialLoginInfo(registerMemberDto.getSocialInfoDto().toEntity());
+        Member member = memberRepository.findBySocialLoginInfo_TypeAndSocialLoginInfo_Id(registerMemberDto.getSocialInfoDto().getType(), registerMemberDto.getSocialInfoDto().getId());
+
         if (member != null) {
             throw new CustomException(MemberErrorCode.MEMBER_SOCIAL_LOGIN_INFO_EXISTS);
         }
@@ -75,7 +76,7 @@ public class MemberService {
     @Transactional
     public void registerTemporary(RequestMember.RegisterTemporaryDto registerTemporaryDto) {
 
-        Member member = memberRepository.findBySocialLoginInfo(registerTemporaryDto.getSocialInfoDto().toEntity());
+        Member member = memberRepository.findBySocialLoginInfo_TypeAndSocialLoginInfo_Id(registerTemporaryDto.getSocialInfoDto().getType(), registerTemporaryDto.getSocialInfoDto().getId());
         if (member != null) {
             throw new CustomException(MemberErrorCode.MEMBER_SOCIAL_LOGIN_INFO_EXISTS);
         }
@@ -91,7 +92,7 @@ public class MemberService {
 
     @Transactional
     public ResponseMember.LoginMemberRsDto loginMember(RequestMember.LoginMemberRqDto loginMemberRqDto) {
-        Member member = memberRepository.findBySocialLoginInfo(loginMemberRqDto.getSocialInfoDto().toEntity());
+        Member member = memberRepository.findBySocialLoginInfo_TypeAndSocialLoginInfo_Id(loginMemberRqDto.getSocialInfoDto().getType(), loginMemberRqDto.getSocialInfoDto().getId());
         if (member == null)
             throw new CustomException(MemberErrorCode.MEMBER_NOT_FOUND);
         String accessToken = jwtTokenProvider.createAccessToken(member.getId());
@@ -103,7 +104,7 @@ public class MemberService {
 
     @Transactional
     public ResponseMember.LoginMemberRsDto v2loginMember(RequestMember.V2LoginMemberRqDto loginMemberRqDto) {
-        Member member = memberRepository.findBySocialLoginInfo(loginMemberRqDto.getSocialInfoDto().toEntity());
+        Member member = memberRepository.findBySocialLoginInfo_TypeAndSocialLoginInfo_Id(loginMemberRqDto.getSocialInfoDto().getType(), loginMemberRqDto.getSocialInfoDto().getId());
         if (member == null)
             throw new CustomException(MemberErrorCode.MEMBER_NOT_FOUND);
 

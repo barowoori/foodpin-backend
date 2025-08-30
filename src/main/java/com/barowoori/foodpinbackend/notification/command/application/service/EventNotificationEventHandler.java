@@ -83,7 +83,7 @@ public class EventNotificationEventHandler {
         if (eventCreatorFcmInfo == null) {
             return;
         }
-        notificationService.pushAlarmToToken(type, type.getName(), content, eventCreatorFcmInfo.getFcmToken(), targetType, event.getEventTruckId());
+        notificationService.pushAlarmToToken(type, type.getName(), content, eventCreatorFcmInfo.getFcmToken(), targetType, event.getEventId());
 
         savePushAlarmHistory(eventCreatorFcmInfo.getMemberId(), type, targetType, event.getEventTruckId(), content);
     }
@@ -103,7 +103,7 @@ public class EventNotificationEventHandler {
         if (eventCreatorFcmInfo == null) {
             return;
         }
-        notificationService.pushAlarmToToken(type, type.getName(), content, eventCreatorFcmInfo.getFcmToken(), targetType, null);
+        notificationService.pushAlarmToToken(type, type.getName(), content, eventCreatorFcmInfo.getFcmToken(), targetType, event.getEventId());
 
         savePushAlarmHistory(eventCreatorFcmInfo.getMemberId(), type, targetType, null, content);
     }

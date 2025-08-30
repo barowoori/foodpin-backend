@@ -120,7 +120,7 @@ public class TruckNotificationEventHandler {
         List<MemberFcmInfoDto> memberFcmInfoDtos = eventTruckRepository.findEventTruckManagersFcmInfo(event.getEventTruckId());
         System.out.println("notificationMessage : " + content);
         memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
-            notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, null);
+            notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, event.getTruckId());
 
             savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, null, content);
         });

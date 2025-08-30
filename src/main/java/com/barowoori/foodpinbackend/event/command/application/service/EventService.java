@@ -241,7 +241,7 @@ public class EventService {
         if (!event.isCreator(memberId)) {
             throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
         }
-        if (EventDateCalculator.getMinDate(event).isBefore(LocalDate.now()) && EventDateCalculator.getMaxDate(event).isAfter(LocalDate.now())){
+        if (EventDateCalculator.getMinDate(event).isBefore(LocalDate.now()) && EventDateCalculator.getMaxDate(event).isAfter(LocalDate.now())) {
             throw new CustomException(EventErrorCode.ALREADY_IN_PROGRESS_EVENT);
         }
 
@@ -357,7 +357,7 @@ public class EventService {
 
         eventTruckRepository.save(eventTruck);
 
-        NotificationEvent.raise(new TruckSelectionConfirmedNotificationEvent(event.getId(), eventTruck.getId()));
+        NotificationEvent.raise(new TruckSelectionConfirmedNotificationEvent(event.getId(), eventTruck.getId(), eventTruck.getTruck().getId()));
     }
 
     @Transactional(readOnly = true)

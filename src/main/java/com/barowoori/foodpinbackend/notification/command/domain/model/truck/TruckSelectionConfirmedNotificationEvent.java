@@ -7,10 +7,12 @@ import lombok.Getter;
 public class TruckSelectionConfirmedNotificationEvent extends NotificationEvent {
     private final String eventId;
     private final String eventTruckId;
+    private final String truckId;
 
-    public TruckSelectionConfirmedNotificationEvent(String eventId, String eventTruckId) {
+    public TruckSelectionConfirmedNotificationEvent(String eventId, String eventTruckId, String truckId) {
         super();
         this.eventId = eventId;
         this.eventTruckId = eventTruckId;
+        this.truckId = truckId;
     }
 }

@@ -26,6 +26,7 @@ public class EventDetail {
     private RecruitInfo recruitInfo;
     private String name;
     private List<RegionCode> regions;
+    private String regionList;
     private List<EventDateInfo> dates;
     private Integer entryFee;
     private Boolean electricitySupportAvailability;
@@ -40,7 +41,7 @@ public class EventDetail {
     private Boolean isRecruitEndOnSelection;
     private LocalDateTime recruitEndDateTime;
 
-    public static EventDetail of(Event event, String memberId, Boolean isLike, ImageManager imageManager, List<RegionCode> regions) {
+    public static EventDetail of(Event event, String memberId, Boolean isLike, ImageManager imageManager, List<RegionCode> regions, String regionList) {
         return EventDetail.builder()
                 .isEventManager(event.isCreator(memberId))
                 .id(event.getId())
@@ -49,6 +50,7 @@ public class EventDetail {
                 .recruitInfo(RecruitInfo.of(event, event.getRecruitDetail()))
                 .name(event.getName())
                 .regions(regions)
+                .regionList(regionList)
                 .dates(event.getSortedEventDates().stream()
                         .map(EventDateInfo::of).toList())
                 .entryFee(event.getRecruitDetail().getEntryFee())

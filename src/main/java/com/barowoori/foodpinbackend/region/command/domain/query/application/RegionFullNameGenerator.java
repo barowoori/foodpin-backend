@@ -1,9 +1,15 @@
 package com.barowoori.foodpinbackend.region.command.domain.query.application;
 
 import com.barowoori.foodpinbackend.region.command.domain.model.*;
+import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionCode;
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.stereotype.Component;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.barowoori.foodpinbackend.region.command.domain.model.QRegionDo.regionDo;
 import static com.barowoori.foodpinbackend.region.command.domain.model.QRegionGu.regionGu;
@@ -89,6 +95,50 @@ public class RegionFullNameGenerator {
         String finalFullName = fullName.toString().trim();
 
         return finalFullName.isEmpty() ? null : finalFullName;
+    }
+
+    public String convertFormat(List<RegionCode> regionCodes) {
+        Map<String, List<String>> grouped = regionCodes.stream()
+                .collect(Collectors.groupingBy(
+                        rc -> rc.getName().split(" ")[0], // 상위 지역
+                        LinkedHashMap::new,               // 입력 순서 유지
+                        Collectors.mapping(
+                                rc -> rc.getName().substring(rc.getName().indexOf(" ") + 1), // 하위만 추출
+                                Collectors.toList()
+                        )
+                ));
+
+        // 문자열 합치기
+        String result = grouped.entrySet().stream()
+                .map(entry -> entry.getKey() + " " + String.join(", ", entry.getValue()))
+                .collect(Collectors.joining(", "));
+
+        return result;
+    }
+
+    public String convertFormatByRegionName(List<String> regionNames) {
+        Map<String, List<String>> grouped = regionNames.stream()
+                .collect(Collectors.groupingBy(
+                        rc -> rc.split(" ")[0], // 상위 지역
+                        LinkedHashMap::new,
+                        Collectors.mapping(rc -> {
+                            String[] parts = rc.split(" ");
+                            if (parts.length == 1) {
+                                return "전체";
+                            } else {
+                                return parts[1];
+                            }
+                        }, Collectors.toList())
+                ));
+
+        return grouped.entrySet().stream()
+                .map(entry -> {
+                    if (entry.getValue().size() == 1 && "전체".equals(entry.getValue().get(0))) {
+                        return entry.getKey() + " 전체";
+                    }
+                    return entry.getKey() + " " + String.join(", ", entry.getValue());
+                })
+                .collect(Collectors.joining(", "));
     }
 
 }

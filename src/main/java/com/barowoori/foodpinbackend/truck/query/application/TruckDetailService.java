@@ -55,8 +55,9 @@ public class TruckDetailService {
         TruckLike truckLike = truckLikeRepository.findByMemberIdAndTruckId(memberId, truckId);
         TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(truckId, memberId);
         List<RegionCode> regionNames = truckRegionFullNameGenerator.findRegionCodesByTruckId(truckId);
+        String regionList = truckRegionFullNameGenerator.makeRegionList(regionNames);
         List<Category> categories = truckCategoryRepository.findCategoriesByTruckId(truckId);
         truck.addViews();
-        return TruckDetail.of(truckManager, truck, documentManager, regionNames, categories, truckMenus, truckLike != null, imageManager);
+        return TruckDetail.of(truckManager, truck, documentManager, regionNames, regionList, categories, truckMenus, truckLike != null, imageManager);
     }
 }

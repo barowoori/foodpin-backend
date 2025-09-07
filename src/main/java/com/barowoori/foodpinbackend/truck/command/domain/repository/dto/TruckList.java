@@ -13,22 +13,24 @@ import java.util.List;
 @Getter
 @Builder
 public class TruckList {
-        private String id;
-        private String name;
-        private List<DocumentType> documents;
-        private List<String> regions;
-        private List<String> menuNames;
-        private String photo;
+    private String id;
+    private String name;
+    private List<DocumentType> documents;
+    private List<String> regions;
+    private String regionList;
+    private List<String> menuNames;
+    private String photo;
 
-        public static TruckList of(Truck truck, List<DocumentType> documents, List<String> regions, ImageManager imageManager) {
+    public static TruckList of(Truck truck, List<DocumentType> documents, List<String> regions, String regionList, ImageManager imageManager) {
 
-            return TruckList.builder()
-                    .id(truck.getId())
-                    .name(truck.getName())
-                    .documents(documents)
-                    .regions(regions)
-                    .menuNames(truck.getSortedTruckMenuNames())
-                    .photo(truck.getTruckMainPhotoUrl(imageManager))
-                    .build();
-        }
+        return TruckList.builder()
+                .id(truck.getId())
+                .name(truck.getName())
+                .documents(documents)
+                .regions(regions)
+                .regionList(regionList)
+                .menuNames(truck.getSortedTruckMenuNames())
+                .photo(truck.getTruckMainPhotoUrl(imageManager))
+                .build();
+    }
 }

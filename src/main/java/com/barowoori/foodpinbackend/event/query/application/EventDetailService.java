@@ -36,8 +36,9 @@ public class EventDetailService {
             throw new CustomException(EventErrorCode.NOT_FOUND_EVENT);
         }
         List<RegionCode> regionNames = eventRegionFullNameGenerator.findRegionCodesByEventId(eventId);
+        String regionList = eventRegionFullNameGenerator.makeRegionList(regionNames);
         EventLike eventLike = eventLikeRepository.findByMemberIdAndEventId(memberId, eventId);
         event.getView().addViews();
-        return EventDetail.of(event, memberId, eventLike != null, imageManager, regionNames);
+        return EventDetail.of(event, memberId, eventLike != null, imageManager, regionNames, regionList);
     }
 }

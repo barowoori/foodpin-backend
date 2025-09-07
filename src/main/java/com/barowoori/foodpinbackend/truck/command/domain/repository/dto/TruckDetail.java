@@ -27,8 +27,9 @@ public class TruckDetail {
     private List<CategoryInfo> categories;
     private List<MenuInfo> menus;
     private Boolean isLike;
+    private String regionList;
 
-    public static TruckDetail of(TruckManager truckManager, Truck truck, TruckDocumentManager truckDocumentManager, List<RegionCode> regions, List<Category> categories,List<TruckMenu> truckMenus, Boolean isLike, ImageManager imageManager) {
+    public static TruckDetail of(TruckManager truckManager, Truck truck, TruckDocumentManager truckDocumentManager, List<RegionCode> regions, String regionList, List<Category> categories,List<TruckMenu> truckMenus, Boolean isLike, ImageManager imageManager) {
         return TruckDetail.builder()
                 .isTruckManager(truckManager != null)
                 .isAvailableUpdate(checkAvailableUpdate(truckManager))
@@ -44,6 +45,7 @@ public class TruckDetail {
                         .map(truckMenu -> MenuInfo.of(truckMenu, imageManager))
                         .toList())
                 .isLike(isLike)
+                .regionList(regionList)
                 .build();
     }
 

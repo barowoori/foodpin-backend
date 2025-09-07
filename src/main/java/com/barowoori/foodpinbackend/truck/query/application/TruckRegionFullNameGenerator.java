@@ -8,10 +8,8 @@ import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class TruckRegionFullNameGenerator {
@@ -23,9 +21,9 @@ public class TruckRegionFullNameGenerator {
         this.regionFullNameGenerator = regionFullNameGenerator;
     }
 
-    public Map<String, List<String>> findRegionNamesByTruckIds(List<String> truckIds){
+    public Map<String, List<String>> findRegionNamesByTruckIds(List<String> truckIds) {
         Map<String, List<String>> result = new HashMap<>();
-        for (String truckId : truckIds){
+        for (String truckId : truckIds) {
             result.put(truckId, findRegionNamesByTruckId(truckId));
         }
         return result;
@@ -73,6 +71,14 @@ public class TruckRegionFullNameGenerator {
         }
 
         return regionCodes;
+    }
+
+    public String makeRegionList(List<RegionCode> regionCodes) {
+        return regionFullNameGenerator.convertFormat(regionCodes);
+    }
+
+    public String makeRegionListByRegionNames(List<String> regionNames) {
+        return regionFullNameGenerator.convertFormatByRegionName(regionNames);
     }
 
 }

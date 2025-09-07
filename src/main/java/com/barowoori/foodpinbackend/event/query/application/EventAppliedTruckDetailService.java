@@ -38,16 +38,17 @@ public class EventAppliedTruckDetailService {
     }
 
     @Transactional(readOnly = true)
-    public EventAppliedTruckDetail getEventAppliedTruckDetail(String eventApplicationId){
+    public EventAppliedTruckDetail getEventAppliedTruckDetail(String eventApplicationId) {
         EventApplication eventApplication = eventApplicationRepository.findById(eventApplicationId)
-                .orElseThrow(()-> new CustomException(EventErrorCode.EVENT_APPLICATION_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_APPLICATION_NOT_FOUND));
         Truck truck = eventApplication.getTruck();
         TruckDocumentManager documentManager = truckDocumentRepository.getDocumentManager(truck.getId());
         List<TruckMenu> truckMenus = truckMenuRepository.getMenuListWithPhotoByTruckId(truck.getId());
         List<RegionCode> regionNames = truckRegionFullNameGenerator.findRegionCodesByTruckId(truck.getId());
+        String regionList = truckRegionFullNameGenerator.makeRegionList(regionNames);
         List<Category> categories = truckCategoryRepository.findCategoriesByTruckId(truck.getId());
 
-        return EventAppliedTruckDetail.of(eventApplication, truck, documentManager, regionNames, categories, truckMenus, imageManager);
+        return EventAppliedTruckDetail.of(eventApplication, truck, documentManager, regionNames, regionList, categories, truckMenus, imageManager);
 
     }
 }

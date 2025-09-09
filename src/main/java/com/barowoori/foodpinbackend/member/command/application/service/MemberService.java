@@ -91,7 +91,7 @@ public class MemberService {
     }
 
     @Transactional
-    public ResponseMember.LoginMemberRsDto loginMember(RequestMember.LoginMemberRqDto loginMemberRqDto) {
+    public ResponseMember.LoginMemberRsDto loginTemporary(RequestMember.LoginMemberRqDto loginMemberRqDto) {
         Member member = memberRepository.findBySocialLoginInfo_TypeAndSocialLoginInfo_Id(loginMemberRqDto.getSocialInfoDto().getType(), loginMemberRqDto.getSocialInfoDto().getId());
         if (member == null)
             throw new CustomException(MemberErrorCode.MEMBER_NOT_FOUND);

@@ -60,7 +60,7 @@ public class MemberController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
-    @Operation(summary = "로그인", description = "반환되는 accessToken, refreshToken 전부 저장 후" +
+    @Operation(summary = "비회원 로그인", description = "반환되는 accessToken, refreshToken 전부 저장 후" +
             "\n\n모든 요청의 Authorization 헤더에 accessToken을 담아서 사용(/reissued-token, /logout API는 refreshToken)" +
             "\n\naccessToken(유효기간 1시간) 만료(401 에러) 시 /reissued-token API로 액세스 토큰 재발급" +
             "\n\nrefreshToken(유효기간 30일)은 만료(401 에러) 시 /login API로 액세스, 리프레쉬 전부 재발급")
@@ -69,9 +69,9 @@ public class MemberController {
             @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PostMapping("/v1/login")
-    public ResponseEntity<CommonResponse<ResponseMember.LoginMemberRsDto>> loginMember(@Valid @RequestBody RequestMember.LoginMemberRqDto loginMemberRqDto) {
-        ResponseMember.LoginMemberRsDto loginMemberRsDto = memberService.loginMember(loginMemberRqDto);
+    @PostMapping("/v2/login/temporary")
+    public ResponseEntity<CommonResponse<ResponseMember.LoginMemberRsDto>> loginTemporary(@Valid @RequestBody RequestMember.LoginMemberRqDto loginMemberRqDto) {
+        ResponseMember.LoginMemberRsDto loginMemberRsDto = memberService.loginTemporary(loginMemberRqDto);
         CommonResponse<ResponseMember.LoginMemberRsDto> commonResponse = CommonResponse.<ResponseMember.LoginMemberRsDto>builder()
                 .data(loginMemberRsDto)
                 .build();

@@ -203,6 +203,8 @@ jobs:
             # 기존 컨테이너가 있다면 종료하고 삭제
             docker stop ${{env.SERVICE}}-${{env.PROFILE}} || true
             docker rm ${{env.SERVICE}}-${{env.PROFILE}} || true
+            docker image prune -f
+            
             # 브랜치에 따른 포트 설정
             if [[ ${{env.PROFILE}} == "prod" ]]; then
               PORT=8080

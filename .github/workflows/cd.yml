@@ -9,8 +9,6 @@ on:
 
 env:
   ECR_URI: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}
-  PROFILE: "dev"
-  SERVICE: "default"
 
 jobs:
   setup-env:
@@ -22,20 +20,17 @@ jobs:
       - name: Set dynamic PROFILE based on branch
         id: set-env
         run: |
-          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
-            echo "PROFILE=prod" >> $GITHUB_ENV
-            echo "::set-output name=profile::prod"
-          elif [[ "${GITHUB_REF_NAME}" == "dev" ]]; then
-            echo "PROFILE=dev" >> $GITHUB_ENV
-            echo "::set-output name=profile::dev"
+          if [[ "${{ github.event.workflow_run.head_branch }}" == "main" ]]; then
+            echo "profile=prod" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.workflow_run.head_branch }}" == "dev" ]]; then
+            echo "profile=dev" >> $GITHUB_OUTPUT
           fi
 
       - name: Set SERVICE variables
         id: set-service
         run: |
           SERVICE=$(basename ${GITHUB_REPOSITORY})
-          echo "SERVICE=${SERVICE}" >> $GITHUB_ENV
-          echo "::set-output name=service::${SERVICE}"
+          echo "service=${SERVICE}" >> $GITHUB_OUTPUT
 
   build:
     if: ${{ github.event.workflow_run.event == 'push' }}
@@ -48,6 +43,8 @@ jobs:
       # 1. GitHub 저장소 코드 체크아웃
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
         # 2. Java 버전 설정
       - name: Set up JDK 21
@@ -56,16 +53,17 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Set DB_URL based on PROFILE
+      - name: Set DB_URL to prod
+        id: set-prod-db
+        if: ${{ env.PROFILE == 'prod' }}
         run: |
-          if [ "${PROFILE}" = "prod" ]; then
-            echo "DB_URL=${{ secrets.DB_URL_PROD }}" >> $GITHUB_ENV
-          elif [ "${PROFILE}" = "dev" ]; then
-            echo "DB_URL=${{ secrets.DB_URL_DEV }}" >> $GITHUB_ENV
-          else
-            echo "Unknown PROFILE: ${PROFILE}"
-            exit 1
-          fi
+          echo "DB_URL=${{ secrets.DB_URL_PROD }}" >> $GITHUB_ENV
+
+      - name: Set DB_URL to dev
+        id: set-dev-db
+        if: ${{ env.PROFILE == 'dev' }}
+        run: |
+          echo "DB_URL=${{ secrets.DB_URL_DEV }}" >> $GITHUB_ENV
 
       - name: Create application.yml dynamically
         env: # 환경 변수로 GitHub Secrets 값을 읽어옵니다.
@@ -222,6 +220,6 @@ jobs:
             # Docker 컨테이너 실행
             docker run -d \
             --name ${{env.SERVICE}}-${{env.PROFILE}} \
-            -p ${PORT}:${PORT} \
+            -p ${PORT}:8080 \
             -e SPRING_PROFILES_ACTIVE=${{env.PROFILE}} \
             ${{ env.ECR_URI }}:${{env.PROFILE}}-latest

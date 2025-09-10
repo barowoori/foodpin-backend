@@ -86,7 +86,7 @@ public class EventManagementService {
 
         eventApplication.select();
         eventApplicationRepository.save(eventApplication);
-        NotificationEvent.raise(new SelectionCompletedNotificationEvent(event.getId(), eventTruck.getId(), event.getName()));
+        NotificationEvent.raise(new SelectionCompletedNotificationEvent(event.getId(), eventTruck.getId(), event.getName(), eventTruck.getTruck().getId()));
         NotificationEvent.raise(new EventSelectedTruckDocumentSubmissionEvent(event, eventTruck.getTruck()));
     }
 

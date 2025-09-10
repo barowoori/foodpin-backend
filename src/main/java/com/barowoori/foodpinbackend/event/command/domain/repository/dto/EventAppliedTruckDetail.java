@@ -25,7 +25,7 @@ public class EventAppliedTruckDetail extends TruckDetail {
     private String eventApplicationId;
     private List<LocalDate> dates;
 
-    public static EventAppliedTruckDetail of(EventApplication eventApplication, Truck truck, TruckDocumentManager truckDocumentManager, List<RegionCode> regions, List<Category> categories, List<TruckMenu> truckMenus, ImageManager imageManager) {
+    public static EventAppliedTruckDetail of(EventApplication eventApplication, Truck truck, TruckDocumentManager truckDocumentManager, List<RegionCode> regions, String regionList, List<Category> categories, List<TruckMenu> truckMenus, ImageManager imageManager) {
         return EventAppliedTruckDetail.builder()
                 .truck(TruckInfo.of(truck, imageManager))
                 .documents(truckDocumentManager.getTypes())
@@ -40,6 +40,7 @@ public class EventAppliedTruckDetail extends TruckDetail {
                 .eventApplicationId(eventApplication.getId())
                 .dates(eventApplication.getDates().stream()
                         .map(EventApplicationDate::getEventDate).map(EventDate::getDate).toList())
+                .regionList(regionList)
                 .build();
     }
 }

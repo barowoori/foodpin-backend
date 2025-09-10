@@ -74,4 +74,8 @@ public class EventRegionFullNameGenerator {
         return regionCodes;
     }
 
+    public String makeRegionList(List<RegionCode> regionCodes) {
+        return regionFullNameGenerator.convertFormat(regionCodes);
+    }
+
 }

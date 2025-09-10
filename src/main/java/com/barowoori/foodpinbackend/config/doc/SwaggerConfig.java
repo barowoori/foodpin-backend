@@ -28,8 +28,9 @@ public class SwaggerConfig {
 
 
         return new OpenAPI()
-                .addServersItem(new Server().url("https://barowoori.click").description("https 호스트"))
-                .addServersItem(new Server().url("/").description("local 호스트"))
+                .addServersItem(new Server().url("https://barowoori.click").description("Prod host"))
+                .addServersItem(new Server().url("https://dev.barowoori.click").description("Dev host"))
+                .addServersItem(new Server().url("/").description("Local host"))
                 .components(components)
                 .addSecurityItem(securityRequirement)
                 .info(info);

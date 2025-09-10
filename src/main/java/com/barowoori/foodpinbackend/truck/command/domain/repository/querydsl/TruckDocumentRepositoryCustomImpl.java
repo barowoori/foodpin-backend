@@ -3,6 +3,7 @@ package com.barowoori.foodpinbackend.truck.command.domain.repository.querydsl;
 import com.barowoori.foodpinbackend.document.command.domain.model.BusinessRegistration;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.document.command.domain.model.QBusinessRegistration;
+import com.barowoori.foodpinbackend.file.command.domain.model.QFile;
 import com.barowoori.foodpinbackend.truck.command.domain.model.QTruck;
 import com.barowoori.foodpinbackend.truck.command.domain.model.QTruckDocument;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckDocument;
@@ -13,6 +14,9 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckDocument.truckDocument;
+import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckDocumentPhoto.truckDocumentPhoto;
 
 public class TruckDocumentRepositoryCustomImpl implements TruckDocumentRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
@@ -40,11 +44,12 @@ public class TruckDocumentRepositoryCustomImpl implements TruckDocumentRepositor
                         .and(truckDocument.type.eq(DocumentType.BUSINESS_REGISTRATION)))
                 .fetchOne();
     }
+
     @Override
-    public Map<String, List<DocumentType>> getDocumentTypeByTruckIds(List<String> truckIds){
+    public Map<String, List<DocumentType>> getDocumentTypeByTruckIds(List<String> truckIds) {
         QTruckDocument truckDocument = QTruckDocument.truckDocument;
         QTruck truck = QTruck.truck;
-        List<Tuple> results = jpaQueryFactory.select(truck.id,truckDocument.type)
+        List<Tuple> results = jpaQueryFactory.select(truck.id, truckDocument.type)
                 .from(truckDocument)
                 .join(truckDocument.truck, truck).on(truckDocument.truck.id.in(truckIds))
                 .fetch();
@@ -54,5 +59,16 @@ public class TruckDocumentRepositoryCustomImpl implements TruckDocumentRepositor
                         tuple -> tuple.get(truck.id),
                         Collectors.mapping(tuple -> tuple.get(truckDocument.type), Collectors.toList())
                 ));
+    }
+
+    @Override
+    public List<TruckDocument> getTruckDocumentFiles(String truckId) {
+        QFile file = QFile.file;
+        return jpaQueryFactory.selectDistinct(truckDocument)
+                .from(truckDocument)
+                .leftJoin(truckDocument.photos, truckDocumentPhoto)
+                .leftJoin(truckDocumentPhoto.file, file)
+                .where(truckDocument.truck.id.eq(truckId))
+                .fetch();
     }
 }

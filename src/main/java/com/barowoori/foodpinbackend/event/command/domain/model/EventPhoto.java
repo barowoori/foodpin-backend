@@ -1,5 +1,6 @@
 package com.barowoori.foodpinbackend.event.command.domain.model;
 
+import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,8 +20,10 @@ public class EventPhoto {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "path", length = 500)
-    private String path;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "files_id")
+    private File file;
 
     @Column(name = "updated_by")
     private String updatedBy;
@@ -33,8 +36,8 @@ public class EventPhoto {
     }
 
     @Builder
-    public EventPhoto(String path, String updatedBy, Event event) {
-        this.path = path;
+    public EventPhoto(File file, String updatedBy, Event event) {
+        this.file = file;
         this.updatedBy = updatedBy;
         this.event = event;
     }

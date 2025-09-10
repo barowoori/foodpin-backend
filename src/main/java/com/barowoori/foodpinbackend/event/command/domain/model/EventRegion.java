@@ -27,8 +27,8 @@ public class EventRegion {
     @Column(name = "region_id", nullable = false)
     private String regionId;
 
-    @ManyToOne
-    @JoinColumn(name = "event_id", nullable = false)
+    @OneToOne
+    @JoinColumn(name = "events_id")
     private Event event;
 
     protected EventRegion(){}
@@ -38,5 +38,10 @@ public class EventRegion {
         this.regionType = regionType;
         this.regionId = regionId;
         this.event = event;
+    }
+
+    public void updateRegion(RegionType regionType, String regionId){
+        this.regionType = regionType;
+        this.regionId = regionId;
     }
 }

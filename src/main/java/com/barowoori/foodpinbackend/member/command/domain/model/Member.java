@@ -1,12 +1,14 @@
 package com.barowoori.foodpinbackend.member.command.domain.model;
 
 import com.barowoori.foodpinbackend.common.exception.CustomException;
+import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.file.infra.domain.ImageDirectory;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
@@ -53,17 +55,25 @@ public class Member implements UserDetails {
     @Embedded
     private SocialLoginInfo socialLoginInfo;
 
-    @Column(name = "image", length = 1000)
-    private String image;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "files_id")
+    private File image;
 
     @Column(name = "refresh_token", length = 1000)
     private String refreshToken;
+
+    @Column(name = "fcm_token", length = 1000)
+    private String fcmToken;
+
+    @ColumnDefault("0")
+    @Column(name = "is_deleted")
+    private Boolean isDeleted = false;
 
     protected Member() {
     }
 
     @Builder
-    public Member(String phone, String email, String image, String nickname, SocialLoginInfo socialLoginInfo, String refreshToken) {
+    public Member(String phone, String email, File image, String nickname, SocialLoginInfo socialLoginInfo, String refreshToken) {
         setPhone(phone);
         this.email = email;
         setNickname(nickname);
@@ -73,9 +83,18 @@ public class Member implements UserDetails {
         this.refreshToken = refreshToken;
     }
 
-    public void updateProfile(ImageManager imageManager, String nickname, String originImageUrl, MultipartFile image) {
+    public void delete() {
+        this.phone = "";
+        this.nickname = "";
+        this.refreshToken = null;
+        this.socialLoginInfo = null;
+        this.fcmToken = null;
+        this.isDeleted = true;
+    }
+
+    public void updateProfile(String nickname, File image) {
         setNickname(nickname);
-        setImage(imageManager, originImageUrl, image);
+        setImage(image);
     }
 
     public void updatePhone(String phone) {
@@ -107,15 +126,12 @@ public class Member implements UserDetails {
         this.phone = phone;
     }
 
-    private void setImage(ImageManager imageManager, String originImageUrl, MultipartFile image) {
-        if (image == null) {
-            this.image = originImageUrl;
-            return;
-        }
-        if (this.image != null) {
-            imageManager.deleteFile(this.image);
-        }
-        this.image = imageManager.updateFile(image, this.image, ImageDirectory.PROFILE);
+    private void setImage(File image) {
+        this.image = image;
+    }
+
+    public void updateFcmToken(String fcmToken){
+        this.fcmToken = fcmToken;
     }
 
     //Spring Security에서 쓰이는 getAuthorities는 ROLE_ 접두사를 사용하므로 type 앞에 붙여서 넣어줌
@@ -134,6 +150,7 @@ public class Member implements UserDetails {
 
     /**
      * spring security에서 사용하는 principal 값(String)
+     *
      * @return String 타입 id
      */
     @Override

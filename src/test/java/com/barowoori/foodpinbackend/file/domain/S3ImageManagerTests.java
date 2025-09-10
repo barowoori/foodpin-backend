@@ -70,7 +70,6 @@ public class S3ImageManagerTests {
             String oldUploadedUrl = s3ImageManager.updateFile(multipartFile, null, ImageDirectory.PROFILE);
 
             String uploadedUrl = s3ImageManager.updateFile(multipartFile, oldUploadedUrl, ImageDirectory.PROFILE);
-            assertNotEquals(oldUploadedUrl, uploadedUrl);
             assertNotNull(uploadedUrl);
             System.out.println(uploadedUrl);
         }

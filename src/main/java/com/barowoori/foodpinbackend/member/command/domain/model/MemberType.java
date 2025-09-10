@@ -4,5 +4,5 @@ import lombok.Getter;
 
 @Getter
 public enum MemberType {
-    NORMAL, TRUCK
+    NORMAL, TRUCK, UNREGISTERED
 }

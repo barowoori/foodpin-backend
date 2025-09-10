@@ -8,6 +8,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "truck_documents")
@@ -42,6 +44,9 @@ public class TruckDocument {
     @JoinColumn(name = "trucks_id")
     private Truck truck;
 
+    @OneToMany(mappedBy = "truckDocument")
+    private List<TruckDocumentPhoto> photos = new ArrayList<>();
+
     protected TruckDocument() {
     }
 
@@ -53,5 +58,11 @@ public class TruckDocument {
         this.documentId = documentId;
         this.approval = approval;
         this.truck = truck;
+    }
+
+    public void update(LocalDateTime updatedAt, String updatedBy, Boolean approval) {
+        this.updatedAt = updatedAt;
+        this.updatedBy = updatedBy;
+        this.approval = approval;
     }
 }

@@ -33,7 +33,7 @@ public class RegionRepositoryCustomImpl implements RegionRepositoryCustom {
         if (codes.containsKey("GUN") && isExistGUN(codes.get("GUN"))) {
             return RegionInfo.of(RegionType.REGION_GUN, codes.get("GUN"));
         } else if (codes.containsKey("GU") && isExistGU(codes.get("GU"))) {
-            return RegionInfo.of(RegionType.REGION_GUN, codes.get("GU"));
+            return RegionInfo.of(RegionType.REGION_GU, codes.get("GU"));
         } else if (codes.containsKey("SI") && isExistSI(codes.get("SI"))) {
             return RegionInfo.of(RegionType.REGION_SI, codes.get("SI"));
         } else if (codes.containsKey("DO") && isExistDO(codes.get("DO"))) {
@@ -83,7 +83,7 @@ public class RegionRepositoryCustomImpl implements RegionRepositoryCustom {
             while (matcher.find()) {
                 codes.put(matcher.group(1), matcher.group(2));
             }
-            if (codes.containsKey("GUN") && isExistGUN(codes.get("GUN"))) {
+            if (codes.containsKey("GUN")) {
                 regionGunIds.add(codes.get("GUN"));
             } else if (codes.containsKey("GU")) {
                 regionGuIds.add(codes.get("GU"));

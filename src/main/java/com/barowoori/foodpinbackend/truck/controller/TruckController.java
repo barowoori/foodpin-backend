@@ -3,6 +3,7 @@ package com.barowoori.foodpinbackend.truck.controller;
 import com.barowoori.foodpinbackend.common.dto.CommonResponse;
 import com.barowoori.foodpinbackend.common.exception.ErrorResponse;
 import com.barowoori.foodpinbackend.truck.command.application.dto.RequestTruck;
+import com.barowoori.foodpinbackend.truck.command.application.dto.ResponseTruck;
 import com.barowoori.foodpinbackend.truck.command.application.service.TruckService;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckDetail;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckList;
@@ -24,14 +25,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Map;
 
 @Tag(name = "트럭 API")
 @RequiredArgsConstructor
@@ -49,13 +47,13 @@ public class TruckController {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "트럭 사진 파일을 못 찾을 경우[30001]," +
-                    "트럭 카테고리가 없을 경우[30007], 트럭 메뉴 사진 파일을 못 찾을 경우[30002]," +
+            @ApiResponse(responseCode = "404", description = "트럭 사진 파일을 못 찾을 경우[30001], " +
+                    "트럭 카테고리가 없을 경우[30007], 트럭 메뉴 사진 파일을 못 찾을 경우[30002], " +
                     "트럭 서류 사진 파일을 못 찾을 경우[30003], 멤버를 못 찾을 경우[20004]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PostMapping(value = "/v1", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<CommonResponse<String>> createTruck(@Valid @RequestPart(value = "createTruckDto") RequestTruck.CreateTruckDto createTruckDto) {
+    @PostMapping(value = "/v1")
+    public ResponseEntity<CommonResponse<String>> createTruck(@Valid @RequestBody RequestTruck.CreateTruckDto createTruckDto) {
         truckService.createTruck(createTruckDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Truck created successfully.")
@@ -66,19 +64,41 @@ public class TruckController {
     @Operation(summary = "트럭 운영자 추가", description = "초대된 사람(새 운영자) 계정에서 실행, 초대된 트럭 id(초대코드) 입력")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
-            @ApiResponse(responseCode = "400", description = "매니저가 이미 등록되어 있는 경우[30006]",
+            @ApiResponse(responseCode = "400", description = "매니저가 이미 등록되어 있는 경우[30006], " +
+                    "초대 코드가 일치하지 않는 경우[30010]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "멤버를 못 찾을 경우[20004]," +
+            @ApiResponse(responseCode = "404", description = "멤버를 못 찾을 경우[20004], " +
                     "트럭을 못 찾을 경우[30000]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PostMapping(value = "/v1/{truckId}/manager")
-    public ResponseEntity<CommonResponse<String>> addManager(@Valid @PathVariable("truckId") String truckId) {
-        truckService.addManager(truckId);
+    @PostMapping(value = "/v1/manager")
+    public ResponseEntity<CommonResponse<String>> addManager(@Valid @RequestBody RequestTruck.AddManagerDto addManagerDto) {
+        truckService.addManager(addManagerDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Truck manager added successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "트럭 운영자 초대 문구 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "매니저가 이미 등록되어 있는 경우[30006], " +
+                    "초대 코드가 일치하지 않는 경우[30010]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "멤버를 못 찾을 경우[20004], " +
+                    "트럭을 못 찾을 경우[30000]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/{truckId}/manager/invite-message")
+    public ResponseEntity<CommonResponse<ResponseTruck.GetTruckInviteMessageDto>> getManagerInviteMessage(@Valid @PathVariable("truckId") String truckId) {
+        ResponseTruck.GetTruckInviteMessageDto response = truckService.getManagerInviteMessage(truckId);
+        CommonResponse<ResponseTruck.GetTruckInviteMessageDto> commonResponse = CommonResponse.<ResponseTruck.GetTruckInviteMessageDto>builder()
+                .data(response)
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
@@ -97,6 +117,43 @@ public class TruckController {
         TruckDetail truckDetail = truckDetailService.getTruckDetail(memberId, truckId);
         CommonResponse<TruckDetail> commonResponse = CommonResponse.<TruckDetail>builder()
                 .data(truckDetail)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+
+    @Operation(summary = "트럭 사업자등록증 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/{truckId}/business-registration/info")
+    public ResponseEntity<CommonResponse<ResponseTruck.GetBusinessRegistrationInfo>> getTruckBusinessRegistrationDocumentInfo(@Valid @PathVariable("truckId") String truckId) {
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        ResponseTruck.GetBusinessRegistrationInfo response = truckService.getTruckBusinessRegistrationDocumentInfo(truckId);
+        CommonResponse<ResponseTruck.GetBusinessRegistrationInfo> commonResponse = CommonResponse.<ResponseTruck.GetBusinessRegistrationInfo>builder()
+                .data(response)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "트럭 서류 파일 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/{truckId}/document/file")
+    public ResponseEntity<CommonResponse<List<ResponseTruck.GetTruckDocumentFile>>> getTruckDocumentFiles(@Valid @PathVariable("truckId") String truckId) {
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        List<ResponseTruck.GetTruckDocumentFile> response = truckService.getTruckDocumentFiles(truckId);
+        CommonResponse<List<ResponseTruck.GetTruckDocumentFile>> commonResponse = CommonResponse.<List<ResponseTruck.GetTruckDocumentFile>>builder()
+                .data(response)
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
@@ -146,15 +203,33 @@ public class TruckController {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000]," +
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
                     "멤버를 못 찾을 경우[20004]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping(value = "/v1/owned")
-    public ResponseEntity<CommonResponse<List<TruckDetail.TruckInfo>>> getOwnedTruck() {
-        List<TruckDetail.TruckInfo> truckInfoList = truckQueryService.getOwnedTruck();
-        CommonResponse<List<TruckDetail.TruckInfo>> commonResponse = CommonResponse.<List<TruckDetail.TruckInfo>>builder()
+    public ResponseEntity<CommonResponse<List<ResponseTruck.GetTruckNameDto>>> getOwnedTruck() {
+        List<ResponseTruck.GetTruckNameDto> truckInfoList = truckQueryService.getOwnedTruck();
+        CommonResponse<List<ResponseTruck.GetTruckNameDto>> commonResponse = CommonResponse.<List<ResponseTruck.GetTruckNameDto>>builder()
                 .data(truckInfoList)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "지원한 행사 갯수 조회", description = "소유자 뿐만 아니라 운영자도 트럭 조회 가능")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
+                    "멤버를 못 찾을 경우[20004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/{truckId}/applications/applied/count")
+    public ResponseEntity<CommonResponse<ResponseTruck.GetAppliedEventCountDto>> getAppliedEventCount(@Valid @PathVariable("truckId") String truckId) {
+        ResponseTruck.GetAppliedEventCountDto response = truckQueryService.getTruckAppliedEventCount(truckId);
+        CommonResponse<ResponseTruck.GetAppliedEventCountDto> commonResponse = CommonResponse.<ResponseTruck.GetAppliedEventCountDto>builder()
+                .data(response)
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
@@ -164,13 +239,13 @@ public class TruckController {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000]," +
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
                     "멤버를 못 찾을 경우[20004], 트럭 사진 파일을 못 찾는 경우[30001]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PutMapping(value = "/v1/{truckId}/info")
     public ResponseEntity<CommonResponse<String>> updateTruckInfo(@Valid @PathVariable("truckId") String truckId,
-                                                                  @RequestBody RequestTruck.UpdateTruckInfoDto updateTruckInfoDto) {
+                                                                  @Valid @RequestBody RequestTruck.UpdateTruckInfoDto updateTruckInfoDto) {
         truckService.updateTruckInfo(truckId, updateTruckInfoDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Truck info updated successfully.")
@@ -181,15 +256,17 @@ public class TruckController {
     @Operation(summary = "트럭 운영 정보 수정")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "사업자 등록 정보가 누락됐을 경우[30008]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000]," +
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
                     "멤버를 못 찾을 경우[20004]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PutMapping(value = "/v1/{truckId}/operation")
     public ResponseEntity<CommonResponse<String>> updateTruckOperation(@Valid @PathVariable("truckId") String truckId,
-                                                                       @RequestBody RequestTruck.UpdateTruckOperationDto updateTruckOperationDto) {
+                                                                       @Valid @RequestBody RequestTruck.UpdateTruckOperationDto updateTruckOperationDto) {
         truckService.updateTruckOperation(truckId, updateTruckOperationDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Truck operation updated successfully.")
@@ -202,17 +279,41 @@ public class TruckController {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000]," +
-                    "멤버를 못 찾을 경우[20004], 카테고리를 못 찾을 경우[30007]," +
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
+                    "멤버를 못 찾을 경우[20004], 카테고리를 못 찾을 경우[30007], " +
                     "메뉴 사진 파일을 못 찾을 경우[30003]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PutMapping(value = "/v1/{truckId}/menu")
     public ResponseEntity<CommonResponse<String>> updateTruckMenu(@Valid @PathVariable("truckId") String truckId,
-                                                                  @RequestBody RequestTruck.UpdateTruckMenuDto updateTruckMenuDto) {
+                                                                  @Valid @RequestBody RequestTruck.UpdateTruckMenuDto updateTruckMenuDto) {
         truckService.updateTruckMenu(truckId, updateTruckMenuDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Truck menu updated successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "트럭 서류 수정/신규 등록", description = "요청으로 보낸 서류 타입이 기존에 존재하면 수정, 없으면 신규 등록" +
+            "\n\n사업자 등록증의 경우 사업자 정보 createBusinessRegistrationDto를, 그 외 서류의 경우 사진 파일 id 리스트를 같이 보내야 함")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "사업자 등록 정보가 누락됐을 경우[30008], " +
+                    "서류 사진이 누락됐을 경우[30009]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
+                    "멤버를 못 찾을 경우[20004], 카테고리를 못 찾을 경우[30007], " +
+                    "메뉴 사진 파일을 못 찾을 경우[30003]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping(value = "/v1/{truckId}/documents")
+    public ResponseEntity<CommonResponse<String>> setTruckDocuments(@Valid @PathVariable("truckId") String truckId,
+                                                                    @Valid @RequestBody List<RequestTruck.TruckDocumentDto> truckDocumentDtoList) {
+        truckService.setTruckDocuments(truckId, truckDocumentDtoList);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Truck document set successfully.")
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
@@ -222,14 +323,14 @@ public class TruckController {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000]," +
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
                     "멤버를 못 찾을 경우[20004], 트럭 소유자를 못 찾을(아닐) 경우[30005]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PutMapping(value = "/v1/{truckId}/owner")
     public ResponseEntity<CommonResponse<String>> changeOwner(@Valid @PathVariable("truckId") String truckId,
-                                                              @Valid @RequestParam String managerId) {
-        truckService.changeOwner(managerId, truckId);
+                                                              @Valid @RequestBody RequestTruck.GetTruckManagerIdDto requestDto) {
+        truckService.changeOwner(requestDto.getTruckManagerId(), truckId);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Truck owner changed successfully.")
                 .build();
@@ -241,13 +342,13 @@ public class TruckController {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000]," +
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
                     "멤버를 못 찾을 경우[20004], 트럭 소유자를 못 찾을(아닐) 경우[30005]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @DeleteMapping(value = "/v1/{truckId}/manager")
+    @DeleteMapping(value = "/v1/{truckId}/managers/{managerId}")
     public ResponseEntity<CommonResponse<String>> deleteManager(@Valid @PathVariable("truckId") String truckId,
-                                                                @Valid @RequestParam String managerId) {
+                                                                @Valid @PathVariable("managerId") String managerId) {
         truckService.deleteManager(managerId, truckId);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Truck manager deleted successfully.")
@@ -260,7 +361,7 @@ public class TruckController {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000]," +
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
                     "멤버를 못 찾을 경우[20004]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -280,8 +381,10 @@ public class TruckController {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000]," +
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
                     "멤버를 못 찾을 경우[20004], 트럭 소유자를 못 찾을(아닐) 경우[30005]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "400", description = "트럭이 현재 진행중인 행사에 참여중인 경우[40023]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @DeleteMapping(value = "/v1/{truckId}")

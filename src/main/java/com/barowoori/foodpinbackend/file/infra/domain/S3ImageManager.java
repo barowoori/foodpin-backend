@@ -8,6 +8,7 @@ import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.barowoori.foodpinbackend.config.factory.YamlPropertySourceFactory;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
@@ -18,9 +19,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Date;
 import java.util.UUID;
 
+@Slf4j
 @Component
 @PropertySource(value = "classpath:secrets/aws-s3-config.yml", factory = YamlPropertySourceFactory.class)
 public class S3ImageManager implements ImageManager {
@@ -67,15 +72,34 @@ public class S3ImageManager implements ImageManager {
         }
     }
 
+    @Override
+    public File downloadFile(String fileUrl) {
+        if (fileUrl == null){
+            return null;
+        }
+        String objectKey = getObjectKey(fileUrl);
+        try {
+            String fileName = objectKey.substring(objectKey.lastIndexOf("/") + 1);
+            fileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8.name());
+
+            Path tempDir = Files.createTempDirectory("s3-download-");
+
+            Path tempFile = Files.createFile(tempDir.resolve(fileName));
+            log.info("파일 다운로드 : {}", tempFile);
+            amazonS3.getObject(new GetObjectRequest(bucket, objectKey), tempFile.toFile());
+
+            return tempFile.toFile();
+        } catch (Exception e) {
+            System.out.println("Error while decoding or deleting the file: " + e.getMessage());
+        }
+        return null;
+    }
+
     private String upload(MultipartFile multipartFile, String dirName) throws IOException {
         // 파일 이름에서 공백을 제거한 새로운 파일 이름 생성
         String originalFileName = multipartFile.getOriginalFilename();
 
-        // UUID를 파일명에 추가
-        String uuid = UUID.randomUUID().toString();
-        String uniqueFileName = uuid + "_" + originalFileName.replaceAll("\\s", "_");
-
-        String fileName = dirName + "/" + uniqueFileName;
+        String fileName = dirName + "/" + originalFileName;
         File uploadFile = convert(multipartFile);
 
         String uploadImageUrl = putS3(uploadFile, fileName);
@@ -114,6 +138,7 @@ public class S3ImageManager implements ImageManager {
             System.out.println("파일이 삭제되지 못했습니다.");
         }
     }
+
     @Override
     public String getPreSignUrl(String fileUrl) {
         if (fileUrl == null || fileUrl.equals("")) {

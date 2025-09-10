@@ -72,6 +72,15 @@ jobs:
           APP_CONFIG_FILE: src/main/resources/application-${{ env.PROFILE }}.yml
         run: |
           echo "spring:" >> ${APP_CONFIG_FILE}
+          echo "  servlet:" >> ${APP_CONFIG_FILE}
+          echo "    multipart:" >> ${APP_CONFIG_FILE}
+          echo "      max-file-size: 50MB" >> ${APP_CONFIG_FILE}
+          echo "      max-request-size: 50MB" >> ${APP_CONFIG_FILE}
+          echo "      enabled: true" >> ${APP_CONFIG_FILE}
+          echo "  data:" >> ${APP_CONFIG_FILE}
+          echo "    web:" >> ${APP_CONFIG_FILE}
+          echo "      pageable:" >> ${APP_CONFIG_FILE}
+          echo "        max-page-size: 100000" >> ${APP_CONFIG_FILE}
           echo "  datasource:" >> ${APP_CONFIG_FILE}
           echo "    driver-class-name: com.mysql.cj.jdbc.Driver" >> ${APP_CONFIG_FILE}
           echo "    url: ${DB_URL}" >> ${APP_CONFIG_FILE}
@@ -83,7 +92,21 @@ jobs:
           echo "    generate-ddl: false" >> ${APP_CONFIG_FILE}
           echo "    hibernate:" >> ${APP_CONFIG_FILE}
           echo "      ddl-auto: none" >> ${APP_CONFIG_FILE}
-
+          echo "  mail:" >> ${APP_CONFIG_FILE}
+          echo "    host: smtp.gmail.com" >> ${APP_CONFIG_FILE}
+          echo "    port: 587" >> ${APP_CONFIG_FILE}
+          echo "    username: ${{ secrets.MAIL_USERNAME }}" >> ${APP_CONFIG_FILE}
+          echo "    password: ${{ secrets.MAIL_PASSWORD }}" >> ${APP_CONFIG_FILE}
+          echo "    properties:" >> ${APP_CONFIG_FILE}
+          echo "      mail:" >> ${APP_CONFIG_FILE}
+          echo "        smtp:" >> ${APP_CONFIG_FILE}
+          echo "          auth: true" >> ${APP_CONFIG_FILE}
+          echo "          starttls:" >> ${APP_CONFIG_FILE}
+          echo "            enable: true" >> ${APP_CONFIG_FILE}
+          echo "server:" >> ${APP_CONFIG_FILE}
+          echo "  tomcat:" >> ${APP_CONFIG_FILE}
+          echo "    max-swallow-size: 50MB" >> ${APP_CONFIG_FILE}
+          echo "    max-http-post-size: 50MB" >> ${APP_CONFIG_FILE}
       # application-S3.properties 생성
       - name: Create aws-s3-config.yml
         env: # 환경 변수로 GitHub Secrets 값을 읽어옵니다.
@@ -104,6 +127,17 @@ jobs:
           mkdir -p $(dirname ${APP_CONFIG_FILE}) # 디렉토리가 없으면 생성
           echo "jwt.secret=${{ secrets.JWT_SECRET_KEY }}" >> ${APP_CONFIG_FILE}
 
+      - name: Create oauth-key.properties
+        env:
+          APP_CONFIG_FILE: src/main/resources/secrets/oauth-key.properties
+        run: |
+          mkdir -p $(dirname ${APP_CONFIG_FILE}) # 디렉토리가 없으면 생성
+          echo "oauth.apple.teamId=${{ secrets.APPLE_TEAM_ID }}" >> ${APP_CONFIG_FILE}
+          echo "oauth.apple.keyId=${{ secrets.APPLE_KEY_ID }}" >> ${APP_CONFIG_FILE}
+          echo "oauth.apple.clientId=${{ secrets.APPLE_CLIENT_ID }}" >> ${APP_CONFIG_FILE}
+          echo "oauth.apple.privateKeyPem=${{ secrets.APPLE_PRIVATE_KEY_PEM }}" >> ${APP_CONFIG_FILE}
+          echo "oauth.kakao.adminKey=${{ secrets.KAKAO_ADMIN_KEY }}" >> ${APP_CONFIG_FILE}
+
       - name: Create odcloud-config.yml
         env: # 환경 변수로 GitHub Secrets 값을 읽어옵니다.
           APP_CONFIG_FILE: src/main/resources/secrets/odcloud-config.yml
@@ -112,6 +146,13 @@ jobs:
           echo "odcloud:" >> ${APP_CONFIG_FILE}
           echo "  encodingKey: ${{ secrets.ODCLOUD_ENCODING_KEY }}" >> ${APP_CONFIG_FILE}
           echo "  decodingKey: ${{ secrets.ODCLOUD_DECODING_KEY }}" >> ${APP_CONFIG_FILE}
+
+      - name: create firebase-adminsdk.json
+        uses: jsdaniell/create-json@1.1.2
+        with:
+          name: "foodpin-d001c-firebase-adminsdk-idqc0-9e68a6effd.json"
+          json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          dir: './src/main/resources/secrets'
 
       # 3. Gradle 빌드 및 Docker 이미지 생성
       - name: Grant execute permission for gradlew

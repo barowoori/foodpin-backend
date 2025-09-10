@@ -1,14 +1,21 @@
 package com.barowoori.foodpinbackend.truck.command.domain.model;
 
+import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
+import com.barowoori.foodpinbackend.file.command.domain.model.File;
+import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
+import com.barowoori.foodpinbackend.region.command.domain.query.application.RegionSearchProcessor;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "trucks")
@@ -51,10 +58,21 @@ public class Truck {
     private Boolean isDeleted = false;
 
     @OneToMany(mappedBy = "truck")
-    private List<TruckMenu> menus = new ArrayList<>();
+    @BatchSize(size = 10)
+    private Set<TruckMenu> menus;
 
     @OneToMany(mappedBy = "truck")
-    private List<TruckPhoto> photos = new ArrayList<>();
+    @BatchSize(size = 10)
+    private Set<TruckPhoto> photos;
+
+    @OneToMany(mappedBy = "truck")
+    private Set<TruckDocument> documents;
+
+    @OneToMany(mappedBy = "truck")
+    private Set<TruckCategory> categories ;
+
+    @OneToMany(mappedBy = "truck")
+    private Set<TruckRegion> regions;
 
     protected Truck() {
     }
@@ -88,5 +106,57 @@ public class Truck {
 
     public void delete(){
         this.isDeleted = true;
+    }
+
+    public Boolean approval(){
+        if (this.documents == null){
+            return Boolean.FALSE;
+        }
+       return this.documents.stream().anyMatch(doc -> doc.getType().equals(DocumentType.BUSINESS_REGISTRATION));
+    }
+
+    public String getTruckMainPhotoUrl(ImageManager imageManager){
+        return getTruckPhotoFiles().stream()
+                .map(file -> imageManager.getPreSignUrl(file.getPath()))
+                .findFirst().orElse(null);
+    }
+
+    public List<File> getTruckPhotoFiles(){
+        if (this.photos == null){
+            return new ArrayList<>();
+        }
+        return this.photos.stream()
+                .sorted(Comparator.comparing(TruckPhoto::getCreateAt))
+                .map(TruckPhoto::getFile)
+                .toList();
+    }
+
+    public List<TruckMenu> getSortedTruckMenus(){
+        if(this.menus == null){
+            return new ArrayList<>();
+        }
+        return this.menus.stream()
+                .sorted(Comparator.comparing(TruckMenu::getCreateAt))
+                .toList();
+    }
+
+    public List<String> getSortedTruckMenuNames(){
+        return getSortedTruckMenus().stream().map(TruckMenu::getName).toList();
+    }
+
+    public List<TruckRegion> getSortedTruckRegions(){
+        if(this.regions == null){
+            return new ArrayList<>();
+        }
+        return this.regions.stream()
+                .sorted(Comparator.comparing(TruckRegion::getCreateAt))
+                .toList();
+    }
+
+    public List<String> getTruckRegionNames(RegionSearchProcessor regionSearchProcessor){
+        return getSortedTruckRegions().stream()
+                .map(truckRegion ->
+                        regionSearchProcessor.findFullRegionName(truckRegion.getRegionType(), truckRegion.getRegionId()))
+                .toList();
     }
 }

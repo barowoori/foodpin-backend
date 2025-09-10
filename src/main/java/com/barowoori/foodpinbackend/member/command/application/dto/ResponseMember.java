@@ -1,5 +1,6 @@
 package com.barowoori.foodpinbackend.member.command.application.dto;
 
+import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
 import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginInfo;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -44,22 +45,24 @@ public class ResponseMember {
     public static class GetInfoDto{
         @Schema(description = "소셜 로그인 정보")
         private CommonMember.SocialInfoDto socialInfoDto;
-        @Schema(description = "핸드폰번호")
+        @Schema(description = "휴대폰 번호")
         private String phone;
         @Schema(description = "이메일")
         private String email;
         @Schema(description = "닉네임")
         private String nickname;
+        private String imageId;
         @Schema(description = "이미지")
         private String image;
 
-        public static GetInfoDto toDto(Member member){
+        public static GetInfoDto toDto(Member member, ImageManager imageManager){
             return GetInfoDto.builder()
                     .socialInfoDto(CommonMember.SocialInfoDto.toDto(member.getSocialLoginInfo()))
                     .phone(member.getPhone())
                     .email(member.getEmail())
                     .nickname(member.getNickname())
-                    .image(member.getImage())
+                    .imageId(member.getImage() != null ? member.getImage().getId() : null)
+                    .image(member.getImage() != null ? member.getImage().getPreSignUrl(imageManager) : null)
                     .build();
         }
     }

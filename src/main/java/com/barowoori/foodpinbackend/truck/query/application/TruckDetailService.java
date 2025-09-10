@@ -5,6 +5,7 @@ import com.barowoori.foodpinbackend.common.exception.CustomException;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.member.command.domain.model.TruckLike;
 import com.barowoori.foodpinbackend.member.command.domain.repository.TruckLikeRepository;
+import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionCode;
 import com.barowoori.foodpinbackend.truck.command.domain.exception.TruckErrorCode;
 import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckManager;
@@ -27,10 +28,11 @@ public class TruckDetailService {
     private final TruckManagerRepository truckManagerRepository;
     private final ImageManager imageManager;
     private final TruckCategoryRepository truckCategoryRepository;
+    private final TruckRegionFullNameGenerator truckRegionFullNameGenerator;
 
     public TruckDetailService(TruckDocumentRepository truckDocumentRepository, TruckLikeRepository truckLikeRepository, TruckRegionRepository truckRegionRepository,
                               TruckRepository truckRepository, TruckMenuRepository truckMenuRepository, TruckManagerRepository truckManagerRepository,
-                              ImageManager imageManager, TruckCategoryRepository truckCategoryRepository) {
+                              ImageManager imageManager, TruckCategoryRepository truckCategoryRepository, TruckRegionFullNameGenerator truckRegionFullNameGenerator) {
         this.truckDocumentRepository = truckDocumentRepository;
         this.truckLikeRepository = truckLikeRepository;
         this.truckRegionRepository = truckRegionRepository;
@@ -39,6 +41,7 @@ public class TruckDetailService {
         this.truckManagerRepository = truckManagerRepository;
         this.imageManager = imageManager;
         this.truckCategoryRepository = truckCategoryRepository;
+        this.truckRegionFullNameGenerator = truckRegionFullNameGenerator;
     }
 
     @Transactional
@@ -51,9 +54,9 @@ public class TruckDetailService {
         List<TruckMenu> truckMenus = truckMenuRepository.getMenuListWithPhotoByTruckId(truckId);
         TruckLike truckLike = truckLikeRepository.findByMemberIdAndTruckId(memberId, truckId);
         TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(truckId, memberId);
-        List<String> regionNames = truckRegionRepository.findRegionNamesByTruckId(truckId);
+        List<RegionCode> regionNames = truckRegionFullNameGenerator.findRegionCodesByTruckId(truckId);
         List<Category> categories = truckCategoryRepository.findCategoriesByTruckId(truckId);
         truck.addViews();
-        return TruckDetail.of(truckManager, truck, documentManager.getTypes(), regionNames, categories, truckMenus, truckLike != null, imageManager);
+        return TruckDetail.of(truckManager, truck, documentManager, regionNames, categories, truckMenus, truckLike != null, imageManager);
     }
 }

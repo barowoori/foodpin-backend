@@ -6,9 +6,6 @@ import com.barowoori.foodpinbackend.common.security.JwtTokenProvider;
 import com.barowoori.foodpinbackend.member.command.application.dto.RequestMember;
 import com.barowoori.foodpinbackend.member.command.application.dto.ResponseMember;
 import com.barowoori.foodpinbackend.member.command.application.service.MemberService;
-import com.barowoori.foodpinbackend.region.command.domain.model.Region;
-import com.barowoori.foodpinbackend.region.command.domain.model.RegionDo;
-import com.barowoori.foodpinbackend.region.command.domain.model.RegionSi;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -19,12 +16,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.Date;
 
 @Tag(name = "회원 API", description = "회원 관련 API")
 @RequiredArgsConstructor
@@ -50,7 +43,24 @@ public class MemberController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
-    @Operation(summary = "로그인", description = "반환되는 accessToken, refreshToken 전부 저장 후" +
+    @Operation(summary = "임시 회원가입", description = "SocialLoginType은 UNREGISTERED 필수")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "이미 해당 소셜 정보로 가입한 경우[20003]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "SocialLoginType이 UNREGISTERED가 아닌 경우[20007]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping("/v1/register/temporary")
+    public ResponseEntity<CommonResponse<String>> registerTemporary(@Valid @RequestBody RequestMember.RegisterTemporaryDto registerTemporaryDto) {
+        memberService.registerTemporary(registerTemporaryDto);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Temporary registered successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "비회원 로그인", description = "반환되는 accessToken, refreshToken 전부 저장 후" +
             "\n\n모든 요청의 Authorization 헤더에 accessToken을 담아서 사용(/reissued-token, /logout API는 refreshToken)" +
             "\n\naccessToken(유효기간 1시간) 만료(401 에러) 시 /reissued-token API로 액세스 토큰 재발급" +
             "\n\nrefreshToken(유효기간 30일)은 만료(401 에러) 시 /login API로 액세스, 리프레쉬 전부 재발급")
@@ -59,9 +69,31 @@ public class MemberController {
             @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PostMapping("/v1/login")
-    public ResponseEntity<CommonResponse<ResponseMember.LoginMemberRsDto>> loginMember(@Valid @RequestBody RequestMember.LoginMemberRqDto loginMemberRqDto) {
-        ResponseMember.LoginMemberRsDto loginMemberRsDto = memberService.loginMember(loginMemberRqDto);
+    @PostMapping("/v2/login/temporary")
+    public ResponseEntity<CommonResponse<ResponseMember.LoginMemberRsDto>> loginTemporary(@Valid @RequestBody RequestMember.LoginMemberRqDto loginMemberRqDto) {
+        ResponseMember.LoginMemberRsDto loginMemberRsDto = memberService.loginTemporary(loginMemberRqDto);
+        CommonResponse<ResponseMember.LoginMemberRsDto> commonResponse = CommonResponse.<ResponseMember.LoginMemberRsDto>builder()
+                .data(loginMemberRsDto)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "로그인", description = "반환되는 accessToken, refreshToken 전부 저장 후" +
+            "\n\n모든 요청의 Authorization 헤더에 accessToken을 담아서 사용(/reissued-token, /logout API는 refreshToken)" +
+            "\n\naccessToken(유효기간 1시간) 만료(401 에러) 시 /reissued-token API로 액세스 토큰 재발급" +
+            "\n\nrefreshToken(유효기간 30일)은 만료(401 에러) 시 /login API로 액세스, 리프레쉬 전부 재발급" +
+            "\n\nidentityToken(인증 토큰) : 애플-identityToken, 카카오-accessToken 전송 / authorizationCode(인증 코드)는 애플만 전송")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "인증 토큰이 유효하지 않은 경우[20010], " +
+                    "인증 코드가 누락된 경우[20011], 소셜 타입이 누락된 경우[20009], 인증 코드가 유효하지 않은 경우[20008]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping("/v2/login")
+    public ResponseEntity<CommonResponse<ResponseMember.LoginMemberRsDto>> v2loginMember(@Valid @RequestBody RequestMember.V2LoginMemberRqDto loginMemberRqDto) {
+        ResponseMember.LoginMemberRsDto loginMemberRsDto = memberService.v2loginMember(loginMemberRqDto);
         CommonResponse<ResponseMember.LoginMemberRsDto> commonResponse = CommonResponse.<ResponseMember.LoginMemberRsDto>builder()
                 .data(loginMemberRsDto)
                 .build();
@@ -143,6 +175,25 @@ public class MemberController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "번호 수정")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "번호가 비어있을 경우[20001]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PutMapping(value = "/v1/phone/{phone}")
+    public ResponseEntity<CommonResponse<String>> updatePhone(@Valid @PathVariable("phone") String phone) {
+        memberService.updatePhone(phone);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Phone updated successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
     @Operation(summary = "프로필(사진, 닉네임) 수정", description = "닉네임은 필수 입력" +
             "\n\n기존 이미지 경로, 새 이미지 파일 둘 다 입력 없는 경우 프로필 이미지 삭제" +
             "\n\n기존 이미지 경로 입력 유무와는 상관없이 새 이미지 파일이 들어오는 경우 새 파일로 프로필 이미지 변경")
@@ -155,10 +206,9 @@ public class MemberController {
             @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PutMapping(value = "/v1/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<CommonResponse<String>> updateProfile(@Valid @RequestPart(name = "updateProfileRqDto") RequestMember.UpdateProfileRqDto updateProfileRqDto,
-                                                                @RequestPart(name = "image", required = false) MultipartFile image) {
-        memberService.updateProfile(updateProfileRqDto, image);
+    @PutMapping(value = "/v1/profile")
+    public ResponseEntity<CommonResponse<String>> updateProfile(@Valid @RequestBody RequestMember.UpdateProfileRqDto updateProfileRqDto) {
+        memberService.updateProfile(updateProfileRqDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Profile updated successfully.")
                 .build();
@@ -184,19 +234,61 @@ public class MemberController {
     }
 
 
-    @Operation(summary = "임시 회원삭제", description = "Authorization 헤더에 RefreshToken 입력, 임시 회원 삭제 기능")
+    @Operation(summary = "회원탈퇴", description = "Authorization 헤더에 RefreshToken 입력")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(리프레쉬 토큰 만료), 리프레시 토큰이 일치하지 않는 경우[20005]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "400", description = "사용자 소유 트럭이 현재 진행중인 행사에 참여중인 경우, 사용자 주최 행사가 진행중인 경우[40023]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @DeleteMapping("/v1/test")
+    @DeleteMapping("/v1/delete")
     public ResponseEntity<CommonResponse<String>> deleteMember(HttpServletRequest request) {
-        memberService.deleteMember();
+        String refreshToken = jwtTokenProvider.resolveToken(request);
+        memberService.deleteMember(refreshToken);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Member deleted successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "회원탈퇴", description = "Authorization 헤더에 RefreshToken 입력")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(리프레쉬 토큰 만료), 리프레시 토큰이 일치하지 않는 경우[20005]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "400", description = "사용자 소유 트럭이 현재 진행중인 행사에 참여중인 경우, 사용자 주최 행사가 진행중인 경우[40023]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @DeleteMapping("/v2/delete")
+    public ResponseEntity<CommonResponse<String>> v2deleteMember(HttpServletRequest request) {
+        String refreshToken = jwtTokenProvider.resolveToken(request);
+        memberService.v2deleteMember(refreshToken);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Member deleted successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "fcm token 설정")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(리프레쉬 토큰 만료), 리프레시 토큰이 일치하지 않는 경우[20005]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "400", description = "해당 회원 정보가 없을 경우[20004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping("/v1/fcm-token")
+    public ResponseEntity<CommonResponse<String>> setFcmToken(@RequestParam String fcmToken) {
+        memberService.setFcmToken(fcmToken);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Member fcm token set successfully.")
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
@@ -211,9 +303,23 @@ public class MemberController {
     public ResponseEntity<CommonResponse<String>> likeTruck(@Valid @PathVariable(name = "truckId") String truckId) {
         memberService.likeTruck(truckId);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
-                .data("successfully")
+                .data("Truck liked successfully")
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "행사 좋아요/취소", description = "좋아요가 이미 있을 경우 좋아요 취소, 없을 경우 좋아요 등록")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004], 해당 행사 정보가 없을 경우[40005]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PutMapping("/v1/events/{eventId}/like")
+    public ResponseEntity<CommonResponse<String>> likeEvent(@Valid @PathVariable(name = "eventId") String eventId) {
+        memberService.likeEvent(eventId);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Event liked successfully")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
 }

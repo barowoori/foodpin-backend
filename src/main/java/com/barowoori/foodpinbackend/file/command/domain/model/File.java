@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Getter;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
 @Entity
@@ -32,5 +35,20 @@ public class File {
 
     public String getPreSignUrl(ImageManager imageManager){
         return imageManager.getPreSignUrl(this.path);
+    }
+
+    public String getFileName() {
+        if (this.path == null || this.path.isEmpty()) {
+            return null;
+        }
+
+        try {
+            URL url = new URL(this.path);
+            String filePath = url.getPath();
+            String fileNameEncoded = filePath.substring(filePath.lastIndexOf('/') + 1);
+            return URLDecoder.decode(fileNameEncoded, StandardCharsets.UTF_8.name());
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

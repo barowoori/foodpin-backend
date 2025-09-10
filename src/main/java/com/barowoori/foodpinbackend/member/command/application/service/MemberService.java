@@ -2,25 +2,36 @@ package com.barowoori.foodpinbackend.member.command.application.service;
 
 import com.barowoori.foodpinbackend.common.exception.CustomException;
 import com.barowoori.foodpinbackend.common.security.JwtTokenProvider;
+import com.barowoori.foodpinbackend.event.command.application.service.EventService;
+import com.barowoori.foodpinbackend.event.command.domain.exception.EventErrorCode;
+import com.barowoori.foodpinbackend.event.command.domain.model.Event;
+import com.barowoori.foodpinbackend.event.command.domain.repository.EventRepository;
+import com.barowoori.foodpinbackend.file.command.domain.model.File;
+import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepository;
 import com.barowoori.foodpinbackend.member.command.application.dto.RequestMember;
 import com.barowoori.foodpinbackend.member.command.application.dto.ResponseMember;
 import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
-import com.barowoori.foodpinbackend.member.command.domain.model.Member;
-import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginInfo;
-import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginType;
-import com.barowoori.foodpinbackend.member.command.domain.model.TruckLike;
+import com.barowoori.foodpinbackend.member.command.domain.model.*;
+import com.barowoori.foodpinbackend.member.command.domain.repository.EventLikeRepository;
 import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
 import com.barowoori.foodpinbackend.member.command.domain.repository.TruckLikeRepository;
 import com.barowoori.foodpinbackend.member.command.domain.service.GenerateNicknameService;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
+import com.barowoori.foodpinbackend.truck.command.application.service.TruckService;
 import com.barowoori.foodpinbackend.truck.command.domain.exception.TruckErrorCode;
 import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
+import com.barowoori.foodpinbackend.truck.command.domain.model.TruckManager;
+import com.barowoori.foodpinbackend.truck.command.domain.model.TruckManagerRole;
+import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckManagerRepository;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +43,15 @@ public class MemberService {
     private final ImageManager imageManager;
     private final TruckLikeRepository truckLikeRepository;
     private final TruckRepository truckRepository;
+    private final FileRepository fileRepository;
+    private final EventRepository eventRepository;
+    private final EventLikeRepository eventLikeRepository;
+    private final TruckManagerRepository truckManagerRepository;
+    private final TruckService truckService;
+    private final EventService eventService;
+    private final SocialTokenVerifier socialTokenVerifier;
+    private final AuthCodeExchanger authCodeExchanger;
+    private final OAuthRevokeService oauthRevokeService;
 
     private Member getMember() {
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -43,7 +63,8 @@ public class MemberService {
     @Transactional
     public void registerMember(RequestMember.RegisterMemberDto registerMemberDto) {
 
-        Member member = memberRepository.findBySocialLoginInfo(registerMemberDto.getSocialInfoDto().toEntity());
+        Member member = memberRepository.findBySocialLoginInfo_TypeAndSocialLoginInfo_Id(registerMemberDto.getSocialInfoDto().getType(), registerMemberDto.getSocialInfoDto().getId());
+
         if (member != null) {
             throw new CustomException(MemberErrorCode.MEMBER_SOCIAL_LOGIN_INFO_EXISTS);
         }
@@ -53,10 +74,54 @@ public class MemberService {
     }
 
     @Transactional
-    public ResponseMember.LoginMemberRsDto loginMember(RequestMember.LoginMemberRqDto loginMemberRqDto) {
-        Member member = memberRepository.findBySocialLoginInfo(loginMemberRqDto.getSocialInfoDto().toEntity());
+    public void registerTemporary(RequestMember.RegisterTemporaryDto registerTemporaryDto) {
+
+        Member member = memberRepository.findBySocialLoginInfo_TypeAndSocialLoginInfo_Id(registerTemporaryDto.getSocialInfoDto().getType(), registerTemporaryDto.getSocialInfoDto().getId());
+        if (member != null) {
+            throw new CustomException(MemberErrorCode.MEMBER_SOCIAL_LOGIN_INFO_EXISTS);
+        }
+        if (!registerTemporaryDto.getSocialInfoDto().getType().equals(SocialLoginType.UNREGISTERED)) {
+            throw new CustomException(MemberErrorCode.ONLY_UNREGISTERED_ALLOWED);
+        }
+
+        member = registerTemporaryDto.toEntity();
+        member.getTypes().remove(MemberType.NORMAL);
+        member.getTypes().add(MemberType.UNREGISTERED);
+        memberRepository.save(member);
+    }
+
+    @Transactional
+    public ResponseMember.LoginMemberRsDto loginTemporary(RequestMember.LoginMemberRqDto loginMemberRqDto) {
+        Member member = memberRepository.findBySocialLoginInfo_TypeAndSocialLoginInfo_Id(loginMemberRqDto.getSocialInfoDto().getType(), loginMemberRqDto.getSocialInfoDto().getId());
         if (member == null)
             throw new CustomException(MemberErrorCode.MEMBER_NOT_FOUND);
+        String accessToken = jwtTokenProvider.createAccessToken(member.getId());
+        String refreshToken = jwtTokenProvider.createRefreshToken(member.getId());
+        member.updateRefreshToken(refreshToken);
+        memberRepository.save(member);
+        return ResponseMember.LoginMemberRsDto.toDto(accessToken, refreshToken);
+    }
+
+    @Transactional
+    public ResponseMember.LoginMemberRsDto v2loginMember(RequestMember.V2LoginMemberRqDto loginMemberRqDto) {
+        Member member = memberRepository.findBySocialLoginInfo_TypeAndSocialLoginInfo_Id(loginMemberRqDto.getSocialInfoDto().getType(), loginMemberRqDto.getSocialInfoDto().getId());
+        if (member == null)
+            throw new CustomException(MemberErrorCode.MEMBER_NOT_FOUND);
+
+        String verifiedSocialId = socialTokenVerifier.verify(loginMemberRqDto.getSocialInfoDto().getType(), loginMemberRqDto.getIdentityToken());
+        if (!Objects.equals(verifiedSocialId, loginMemberRqDto.getSocialInfoDto().getId())) {
+            throw new CustomException(MemberErrorCode.INVALID_IDENTITY_TOKEN);
+        }
+
+        if (loginMemberRqDto.getSocialInfoDto().getType().equals(SocialLoginType.APPLE)) {
+            if (Objects.equals(loginMemberRqDto.getAuthorizationCode(), null) || loginMemberRqDto.getAuthorizationCode().isEmpty()) {
+                throw new CustomException(MemberErrorCode.AUTH_CODE_EMPTY);
+            }
+            String oauthRefreshToken = authCodeExchanger.exchangeToken(loginMemberRqDto.getAuthorizationCode());
+            SocialLoginInfo socialLoginInfo = member.getSocialLoginInfo();
+            socialLoginInfo.setAppleRefreshToken(oauthRefreshToken);
+        }
+
         String accessToken = jwtTokenProvider.createAccessToken(member.getId());
         String refreshToken = jwtTokenProvider.createRefreshToken(member.getId());
         member.updateRefreshToken(refreshToken);
@@ -83,7 +148,7 @@ public class MemberService {
     @Transactional
     public ResponseMember.GetInfoDto getInfo() {
         Member member = getMember();
-        return ResponseMember.GetInfoDto.toDto(member);
+        return ResponseMember.GetInfoDto.toDto(member, imageManager);
     }
 
     @Transactional
@@ -112,9 +177,24 @@ public class MemberService {
     }
 
     @Transactional
-    public void updateProfile(RequestMember.UpdateProfileRqDto updateProfileRqDto, MultipartFile image) {
+    public void updatePhone(String phone) {
         Member member = getMember();
-        member.updateProfile(imageManager, updateProfileRqDto.getNickname(), updateProfileRqDto.getOriginImageUrl(), image);
+        if (phone != null && !phone.isEmpty()) {
+            member.updatePhone(phone);
+        } else throw new CustomException(MemberErrorCode.MEMBER_PHONE_EMPTY);
+        memberRepository.save(member);
+    }
+
+    @Transactional
+    public void updateProfile(RequestMember.UpdateProfileRqDto updateProfileRqDto) {
+        Member member = getMember();
+        if (updateProfileRqDto.getImage() == null) {
+            member.updateProfile(updateProfileRqDto.getNickname(), null);
+        } else {
+            File file = fileRepository.findById(updateProfileRqDto.getImage())
+                    .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_PROFILE_NOT_FOUND));
+            member.updateProfile(updateProfileRqDto.getNickname(), file);
+        }
         memberRepository.save(member);
     }
 
@@ -123,15 +203,90 @@ public class MemberService {
         Member member = getMember();
         if (member.matchRefreshToken(refreshToken)) {
             member.updateRefreshToken(null);
+            member.updateFcmToken(null);
             memberRepository.save(member);
         } else
             throw new CustomException(MemberErrorCode.REFRESH_TOKEN_MATCH_FAILED);
     }
 
     @Transactional
-    public void deleteMember() {
+    public void deleteMember(String refreshToken) {
         Member member = getMember();
-        memberRepository.delete(member);
+        if (!member.matchRefreshToken(refreshToken)) {
+            throw new CustomException(MemberErrorCode.REFRESH_TOKEN_MATCH_FAILED);
+        }
+        List<TruckLike> truckLikeList = truckLikeRepository.findAllByMemberId(member.getId());
+        if (truckLikeList != null) {
+            truckLikeList.forEach(truckLikeRepository::delete);
+        }
+        List<EventLike> eventLikeList = eventLikeRepository.findAllByMemberId(member.getId());
+        if (eventLikeList != null) {
+            eventLikeList.forEach(eventLikeRepository::delete);
+        }
+        List<TruckManager> truckManagerList = truckManagerRepository.findAllByMember(member);
+        if (truckManagerList != null) {
+            truckManagerList.forEach(truckManager -> {
+                if (truckManager.getRole().equals(TruckManagerRole.OWNER)) {
+                    truckService.deleteTruck(truckManager.getTruck().getId());
+                }
+                truckManagerRepository.delete(truckManager);
+            });
+        }
+        List<Event> eventList = eventRepository.findAllByCreatedBy(member.getId());
+        if (eventList != null) {
+            eventList.forEach(event -> eventService.deleteEvent(event.getId()));
+        }
+        member.delete();
+        memberRepository.save(member);
+    }
+
+    @Transactional
+    public void v2deleteMember(String refreshToken) {
+        Member member = getMember();
+        if (!member.matchRefreshToken(refreshToken)) {
+            throw new CustomException(MemberErrorCode.REFRESH_TOKEN_MATCH_FAILED);
+        }
+        List<TruckLike> truckLikeList = truckLikeRepository.findAllByMemberId(member.getId());
+        if (truckLikeList != null) {
+            truckLikeList.forEach(truckLikeRepository::delete);
+        }
+        List<EventLike> eventLikeList = eventLikeRepository.findAllByMemberId(member.getId());
+        if (eventLikeList != null) {
+            eventLikeList.forEach(eventLikeRepository::delete);
+        }
+        List<TruckManager> truckManagerList = truckManagerRepository.findAllByMember(member);
+        if (truckManagerList != null) {
+            truckManagerList.forEach(truckManager -> {
+                if (truckManager.getRole().equals(TruckManagerRole.OWNER)) {
+                    truckService.deleteTruck(truckManager.getTruck().getId());
+                }
+                truckManagerRepository.delete(truckManager);
+            });
+        }
+        List<Event> eventList = eventRepository.findAllByCreatedBy(member.getId());
+        if (eventList != null) {
+            eventList.forEach(event -> eventService.deleteEvent(event.getId()));
+        }
+
+        try {
+            SocialLoginInfo socialLoginInfo = member.getSocialLoginInfo();
+            switch (socialLoginInfo.getType()) {
+                case APPLE -> oauthRevokeService.revokeAppleAccess(socialLoginInfo.getAppleRefreshToken());
+                case KAKAO -> oauthRevokeService.unlinkKakaoAccess(socialLoginInfo.getId());
+            }
+        } catch (Exception e) {
+            System.err.println("[WITHDRAW] revoke failed: " + member.getSocialLoginInfo().getType() + " / " + e.getMessage());
+        }
+
+        member.delete();
+        memberRepository.save(member);
+    }
+
+    @Transactional
+    public void setFcmToken(String fcmToken) {
+        Member member = getMember();
+        member.updateFcmToken(fcmToken);
+        memberRepository.save(member);
     }
 
     @Transactional
@@ -147,6 +302,22 @@ public class MemberService {
             truckLikeRepository.save(truckLike);
         } else {
             truckLikeRepository.delete(truckLike);
+        }
+    }
+
+    @Transactional
+    public void likeEvent(String eventId) {
+        Member member = getMember();
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> new CustomException(EventErrorCode.NOT_FOUND_EVENT));
+        EventLike eventLike = eventLikeRepository.findByMemberIdAndEventId(member.getId(), eventId);
+        if (eventLike == null) {
+            eventLike = EventLike.builder()
+                    .event(event)
+                    .member(member)
+                    .build();
+            eventLikeRepository.save(eventLike);
+        } else {
+            eventLikeRepository.delete(eventLike);
         }
     }
 }

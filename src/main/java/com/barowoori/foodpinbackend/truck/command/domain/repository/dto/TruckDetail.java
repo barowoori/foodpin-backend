@@ -2,34 +2,47 @@ package com.barowoori.foodpinbackend.truck.command.domain.repository.dto;
 
 import com.barowoori.foodpinbackend.category.command.domain.model.Category;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
+import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
+import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionCode;
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.experimental.SuperBuilder;
 
+import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 
 @Getter
-@Builder
+@SuperBuilder
 public class TruckDetail {
+    private Boolean isTruckManager;
     private Boolean isAvailableUpdate;
     private Boolean isAvailableDelete;
     private TruckInfo truck;
     private List<DocumentType> documents;
-    private List<String> regions;
+    private List<TruckDocumentInfo> documentInfos;
+    private List<RegionCode> regions;
     private List<CategoryInfo> categories;
     private List<MenuInfo> menus;
     private Boolean isLike;
 
-    public static TruckDetail of(TruckManager truckManager, Truck truck, List<DocumentType> documents, List<String> regions, List<Category> categories, List<TruckMenu> truckMenus, Boolean isLike, ImageManager imageManager) {
+    public static TruckDetail of(TruckManager truckManager, Truck truck, TruckDocumentManager truckDocumentManager, List<RegionCode> regions, List<Category> categories,List<TruckMenu> truckMenus, Boolean isLike, ImageManager imageManager) {
         return TruckDetail.builder()
+                .isTruckManager(truckManager != null)
                 .isAvailableUpdate(checkAvailableUpdate(truckManager))
                 .isAvailableDelete(checkAvailableDelete(truckManager))
                 .truck(TruckInfo.of(truck, imageManager))
-                .documents(documents)
+                .documents(truckDocumentManager.getTypes())
+                .documentInfos(truckDocumentManager.getDocuments().stream().map(TruckDocumentInfo::of).toList())
                 .regions(regions)
-                .categories(categories.stream().map(CategoryInfo::of).toList())
-                .menus(truckMenus.stream().map(truckMenu -> MenuInfo.of(truckMenu, imageManager)).toList())
+                .categories(categories.stream()
+                        .sorted(Comparator.comparing(Category::getCode))
+                        .map(CategoryInfo::of).toList())
+                .menus(truckMenus.stream()
+                        .map(truckMenu -> MenuInfo.of(truckMenu, imageManager))
+                        .toList())
                 .isLike(isLike)
                 .build();
     }
@@ -67,9 +80,8 @@ public class TruckDetail {
                     .electricityUsage(truck.getElectricityUsage())
                     .gasUsage(truck.getGasUsage())
                     .selfGenerationAvailability(truck.getSelfGenerationAvailability())
-                    .photos(truck.getPhotos()
-                            .stream()
-                            .map(truckPhoto -> Photo.ofTruckPhoto(truckPhoto, imageManager))
+                    .photos(truck.getTruckPhotoFiles().stream()
+                            .map(file -> Photo.of(file, imageManager))
                             .toList())
                     .build();
         }
@@ -90,11 +102,9 @@ public class TruckDetail {
                     .name(truckMenu.getName())
                     .price(truckMenu.getPrice())
                     .description(truckMenu.getDescription())
-                    .photos(truckMenu.getPhotos()
-                            .stream()
-                            .map(truckMenuPhoto -> Photo.ofTruckMenuPhoto(truckMenuPhoto, imageManager))
+                    .photos(truckMenu.getTruckMenuPhotoFiles().stream()
+                            .map(file -> Photo.of(file, imageManager))
                             .toList())
-
                     .build();
 
         }
@@ -120,20 +130,25 @@ public class TruckDetail {
     public static class Photo {
         private String id;
         private String path;
-
-        public static Photo ofTruckPhoto(TruckPhoto truckPhoto, ImageManager imageManager) {
+        public static Photo of(File file, ImageManager imageManager) {
             return Photo.builder()
-                    .id(truckPhoto.getId())
-                    .path(truckPhoto.getFile().getPreSignUrl(imageManager))
-                    .build();
-        }
-
-        public static Photo ofTruckMenuPhoto(TruckMenuPhoto truckMenuPhoto, ImageManager imageManager) {
-            return Photo.builder()
-                    .id(truckMenuPhoto.getId())
-                    .path(truckMenuPhoto.getFile().getPreSignUrl(imageManager))
+                    .id(file.getId())
+                    .path(file.getPreSignUrl(imageManager))
                     .build();
         }
     }
 
+    @Getter
+    @Builder
+    public static class TruckDocumentInfo{
+        private DocumentType type;
+        private LocalDate date;
+
+        public static TruckDocumentInfo of(TruckDocument truckDocument){
+            return TruckDocumentInfo.builder()
+                    .type(truckDocument.getType())
+                    .date(truckDocument.getUpdatedAt().toLocalDate())
+                    .build();
+        }
+    }
 }

@@ -111,10 +111,10 @@ public class EventRecruitDetail {
     }
 
     public void addSelectedCount() {
-        this.applicantCount += 1;
+        this.selectedCount += 1;
     }
 
     public void decreaseSelectedCount() {
-        this.applicantCount -= 1;
+        this.selectedCount -= 1;
     }
 }

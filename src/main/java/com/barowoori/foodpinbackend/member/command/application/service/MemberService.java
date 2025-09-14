@@ -69,6 +69,16 @@ public class MemberService {
             throw new CustomException(MemberErrorCode.MEMBER_SOCIAL_LOGIN_INFO_EXISTS);
         }
 
+        member = memberRepository.findByPhone(registerMemberDto.getPhone());
+        if (member != null) {
+            throw new CustomException(MemberErrorCode.MEMBER_PHONE_EXISTS);
+        }
+
+        member = memberRepository.findByNickname(registerMemberDto.getNickname());
+        if (member != null) {
+            throw new CustomException(MemberErrorCode.MEMBER_NICKNAME_EXISTS);
+        }
+
         member = registerMemberDto.toEntity();
         memberRepository.save(member);
     }

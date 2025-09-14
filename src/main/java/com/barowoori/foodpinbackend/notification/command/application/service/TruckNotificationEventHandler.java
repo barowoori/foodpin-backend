@@ -70,7 +70,7 @@ public class TruckNotificationEventHandler {
         memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
             notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, event.getTruckId());
 
-            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, event.getEventTruckId(), content);
+            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, event.getTruckId(), content);
         });
     }
 
@@ -122,7 +122,7 @@ public class TruckNotificationEventHandler {
         memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
             notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, event.getTruckId());
 
-            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, null, content);
+            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType,  event.getTruckId(), content);
         });
     }
 
@@ -141,7 +141,7 @@ public class TruckNotificationEventHandler {
         memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
             notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, event.getEventId());
 
-            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, event.getNoticeId(), content);
+            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, event.getEventId(), content);
         });
     }
 

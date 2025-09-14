@@ -85,7 +85,7 @@ public class EventNotificationEventHandler {
         }
         notificationService.pushAlarmToToken(type, type.getName(), content, eventCreatorFcmInfo.getFcmToken(), targetType, event.getEventId());
 
-        savePushAlarmHistory(eventCreatorFcmInfo.getMemberId(), type, targetType, event.getEventTruckId(), content);
+        savePushAlarmHistory(eventCreatorFcmInfo.getMemberId(), type, targetType, event.getEventId(), content);
     }
 
     //선정 취소 알림 handler
@@ -105,7 +105,7 @@ public class EventNotificationEventHandler {
         }
         notificationService.pushAlarmToToken(type, type.getName(), content, eventCreatorFcmInfo.getFcmToken(), targetType, event.getEventId());
 
-        savePushAlarmHistory(eventCreatorFcmInfo.getMemberId(), type, targetType, null, content);
+        savePushAlarmHistory(eventCreatorFcmInfo.getMemberId(), type, targetType, event.getEventId(), content);
     }
 
     //회신 요청 알림 handler

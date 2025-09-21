@@ -9,7 +9,7 @@ import lombok.Getter;
 @Getter
 @Builder
 public class RecruitInfo {
-    private EventRecruitingStatus status;
+    private String status;
     private Boolean isRecruitEndOnSelection;
     private Integer applicantCount;
     private Integer selectedCount;
@@ -17,11 +17,17 @@ public class RecruitInfo {
 
     public static RecruitInfo of(EventRecruitDetail eventRecruitDetail) {
         return RecruitInfo.builder()
-                .status(eventRecruitDetail.getRecruitingStatus())
+                .status(convertStatus(eventRecruitDetail.getRecruitingStatus(), eventRecruitDetail.getIsSelecting()))
                 .isRecruitEndOnSelection(eventRecruitDetail.getIsRecruitEndOnSelection())
                 .applicantCount(eventRecruitDetail.getApplicantCount())
                 .selectedCount(eventRecruitDetail.getSelectedCount())
                 .recruitCount(eventRecruitDetail.getRecruitCount())
                 .build();
+    }
+    private static String convertStatus(EventRecruitingStatus status, Boolean isSelecting){
+        if (!isSelecting){
+            return "COMPLETED";
+        }
+        return status.toString();
     }
 }

@@ -3,11 +3,11 @@ package com.barowoori.foodpinbackend.event.command.application.dto;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
+import com.barowoori.foodpinbackend.common.validation.UnicodeSize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
@@ -44,15 +44,15 @@ public class RequestEvent {
 
     @Getter
     public static class EventInfoDto{
-        @Size(min = 1, max = 30, message = "1자 이상 30자 이하로 입력하세요.")
+        @UnicodeSize(min = 1, max = 30, message = "1자 이상 30자 이하로 입력하세요.")
         @Schema(description = "행사 이름")
         @NotEmpty
         private String name;
-        @Size(min = 10, max = 10000, message = "10자 이상 10,000자 이하로 입력하세요.")
+        @UnicodeSize(min = 10, max = 10000, message = "10자 이상 10,000자 이하로 입력하세요.")
         @Schema(description = "행사 상세 정보")
         @NotEmpty
         private String description;
-        @Size(min = 10, max = 10000, message = "10자 이상 10,000자 이하로 입력하세요.")
+        @UnicodeSize(min = 10, max = 10000, message = "10자 이상 10,000자 이하로 입력하세요.")
         @Schema(description = "행사 유의 사항")
         @NotEmpty
         private String guidelines;
@@ -143,7 +143,7 @@ public class RequestEvent {
 
     @Getter
     public static class UpdateEventInfoDto{
-        @Size(min = 1, max = 30, message = "1자 이상 30자 이하로 입력하세요.")
+        @UnicodeSize(min = 1, max = 30, message = "1자 이상 30자 이하로 입력하세요.")
         @Schema(description = "행사 이름")
         @NotEmpty
         private String name;
@@ -161,11 +161,11 @@ public class RequestEvent {
         @NotEmpty
         @Schema(description = "카테고리 코드 리스트")
         private List<String> eventCategoryCodeList;
-        @Size(min = 10, max = 10000, message = "10자 이상 10,000자 이하로 입력하세요.")
+        @UnicodeSize(min = 10, max = 10000, message = "10자 이상 10,000자 이하로 입력하세요.")
         @Schema(description = "행사 상세 정보")
         @NotEmpty
         private String description;
-        @Size(min = 10, max = 10000, message = "10자 이상 10,000자 이하로 입력하세요.")
+        @UnicodeSize(min = 10, max = 10000, message = "10자 이상 10,000자 이하로 입력하세요.")
         @Schema(description = "행사 유의 사항")
         @NotEmpty
         private String guidelines;

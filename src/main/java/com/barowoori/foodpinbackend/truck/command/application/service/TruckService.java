@@ -91,6 +91,13 @@ public class TruckService {
                 .orElseThrow(() -> new CustomException(TruckErrorCode.NOT_FOUND_TRUCK));
     }
 
+    private void validateTruckAccess(String truckId, String memberId) {
+        TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(truckId, memberId);
+        if (truckManager == null) {
+            throw new CustomException(TruckErrorCode.TRUCK_MANAGER_NOT_FOUND);
+        }
+    }
+
     @Transactional
     public void createTruck(RequestTruck.CreateTruckDto createTruckDto) {
         String memberId = getMemberId();
@@ -201,6 +208,7 @@ public class TruckService {
 
     @Transactional(readOnly = true)
     public ResponseTruck.GetTruckInviteMessageDto getManagerInviteMessage(String truckId) {
+        validateTruckAccess(truckId, getMemberId());
         Truck truck = getTruck(truckId);
         return ResponseTruck.GetTruckInviteMessageDto.builder()
                 .message(truckManagerInvitationGenerator.getMessage(truck))
@@ -211,6 +219,7 @@ public class TruckService {
     public void updateTruckInfo(String truckId, RequestTruck.UpdateTruckInfoDto updateTruckInfoDto) {
         String memberId = getMemberId();
         Truck truck = getTruck(truckId);
+        validateTruckAccess(truck.getId(), memberId);
         truck.update(updateTruckInfoDto.getName(), memberId, updateTruckInfoDto.getDescription(), truck.getElectricityUsage(), truck.getGasUsage(), truck.getSelfGenerationAvailability());
         truckRepository.save(truck);
 
@@ -229,6 +238,7 @@ public class TruckService {
     public void updateTruckOperation(String truckId, RequestTruck.UpdateTruckOperationDto updateTruckOperationDto) {
         String memberId = getMemberId();
         Truck truck = getTruck(truckId);
+        validateTruckAccess(truck.getId(), memberId);
         truck.update(truck.getName(), memberId, truck.getDescription(), updateTruckOperationDto.getElectricityUsage(), updateTruckOperationDto.getGasUsage(), updateTruckOperationDto.getSelfGenerationAvailability());
         truckRepository.save(truck);
 
@@ -249,6 +259,7 @@ public class TruckService {
     public void updateTruckMenu(String truckId, RequestTruck.UpdateTruckMenuDto updateTruckMenuDto) {
         String memberId = getMemberId();
         Truck truck = getTruck(truckId);
+        validateTruckAccess(truck.getId(), memberId);
 
         List<TruckCategory> truckCategoryList = truckCategoryRepository.findAllByTruck(truck);
         truckCategoryList.forEach(truckCategoryRepository::delete);
@@ -292,6 +303,7 @@ public class TruckService {
     public void setTruckDocuments(String truckId, List<RequestTruck.TruckDocumentDto> documentDtoList) {
         String memberId = getMemberId();
         Truck truck = getTruck(truckId);
+        validateTruckAccess(truck.getId(), memberId);
 
         for (RequestTruck.TruckDocumentDto dto : documentDtoList) {
             DocumentType type = dto.getType();
@@ -339,6 +351,7 @@ public class TruckService {
     }
 
     private void saveTruckDocumentPhotos(List<String> fileIds, TruckDocument doc, String memberId) {
+        validateTruckAccess(doc.getTruck().getId(), memberId);
         for (String fileId : fileIds) {
             File file = fileRepository.findById(fileId)
                     .orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_DOCUMENT_PHOTO_NOT_FOUND));
@@ -358,7 +371,6 @@ public class TruckService {
         TruckManager truckOwner = truckManagerRepository.findByTruckIdAndMemberId(truckId, memberId);
         TruckManager truckMember = truckManagerRepository.findById(truckManagerId).orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_MANAGER_NOT_FOUND));
 
-        System.out.println(Objects.equals(truckOwner.getRole(), TruckManagerRole.OWNER));
         if (truckOwner != null && truckMember != null && Objects.equals(truckOwner.getRole(), TruckManagerRole.OWNER)) {
             truckMember.updateRole(TruckManagerRole.OWNER);
             truckManagerRepository.save(truckMember);
@@ -400,7 +412,7 @@ public class TruckService {
             if (eventTruckList != null) {
                 eventTruckList.forEach(eventTruck -> {
                     Event event = eventTruck.getEvent();
-                    if (EventDateCalculator.getMinDate(event).isBefore(LocalDate.now()) && EventDateCalculator.getMaxDate(event).isAfter(LocalDate.now())){
+                    if (EventDateCalculator.getMinDate(event).isBefore(LocalDate.now()) && EventDateCalculator.getMaxDate(event).isAfter(LocalDate.now())) {
                         throw new CustomException(EventErrorCode.ALREADY_IN_PROGRESS_EVENT);
                     }
                 });
@@ -415,12 +427,14 @@ public class TruckService {
 
     @Transactional(readOnly = true)
     public Page<TruckManagerSummary> getTruckManagerList(String truckId, Pageable pageable) {
+        validateTruckAccess(truckId, getMemberId());
         Page<TruckManagerSummary> truckManagerSummaries = truckManagerRepository.findTruckManagerPages(truckId, getMemberId(), pageable);
         return truckManagerSummaries.map(truckManagerSummary -> truckManagerSummary.convertToPreSignedUrl(imageManager));
     }
 
     @Transactional(readOnly = true)
     public ResponseTruck.GetBusinessRegistrationInfo getTruckBusinessRegistrationDocumentInfo(String truckId) {
+        validateTruckAccess(truckId, getMemberId());
         Truck truck = getTruck(truckId);
         BusinessRegistration businessRegistration = truckDocumentRepository.getBusinessRegistrationDocumentByTruckId(truck.getId());
         return ResponseTruck.GetBusinessRegistrationInfo.of(businessRegistration);
@@ -428,6 +442,7 @@ public class TruckService {
 
     @Transactional(readOnly = true)
     public List<ResponseTruck.GetTruckDocumentFile> getTruckDocumentFiles(String truckId) {
+        validateTruckAccess(truckId, getMemberId());
         Truck truck = getTruck(truckId);
         List<TruckDocument> truckDocuments = truckDocumentRepository.getTruckDocumentFiles(truck.getId());
         return truckDocuments.stream()

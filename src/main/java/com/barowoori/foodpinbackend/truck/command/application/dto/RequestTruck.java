@@ -3,11 +3,11 @@ package com.barowoori.foodpinbackend.truck.command.application.dto;
 import com.barowoori.foodpinbackend.document.command.application.dto.RequestDocument;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
+import com.barowoori.foodpinbackend.common.validation.UnicodeSize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
@@ -42,12 +42,12 @@ public class RequestTruck {
 
     @Getter
     public static class TruckInfoDto{
-        @Size(min = 1, max = 30, message = "1자 이상 30자 이하로 입력하세요.")
+        @UnicodeSize(min = 1, max = 30, message = "1자 이상 30자 이하로 입력하세요.")
         @Schema(description = "트럭 이름")
         @NotEmpty
         private String name;
 
-        @Size(min = 10, max = 10000, message = "10자 이상 10,000자 이하로 입력하세요.")
+        @UnicodeSize(min = 10, max = 10000, message = "10자 이상 10,000자 이하로 입력하세요.")
         @Schema(description = "트럭 설명")
         @NotEmpty
         private String description;
@@ -148,12 +148,12 @@ public class RequestTruck {
     @Getter
     @Data
     public static class UpdateTruckInfoDto{
-        @Size(min = 1, max = 30, message = "1자 이상 30자 이하로 입력하세요.")
+        @UnicodeSize(min = 1, max = 30, message = "1자 이상 30자 이하로 입력하세요.")
         @Schema(description = "트럭 이름")
         @NotEmpty
         private String name;
 
-        @Size(min = 10, max = 10000, message = "10자 이상 10,000자 이하로 입력하세요.")
+        @UnicodeSize(min = 10, max = 10000, message = "10자 이상 10,000자 이하로 입력하세요.")
         @Schema(description = "트럭 설명")
         @NotEmpty
         private String description;

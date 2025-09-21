@@ -80,6 +80,12 @@ public class EventService {
                 .orElseThrow(() -> new CustomException(TruckErrorCode.NOT_FOUND_TRUCK));
     }
 
+    private void validateEventAccess(Event event, String memberId) {
+        if (!event.getCreatedBy().equals(memberId)) {
+            throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
+        }
+    }
+
     @Transactional
     public void createEvent(RequestEvent.CreateEventDto createEventDto) {
         String memberId = getMemberId();
@@ -146,7 +152,7 @@ public class EventService {
     public void updateEventInfo(String eventId, RequestEvent.UpdateEventInfoDto updateEventInfoDto) {
         String memberId = getMemberId();
         Event event = getEvent(eventId);
-
+        validateEventAccess(event, memberId);
         event.updateName(updateEventInfoDto.getName());
 
         if (!Objects.equals(updateEventInfoDto.getFileIdList(), null) && !updateEventInfoDto.getFileIdList().isEmpty()) {
@@ -183,7 +189,7 @@ public class EventService {
     @Transactional
     public void updateEventRecruit(String eventId, RequestEvent.EventRecruitDto eventRecruitDto) {
         Event event = getEvent(eventId);
-
+        validateEventAccess(event, getMemberId());
         EventRecruitDetail eventRecruitDetail = eventRecruitDetailRepository.findByEvent(event);
         if (eventRecruitDetail == null)
             throw new CustomException(EventErrorCode.EVENT_RECRUIT_DETAIL_NOT_FOUND);
@@ -203,7 +209,7 @@ public class EventService {
     @Transactional
     public void updateEventDetail(String eventId, RequestEvent.UpdateEventDetailDto updateEventDetailDto) {
         Event event = getEvent(eventId);
-
+        validateEventAccess(event, getMemberId());
         List<EventCategory> eventCategoryList = eventCategoryRepository.findAllByEvent(event);
         eventCategoryList.forEach(eventCategoryRepository::delete);
         updateEventDetailDto.getEventCategoryCodeList().forEach(eventCategoryCode -> {
@@ -221,7 +227,7 @@ public class EventService {
     @Transactional
     public void updateEventDocument(String eventId, RequestEvent.UpdateEventDocumentDto updateEventDocumentDto) {
         Event event = getEvent(eventId);
-
+        validateEventAccess(event, getMemberId());
         List<EventDocument> eventDocumentList = eventDocumentRepository.findByEventId(eventId);
         if (eventDocumentList != null)
             eventDocumentList.forEach(eventDocumentRepository::delete);
@@ -236,11 +242,9 @@ public class EventService {
 
     @Transactional
     public void deleteEvent(String eventId) {
-        String memberId = getMemberId();
         Event event = getEvent(eventId);
-        if (!event.isCreator(memberId)) {
-            throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
-        }
+        validateEventAccess(event, getMemberId());
+
         if (EventDateCalculator.getMinDate(event).isBefore(LocalDate.now()) && EventDateCalculator.getMaxDate(event).isAfter(LocalDate.now())) {
             throw new CustomException(EventErrorCode.ALREADY_IN_PROGRESS_EVENT);
         }
@@ -258,11 +262,9 @@ public class EventService {
 
     @Transactional
     public void proposeEvent(RequestEvent.ProposeEventDto proposeEventDto) {
-        String memberId = getMemberId();
         Event event = getEvent(proposeEventDto.getEventId());
-        if (!event.isCreator(memberId)) {
-            throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
-        }
+        validateEventAccess(event, getMemberId());
+
         EventProposal eventProposal = eventProposalRepository.findByEventIdAndTruckId(proposeEventDto.getEventId(), proposeEventDto.getTruckId());
         if (eventProposal != null) {
             throw new CustomException(EventErrorCode.ALREADY_PROPOSED_TRUCK);
@@ -368,14 +370,12 @@ public class EventService {
 
     @Transactional
     public ResponseEvent.GetEventNoticeDetailForCreatorDto getEventNoticeDetailForCreator(String noticeId) {
-        String memberId = getMemberId();
         EventNotice eventNotice = eventNoticeRepository.findEventNoticeForCreator(noticeId);
         if (eventNotice == null) {
             throw new CustomException(EventErrorCode.EVENT_NOTICE_NOT_FOUND);
         }
-        if (!eventNotice.getEvent().isCreator(memberId)) {
-            throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
-        }
+        validateEventAccess(eventNotice.getEvent(), getMemberId());
+
         return ResponseEvent.GetEventNoticeDetailForCreatorDto.of(eventNotice);
     }
 

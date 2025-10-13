@@ -98,9 +98,17 @@ public class TruckService {
         }
     }
 
+    private void validateManagedTruckLimit(String memberId) {
+        long managedTruckCount = truckManagerRepository.countByMemberIdAndTruckIsDeletedFalse(memberId);
+        if (managedTruckCount >= 50) {
+            throw new CustomException(TruckErrorCode.TRUCK_MANAGER_LIMIT_EXCEEDED);
+        }
+    }
+
     @Transactional
     public void createTruck(RequestTruck.CreateTruckDto createTruckDto) {
         String memberId = getMemberId();
+        validateManagedTruckLimit(memberId);
 
         // 트럭 생성
         Truck truck = createTruckDto.getTruckInfoDto().toEntity(memberId);
@@ -195,6 +203,7 @@ public class TruckService {
 
         TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(addManagerDto.getTruckId(), memberId);
         if (truckManager == null) {
+            validateManagedTruckLimit(memberId);
             TruckManager newTruckManager = TruckManager.builder()
                     .role(TruckManagerRole.MEMBER)
                     .roleUpdatedAt(LocalDateTime.now())

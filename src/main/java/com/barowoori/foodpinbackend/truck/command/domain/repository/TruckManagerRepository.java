@@ -10,4 +10,5 @@ import java.util.List;
 public interface TruckManagerRepository extends JpaRepository<TruckManager, String>, TruckManagerRepositoryCustom {
     TruckManager findByTruckIdAndMemberId(String truckId, String memberId);
     List<TruckManager> findAllByMember(Member member);
+    long countByMemberIdAndTruckIsDeletedFalse(String memberId);
 }

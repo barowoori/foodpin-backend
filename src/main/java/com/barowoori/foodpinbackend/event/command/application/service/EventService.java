@@ -193,6 +193,14 @@ public class EventService {
         EventRecruitDetail eventRecruitDetail = eventRecruitDetailRepository.findByEvent(event);
         if (eventRecruitDetail == null)
             throw new CustomException(EventErrorCode.EVENT_RECRUIT_DETAIL_NOT_FOUND);
+        if (Objects.equals(eventRecruitDto.getRecruitEndDateTime(), null)) {
+            LocalDateTime lastEndDateTime = event.getEventDates().stream()
+                    .map(eventDate -> LocalDateTime.of(eventDate.getDate(), eventDate.getEndTime()))
+                    .max(LocalDateTime::compareTo)
+                    .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_DATE_NOT_FOUND));
+
+            eventRecruitDto.setRecruitEndDateTime(lastEndDateTime);
+        }
         eventRecruitDetail.update(
                 eventRecruitDto.getRecruitEndDateTime(),
                 eventRecruitDto.getRecruitCount(),

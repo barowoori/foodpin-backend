@@ -41,7 +41,7 @@ public class EventAppliedTruckDetail extends TruckDetail {
                         .map(truckMenu -> MenuInfo.of(truckMenu, imageManager))
                         .toList())
                 .eventApplicationId(eventApplication.getId())
-                .eventId(eventApplication.getId())
+                .eventId(eventApplication.getEvent().getId())
                 .status(eventApplication.getStatus())
                 .dates(eventApplication.getDates().stream()
                         .map(EventApplicationDate::getEventDate).map(EventDate::getDate).toList())

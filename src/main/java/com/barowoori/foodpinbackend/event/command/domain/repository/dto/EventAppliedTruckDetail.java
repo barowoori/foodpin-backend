@@ -61,7 +61,7 @@ public class EventAppliedTruckDetail extends TruckDetail {
 
         public static EventDetail.EventDateInfo of(EventApplicationDate eventDate) {
             return EventDetail.EventDateInfo.builder()
-                    .id(eventDate.getId())
+                    .id(eventDate.getEventDate().getId())
                     .date(eventDate.getEventDate().getDate())
                     .startTime(eventDate.getEventDate().getStartTime())
                     .endTime(eventDate.getEventDate().getEndTime())

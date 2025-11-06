@@ -44,7 +44,6 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
         List<EventTruck> eventTrucks = jpaQueryFactory.selectFrom(eventTruck)
                 .innerJoin(eventTruck.truck, truck)
                 .leftJoin(truck.menus, truckMenu)
-                .leftJoin(eventTruck.dates, eventTruckDate)
                 .leftJoin(truck.documents, truckDocument)
                 .leftJoin(truck.photos, truckPhoto)
                 .leftJoin(truckPhoto.file, file)

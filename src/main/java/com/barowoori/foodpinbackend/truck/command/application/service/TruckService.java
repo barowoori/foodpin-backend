@@ -100,7 +100,7 @@ public class TruckService {
 
     private void validateManagedTruckLimit(String memberId) {
         long managedTruckCount = truckManagerRepository.countByMemberIdAndTruckIsDeletedFalse(memberId);
-        if (managedTruckCount >= 50) {
+        if (managedTruckCount >= 100) {
             throw new CustomException(TruckErrorCode.TRUCK_MANAGER_LIMIT_EXCEEDED);
         }
     }

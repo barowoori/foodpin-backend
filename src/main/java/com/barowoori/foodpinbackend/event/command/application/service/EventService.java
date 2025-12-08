@@ -279,7 +279,7 @@ public class EventService {
         }
         EventProposal newEventProposal = proposeEventDto.toEntity(event, getTruck(proposeEventDto.getTruckId()));
         eventProposalRepository.save(newEventProposal);
-        NotificationEvent.raise(new EventCastedNotificationEvent(event.getId(), event.getName()));
+        NotificationEvent.raise(new EventCastedNotificationEvent(event.getId(), proposeEventDto.getTruckId(), event.getName()));
     }
 
     @Transactional

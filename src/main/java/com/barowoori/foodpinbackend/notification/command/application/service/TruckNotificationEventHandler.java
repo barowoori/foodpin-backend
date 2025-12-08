@@ -122,7 +122,7 @@ public class TruckNotificationEventHandler {
         memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
             notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, event.getTruckId());
 
-            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType,  event.getTruckId(), content);
+            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, event.getTruckId(), content);
         });
     }
 
@@ -155,7 +155,7 @@ public class TruckNotificationEventHandler {
                 "행사명", event.getEventName()
         ));
 
-        List<MemberFcmInfoDto> memberFcmInfoDtos = truckManagerRepository.findTruckManagersFcmInfo(event.getEventId());
+        List<MemberFcmInfoDto> memberFcmInfoDtos = truckManagerRepository.findTruckManagersFcmInfo(event.getTruckId());
         System.out.println("notificationMessage : " + content);
         memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
             notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, event.getEventId());
@@ -194,10 +194,12 @@ public class TruckNotificationEventHandler {
                 "푸드트럭명", event.getTruckName()
         ));
 
-        MemberFcmInfoDto memberFcmInfoDto = memberRepository.findMemberFcmInfo(event.getMemberId());
-        notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, null);
+        List<MemberFcmInfoDto> memberFcmInfoDtos = truckManagerRepository.findTruckManagersFcmInfo(event.getTruckId());
+        memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
+            notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, null);
 
-        savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, null, content);
+            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, null, content);
+        });
     }
 
     //소유자 변경 알림 Handler

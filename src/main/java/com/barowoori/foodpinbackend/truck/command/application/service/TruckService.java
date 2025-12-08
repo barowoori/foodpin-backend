@@ -401,7 +401,7 @@ public class TruckService {
         } else throw new CustomException(TruckErrorCode.TRUCK_OWNER_NOT_FOUND);
         Truck truck = truckMember.getTruck();
 
-        NotificationEvent.raise(new ManagerRemovedNotificationEvent(truck.getName(), memberId));
+        NotificationEvent.raise(new ManagerRemovedNotificationEvent(truck.getName(), memberId, truck.getId()));
     }
 
     @Transactional

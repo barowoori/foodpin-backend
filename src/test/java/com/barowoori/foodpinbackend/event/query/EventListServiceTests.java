@@ -81,6 +81,7 @@ public class EventListServiceTests {
                 .recruitCount(4)
                 .applicantCount(10)
                 .event(event)
+                .isSelecting(false)
                 .recruitingStatus(EventRecruitingStatus.RECRUITING)
                 .build();
         eventRecruitDetail = eventRecruitDetailRepository.save(eventRecruitDetail);
@@ -105,6 +106,7 @@ public class EventListServiceTests {
                 .recruitCount(4)
                 .applicantCount(4)
                 .event(event1)
+                .isSelecting(false)
                 .recruitingStatus(EventRecruitingStatus.RECRUITING)
                 .build();
         eventRecruitDetail1 = eventRecruitDetailRepository.save(eventRecruitDetail1);
@@ -158,6 +160,7 @@ public class EventListServiceTests {
                     .recruitEndDateTime(LocalDateTime.of(2025, 3, 3, 0, 0))
                     .recruitCount(4)
                     .applicantCount(0)
+                    .isSelecting(false)
                     .event(deletedEvent)
                     .recruitingStatus(EventRecruitingStatus.RECRUITING)
                     .build();

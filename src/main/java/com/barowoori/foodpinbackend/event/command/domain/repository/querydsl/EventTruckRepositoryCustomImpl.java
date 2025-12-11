@@ -41,7 +41,8 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
 
     @Override
     public Page<EventTruck> findSelectedEventTrucks(String eventId, String status, Pageable pageable) {
-        List<EventTruck> eventTrucks = jpaQueryFactory.selectFrom(eventTruck)
+        List<EventTruck> eventTrucks = jpaQueryFactory.selectDistinct(eventTruck)
+                .from(eventTruck)
                 .innerJoin(eventTruck.truck, truck)
                 .leftJoin(truck.menus, truckMenu)
                 .leftJoin(truck.documents, truckDocument)

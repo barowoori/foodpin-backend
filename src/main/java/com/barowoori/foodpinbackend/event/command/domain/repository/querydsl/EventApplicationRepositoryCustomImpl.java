@@ -39,7 +39,8 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
 
     @Override
     public Page<EventApplication> findPendingEventApplications(String eventId, Pageable pageable) {
-        List<EventApplication> eventApplications = jpaQueryFactory.selectFrom(eventApplication)
+        List<EventApplication> eventApplications = jpaQueryFactory.selectDistinct(eventApplication)
+                .from(eventApplication)
                 .innerJoin(eventApplication.truck, truck)
                 .leftJoin(truck.menus, truckMenu)
                 .leftJoin(eventApplication.dates, eventApplicationDate)
@@ -64,7 +65,8 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
 
     @Override
     public Page<EventApplication> findRejectedEventApplications(String eventId, Pageable pageable) {
-        List<EventApplication> eventApplications = jpaQueryFactory.selectFrom(eventApplication)
+        List<EventApplication> eventApplications = jpaQueryFactory.selectDistinct(eventApplication)
+                .from(eventApplication)
                 .innerJoin(eventApplication.truck, truck)
                 .leftJoin(truck.menus, truckMenu)
                 .leftJoin(eventApplication.dates, eventApplicationDate)
@@ -134,7 +136,7 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
     @Override
     public List<MemberFcmInfoDto> findAllFcmInfoOfTruckManagersByEventId(String eventId){
         return jpaQueryFactory
-                .select(Projections.constructor(MemberFcmInfoDto.class, member.id, member.fcmToken))
+                .selectDistinct(Projections.constructor(MemberFcmInfoDto.class, member.id, member.fcmToken))
                 .from(eventApplication)
                 .innerJoin(eventApplication.truck, truck)
                 .innerJoin(truckManager).on(truck.eq(truckManager.truck))
@@ -146,7 +148,7 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
     @Override
     public List<MemberFcmInfoDto> findFcmInfoOfTruckManagers(String eventApplicationId){
         return jpaQueryFactory
-                .select(Projections.constructor(MemberFcmInfoDto.class, member.id, member.fcmToken))
+                .selectDistinct(Projections.constructor(MemberFcmInfoDto.class, member.id, member.fcmToken))
                 .from(eventApplication)
                 .innerJoin(eventApplication.truck, truck)
                 .innerJoin(truckManager).on(truck.eq(truckManager.truck))

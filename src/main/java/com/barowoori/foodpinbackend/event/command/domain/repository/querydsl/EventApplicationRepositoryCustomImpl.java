@@ -99,7 +99,7 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
                 .leftJoin(event.photos, eventPhoto)
                 .leftJoin(eventPhoto.file, file)
                 .where(truck.id.eq(truckId)
-                        .and(createStatusBuilder(status)))
+                        .and(eventApplication.status.eq(EventApplicationStatus.PENDING).and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.valueOf(status)))))
                 .orderBy(eventApplication.createdAt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())

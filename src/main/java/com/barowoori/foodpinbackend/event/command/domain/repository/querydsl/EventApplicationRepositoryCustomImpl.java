@@ -8,6 +8,7 @@ import com.barowoori.foodpinbackend.event.command.domain.model.EventRecruitingSt
 import com.barowoori.foodpinbackend.event.command.domain.model.EventTruck;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -99,7 +100,7 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
                 .leftJoin(event.photos, eventPhoto)
                 .leftJoin(eventPhoto.file, file)
                 .where(truck.id.eq(truckId)
-                        .and(eventApplication.status.eq(EventApplicationStatus.PENDING).and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.valueOf(status)))))
+                        .and(createAppliedStatusBuilder(status)))
                 .orderBy(eventApplication.createdAt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -111,26 +112,18 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
                 .leftJoin(event.recruitDetail, eventRecruitDetail)
                 .leftJoin(eventApplication.dates, eventApplicationDate)
                 .where(truck.id.eq(truckId)
-                        .and(createStatusBuilder(status)))
+                        .and(createAppliedStatusBuilder(status)))
                 .fetchOne();
 
         return new PageImpl<>(eventApplications, pageable, total);
     }
 
-    private BooleanBuilder createStatusBuilder(String status) {
+    private BooleanBuilder createAppliedStatusBuilder(String status) {
         BooleanBuilder filterBuilder = new BooleanBuilder();
         if (status.equals("ALL")) {
             return filterBuilder;
         }
-        //선정, 미선정
-        if (Arrays.stream(EventApplicationStatus.values()).anyMatch(s -> s.toString().equals(status))) {
-            return filterBuilder.and(eventApplication.status.eq(EventApplicationStatus.valueOf(status)));
-        }
-        //모집중, 모집마감, 모집취소
-        if (Arrays.stream(EventRecruitingStatus.values()).anyMatch(s -> s.toString().equals(status))) {
-            return filterBuilder.and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.valueOf(status)));
-        }
-        return filterBuilder;
+        return filterBuilder.and(eventApplication.status.eq(EventApplicationStatus.PENDING).and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.valueOf(status))));
     }
 
     @Override

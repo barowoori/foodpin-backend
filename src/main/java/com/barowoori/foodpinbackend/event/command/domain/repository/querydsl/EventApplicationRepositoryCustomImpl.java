@@ -100,7 +100,7 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
                 .leftJoin(event.photos, eventPhoto)
                 .leftJoin(eventPhoto.file, file)
                 .where(truck.id.eq(truckId)
-                        .and(createAppliedStatusBuilder(status)))
+                        .and(createStatusBuilder(status)))
                 .orderBy(eventApplication.createdAt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -112,18 +112,26 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
                 .leftJoin(event.recruitDetail, eventRecruitDetail)
                 .leftJoin(eventApplication.dates, eventApplicationDate)
                 .where(truck.id.eq(truckId)
-                        .and(createAppliedStatusBuilder(status)))
+                        .and(createStatusBuilder(status)))
                 .fetchOne();
 
         return new PageImpl<>(eventApplications, pageable, total);
     }
 
-    private BooleanBuilder createAppliedStatusBuilder(String status) {
+    private BooleanBuilder createStatusBuilder(String status) {
         BooleanBuilder filterBuilder = new BooleanBuilder();
         if (status.equals("ALL")) {
             return filterBuilder;
         }
-        return filterBuilder.and(eventApplication.status.eq(EventApplicationStatus.PENDING).and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.valueOf(status))));
+        //선정, 미선정
+        if (Arrays.stream(EventApplicationStatus.values()).anyMatch(s -> s.toString().equals(status))) {
+            return filterBuilder.and(eventApplication.status.eq(EventApplicationStatus.valueOf(status)));
+        }
+        //모집중, 모집마감, 모집취소
+        if (Arrays.stream(EventRecruitingStatus.values()).anyMatch(s -> s.toString().equals(status))) {
+            return filterBuilder.and(eventApplication.status.eq(EventApplicationStatus.PENDING).and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.valueOf(status))));
+        }
+        return filterBuilder;
     }
 
     @Override

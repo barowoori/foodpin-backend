@@ -30,6 +30,7 @@ public class EventList {
         return EventList.builder()
                 .id(event.getId())
                 .photo(event.getPhotos().stream()
+                        .sorted(Comparator.comparing(EventPhoto::getCreatedAt))
                         .map(eventPhoto -> imageManager.getPreSignUrl(eventPhoto.getFile().getPath()))
                         .findFirst().orElse(null))
                 .name(event.getName())

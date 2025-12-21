@@ -8,6 +8,7 @@ import com.barowoori.foodpinbackend.event.command.domain.model.EventRecruitingSt
 import com.barowoori.foodpinbackend.event.command.domain.model.EventTruck;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -39,7 +40,8 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
 
     @Override
     public Page<EventApplication> findPendingEventApplications(String eventId, Pageable pageable) {
-        List<EventApplication> eventApplications = jpaQueryFactory.selectFrom(eventApplication)
+        List<EventApplication> eventApplications = jpaQueryFactory.selectDistinct(eventApplication)
+                .from(eventApplication)
                 .innerJoin(eventApplication.truck, truck)
                 .leftJoin(truck.menus, truckMenu)
                 .leftJoin(eventApplication.dates, eventApplicationDate)
@@ -64,7 +66,8 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
 
     @Override
     public Page<EventApplication> findRejectedEventApplications(String eventId, Pageable pageable) {
-        List<EventApplication> eventApplications = jpaQueryFactory.selectFrom(eventApplication)
+        List<EventApplication> eventApplications = jpaQueryFactory.selectDistinct(eventApplication)
+                .from(eventApplication)
                 .innerJoin(eventApplication.truck, truck)
                 .leftJoin(truck.menus, truckMenu)
                 .leftJoin(eventApplication.dates, eventApplicationDate)
@@ -126,7 +129,7 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
         }
         //모집중, 모집마감, 모집취소
         if (Arrays.stream(EventRecruitingStatus.values()).anyMatch(s -> s.toString().equals(status))) {
-            return filterBuilder.and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.valueOf(status)));
+            return filterBuilder.and(eventApplication.status.eq(EventApplicationStatus.PENDING).and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.valueOf(status))));
         }
         return filterBuilder;
     }
@@ -134,7 +137,7 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
     @Override
     public List<MemberFcmInfoDto> findAllFcmInfoOfTruckManagersByEventId(String eventId){
         return jpaQueryFactory
-                .select(Projections.constructor(MemberFcmInfoDto.class, member.id, member.fcmToken))
+                .selectDistinct(Projections.constructor(MemberFcmInfoDto.class, member.id, member.fcmToken))
                 .from(eventApplication)
                 .innerJoin(eventApplication.truck, truck)
                 .innerJoin(truckManager).on(truck.eq(truckManager.truck))
@@ -146,7 +149,7 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
     @Override
     public List<MemberFcmInfoDto> findFcmInfoOfTruckManagers(String eventApplicationId){
         return jpaQueryFactory
-                .select(Projections.constructor(MemberFcmInfoDto.class, member.id, member.fcmToken))
+                .selectDistinct(Projections.constructor(MemberFcmInfoDto.class, member.id, member.fcmToken))
                 .from(eventApplication)
                 .innerJoin(eventApplication.truck, truck)
                 .innerJoin(truckManager).on(truck.eq(truckManager.truck))

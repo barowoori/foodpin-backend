@@ -23,7 +23,7 @@ public class AppleAuthService {
             String email = payload.has("email") ? payload.get("email").asText() : "";
 
             //앱 리다이렉트
-            return "signinwithapple?authorizationCode=" + authorizationCode +"&sub="+ sub + "&email="+ URLEncoder.encode(email, StandardCharsets.UTF_8);
+            return "com.barowoori.foodpin.signinwithapple://callback?authorizationCode=" + authorizationCode +"&sub="+ sub + "&email="+ URLEncoder.encode(email, StandardCharsets.UTF_8);
 
         } catch (Exception e) {
             throw new CustomException(MemberErrorCode.SOCIAL_LOGIN_DATA_PARSING_ERROR);

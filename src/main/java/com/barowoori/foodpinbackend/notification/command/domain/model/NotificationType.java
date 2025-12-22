@@ -40,7 +40,7 @@ public enum NotificationType {
     // 운영자 관련
     MANAGER_ADDED("운영자 추가 알림", "{푸드트럭명} 운영자로 {닉네임}님이 추가되었습니다."),
     MANAGER_REMOVED("운영자 삭제 알림","{푸드트럭명} 운영자 권한이 삭제되었습니다."),
-    OWNER_UPDATED("소유자 변경 알림","{푸드트럭} 소유자가 {닉네임}님으로 변경되었습니다.");
+    OWNER_UPDATED("소유자 변경 알림","{푸드트럭명} 소유자가 {닉네임}님으로 변경되었습니다.");
 
     private final String name;
     private final String template;

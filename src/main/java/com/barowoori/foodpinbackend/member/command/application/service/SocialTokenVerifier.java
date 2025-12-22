@@ -66,6 +66,11 @@ public class SocialTokenVerifier {
 
     // token : identityToken
     private String verifyAppleToken(String token) throws Exception {
+        JsonNode payload = getAppleTokenPayload(token);
+        return payload.get("sub").asText();
+    }
+
+    public JsonNode getAppleTokenPayload(String token) throws Exception {
         String[] parts = token.split("\\.");
         if (parts.length != 3) {
             throw new CustomException(MemberErrorCode.INVALID_IDENTITY_TOKEN);
@@ -108,6 +113,6 @@ public class SocialTokenVerifier {
 
         String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
         JsonNode payload = objectMapper.readTree(payloadJson);
-        return payload.get("sub").asText();
+        return payload;
     }
 }

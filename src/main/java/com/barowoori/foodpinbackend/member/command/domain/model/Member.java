@@ -85,6 +85,7 @@ public class Member implements UserDetails {
 
     public void delete() {
         this.phone = "";
+        this.email = "";
         this.nickname = "";
         this.refreshToken = null;
         this.socialLoginInfo = null;
@@ -130,7 +131,7 @@ public class Member implements UserDetails {
         this.image = image;
     }
 
-    public void updateFcmToken(String fcmToken){
+    public void updateFcmToken(String fcmToken) {
         this.fcmToken = fcmToken;
     }
 

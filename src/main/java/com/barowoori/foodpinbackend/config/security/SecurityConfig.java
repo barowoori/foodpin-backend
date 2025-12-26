@@ -37,7 +37,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/v3/api-docs/**", "/swagger-resources/**", "/swagger-ui/**","/index.html",
                                 "/api/members/v1/register", "/api/members/v1/register/temporary", "/api/members/v2/login/temporary", "/api/members/v2/login", "/api/members/v1/random-nickname"
-                                ,"/api/members/v1/nickname/{nickname}/valid", "/api/members/v1/phone/{phone}/valid","/api/files/**","/api/documents/**").permitAll()
+                                ,"/api/members/v1/nickname/{nickname}/valid", "/api/members/v1/phone/{phone}/valid","/api/files/**","/api/documents/**", "/api/auth/apple/callback").permitAll()
                         .requestMatchers("/api/trucks/v1", "/api/trucks/v1/{truckId}/detail", "/api/events/v1", "/api/events/v1/{eventId}/detail",
                                 "/api/events/progress/status/{status}", "/api/trucks/v1/completed/status/{status}").hasAnyRole("NORMAL", "UNREGISTERED")
                         .requestMatchers("**exception**").permitAll())

@@ -19,6 +19,7 @@ import com.barowoori.foodpinbackend.notification.command.domain.model.Notificati
 import com.barowoori.foodpinbackend.notification.command.domain.model.event.SelectionCanceledNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.event.SelectionConfirmedNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.EventCastedNotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.truck.EventRecruitmentCanceledNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.TruckSelectionConfirmedNotificationEvent;
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionDoRepository;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionInfo;
@@ -253,17 +254,22 @@ public class EventService {
         Event event = getEvent(eventId);
         validateEventAccess(event, getMemberId());
 
-        if (EventDateCalculator.getMinDate(event).isBefore(LocalDate.now()) && EventDateCalculator.getMaxDate(event).isAfter(LocalDate.now())) {
+        EventRecruitDetail eventRecruitDetail = eventRecruitDetailRepository.findByEvent(event);
+        LocalDate minDate = EventDateCalculator.getMinDate(event);
+        LocalDate maxDate = EventDateCalculator.getMaxDate(event);
+        LocalDate now = LocalDate.now();
+        if ((eventRecruitDetail != null && eventRecruitDetail.getRecruitingStatus().equals(EventRecruitingStatus.RECRUITMENT_CLOSED) && eventRecruitDetail.getIsSelecting().equals(true))
+                || (minDate.isBefore(now) || minDate.isEqual(now)) && (maxDate.isAfter(now) || maxDate.isEqual(now))) {
             throw new CustomException(EventErrorCode.ALREADY_IN_PROGRESS_EVENT);
+        }
+        if (eventRecruitDetail != null && eventRecruitDetail.getRecruitingStatus().equals(EventRecruitingStatus.RECRUITING)) {
+            eventRecruitDetail.updateStatus(EventRecruitingStatus.RECRUITMENT_CANCELLED);
+            NotificationEvent.raise(new EventRecruitmentCanceledNotificationEvent(event.getId(), event.getName()));
         }
 
         List<EventLike> eventLikeList = eventLikeRepository.findAllByEventId(eventId);
         if (eventLikeList != null) {
             eventLikeList.forEach(eventLikeRepository::delete);
-        }
-        EventRecruitDetail eventRecruitDetail = eventRecruitDetailRepository.findByEvent(event);
-        if (eventRecruitDetail != null && eventRecruitDetail.getRecruitingStatus().equals(EventRecruitingStatus.RECRUITING)) {
-            eventRecruitDetail.closeSelection();
         }
         event.delete();
     }

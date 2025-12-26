@@ -21,6 +21,7 @@ import com.barowoori.foodpinbackend.member.command.domain.model.TruckLike;
 import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
 import com.barowoori.foodpinbackend.member.command.domain.repository.TruckLikeRepository;
 import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.event.SelectionCanceledNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.ManagerAddedNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.ManagerRemovedNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.OwnerUpdatedNotificationEvent;
@@ -405,10 +406,32 @@ public class TruckService {
     }
 
     @Transactional
-    public void deleteTruck(String truckId) {
+    public void deleteTruck(String truckId, boolean isByMemberDelete) {
         TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(truckId, getMemberId());
         if (truckManager != null && Objects.equals(truckManager.getRole(), TruckManagerRole.OWNER)) {
             Truck truck = getTruck(truckId);
+            List<EventTruck> eventTruckList = eventTruckRepository.findAllByTruck(truck);
+            if (eventTruckList != null) {
+                eventTruckList.forEach(eventTruck -> {
+                    Event event = eventTruck.getEvent();
+                    LocalDate maxDate = EventDateCalculator.getMaxDate(event);
+                    LocalDate now = LocalDate.now();
+                    // 진행중인 행사에 참여하고 있는 경우 탈퇴 불가 에러
+                    if (eventTruck.getStatus().equals(EventTruckStatus.CONFIRMED) && (maxDate.isAfter(now) || maxDate.equals(now))) {
+                        throw new CustomException(TruckErrorCode.TRUCK_ALREADY_IN_PROGRESS_EVENT);
+                    }
+                });
+                eventTruckList.forEach(eventTruck -> {
+                    Event event = eventTruck.getEvent();
+                    // 답변대기중인 행사가 있는 경우 참여 불가 처리
+                    if (eventTruck.getStatus().equals(EventTruckStatus.PENDING)) {
+                        EventRecruitDetail eventRecruitDetail = eventTruck.getEvent().getRecruitDetail();
+                        eventRecruitDetail.decreaseSelectedCount();
+                        eventTruck.reject();
+                        NotificationEvent.raise(new SelectionCanceledNotificationEvent(event.getId(), event.getName(), eventTruck.getTruck().getName()));
+                    }
+                });
+            }
             List<EventApplication> eventApplicationList = eventApplicationRepository.findAllByTruckId(truckId);
             if (eventApplicationList != null) {
                 eventApplicationList.forEach(eventApplication -> {
@@ -417,20 +440,15 @@ public class TruckService {
                     }
                 });
             }
-            List<EventTruck> eventTruckList = eventTruckRepository.findAllByTruck(truck);
-            if (eventTruckList != null) {
-                eventTruckList.forEach(eventTruck -> {
-                    Event event = eventTruck.getEvent();
-                    if (EventDateCalculator.getMinDate(event).isBefore(LocalDate.now()) && EventDateCalculator.getMaxDate(event).isAfter(LocalDate.now())) {
-                        throw new CustomException(EventErrorCode.ALREADY_IN_PROGRESS_EVENT);
-                    }
-                });
-            }
             List<TruckLike> truckLikeList = truckLikeRepository.findAllByTruckId(truckId);
             if (truckLikeList != null) {
                 truckLikeList.forEach(truckLikeRepository::delete);
             }
-            truck.delete();
+            if (isByMemberDelete) {
+                truck.deleteByMember();
+            } else {
+                truck.delete();
+            }
         } else throw new CustomException(TruckErrorCode.TRUCK_OWNER_NOT_FOUND);
     }
 

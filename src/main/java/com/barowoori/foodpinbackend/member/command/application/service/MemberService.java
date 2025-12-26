@@ -237,7 +237,7 @@ public class MemberService {
         if (truckManagerList != null) {
             truckManagerList.forEach(truckManager -> {
                 if (truckManager.getRole().equals(TruckManagerRole.OWNER)) {
-                    truckService.deleteTruck(truckManager.getTruck().getId());
+                    truckService.deleteTruck(truckManager.getTruck().getId(), true);
                 }
                 truckManagerRepository.delete(truckManager);
             });
@@ -256,6 +256,22 @@ public class MemberService {
         if (!member.matchRefreshToken(refreshToken)) {
             throw new CustomException(MemberErrorCode.REFRESH_TOKEN_MATCH_FAILED);
         }
+
+        List<TruckManager> truckManagerList = truckManagerRepository.findAllByMember(member);
+        if (truckManagerList != null) {
+            truckManagerList.forEach(truckManager -> {
+                if (truckManager.getRole().equals(TruckManagerRole.OWNER)) {
+                    truckService.deleteTruck(truckManager.getTruck().getId(), true);
+                }
+                truckManagerRepository.delete(truckManager);
+            });
+        }
+
+        List<Event> eventList = eventRepository.findAllByCreatedBy(member.getId());
+        if (eventList != null) {
+            eventList.forEach(event -> eventService.deleteEvent(event.getId()));
+        }
+
         List<TruckLike> truckLikeList = truckLikeRepository.findAllByMemberId(member.getId());
         if (truckLikeList != null) {
             truckLikeList.forEach(truckLikeRepository::delete);
@@ -263,19 +279,6 @@ public class MemberService {
         List<EventLike> eventLikeList = eventLikeRepository.findAllByMemberId(member.getId());
         if (eventLikeList != null) {
             eventLikeList.forEach(eventLikeRepository::delete);
-        }
-        List<TruckManager> truckManagerList = truckManagerRepository.findAllByMember(member);
-        if (truckManagerList != null) {
-            truckManagerList.forEach(truckManager -> {
-                if (truckManager.getRole().equals(TruckManagerRole.OWNER)) {
-                    truckService.deleteTruck(truckManager.getTruck().getId());
-                }
-                truckManagerRepository.delete(truckManager);
-            });
-        }
-        List<Event> eventList = eventRepository.findAllByCreatedBy(member.getId());
-        if (eventList != null) {
-            eventList.forEach(event -> eventService.deleteEvent(event.getId()));
         }
 
         try {

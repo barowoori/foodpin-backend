@@ -69,9 +69,7 @@ public class TruckEventApplicationList {
         public static EventInfo of(Event event, List<String> regions, ImageManager imageManager) {
             return EventInfo.builder()
                     .id(event.getId())
-                    .photo(event.getPhotos().stream()
-                            .map(eventPhoto -> imageManager.getPreSignUrl(eventPhoto.getFile().getPath()))
-                            .findFirst().orElse(null))
+                    .photo(event.getEventMainPhotoUrl(imageManager))
                     .name(event.getName())
                     .region(regions.isEmpty() ? null : regions.getFirst())
                     .isDeleted(event.getIsDeleted())

@@ -366,6 +366,7 @@ public class EventService {
         if (handleEventTruckDto.getEventTruckStatus().equals(EventTruckStatus.CONFIRMED)) {
             eventTruck.confirm();
             NotificationEvent.raise(new SelectionConfirmedNotificationEvent(event.getId(), event.getName(), eventTruck.getTruck().getName(), eventTruck.getId()));
+            NotificationEvent.raise(new TruckSelectionConfirmedNotificationEvent(event.getId(), eventTruck.getId(), eventTruck.getTruck().getId()));
         } else if (handleEventTruckDto.getEventTruckStatus().equals(EventTruckStatus.REJECTED)) {
             EventRecruitDetail eventRecruitDetail = eventTruck.getEvent().getRecruitDetail();
             eventRecruitDetail.decreaseSelectedCount();
@@ -374,8 +375,6 @@ public class EventService {
         } else throw new CustomException(EventErrorCode.WRONG_EVENT_TRUCK_STATUS);
 
         eventTruckRepository.save(eventTruck);
-
-        NotificationEvent.raise(new TruckSelectionConfirmedNotificationEvent(event.getId(), eventTruck.getId(), eventTruck.getTruck().getId()));
     }
 
     @Transactional(readOnly = true)

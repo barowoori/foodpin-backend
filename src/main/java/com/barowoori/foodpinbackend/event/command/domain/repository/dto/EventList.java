@@ -29,10 +29,7 @@ public class EventList {
     public static EventList of(Event event, List<String> regions, ImageManager imageManager) {
         return EventList.builder()
                 .id(event.getId())
-                .photo(event.getPhotos().stream()
-                        .sorted(Comparator.comparing(EventPhoto::getCreatedAt))
-                        .map(eventPhoto -> imageManager.getPreSignUrl(eventPhoto.getFile().getPath()))
-                        .findFirst().orElse(null))
+                .photo(event.getEventMainPhotoUrl(imageManager))
                 .name(event.getName())
                 .recruitEndDateTime(event.getRecruitDetail().getRecruitEndDateTime())
                 .startDate(EventDateCalculator.getMinDate(event))
@@ -41,7 +38,6 @@ public class EventList {
                 .categories(event.getCategories().stream().map(EventCategory::getCategory).map(Category::getName).toList())
                 .recruitInfo(RecruitInfo.of(event.getRecruitDetail()))
                 .views(event.getView().getViews())
-
                 .build();
     }
 }

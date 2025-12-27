@@ -32,16 +32,26 @@ public class EventStatusUpdater {
                 .findByRecruitDetail_RecruitingStatusAndRecruitDetail_RecruitEndDateTimeLessThanEqualAndIsDeletedFalse(EventRecruitingStatus.RECRUITING, now);
         for (Event event : eventsToClose) {
             event.updateStatus(EventRecruitingStatus.RECRUITMENT_CLOSED);
+
+            LocalDateTime recruitEndDateTime = event.getRecruitDetail().getRecruitEndDateTime();
+            LocalDateTime eventEndDateTime = event.getEventDates().stream()
+                    .map(eventDate -> LocalDateTime.of(eventDate.getDate(), eventDate.getEndTime()))
+                    .max(LocalDateTime::compareTo)
+                    .orElse(null);
+            boolean shouldSendNotification = recruitEndDateTime != null && eventEndDateTime != null && recruitEndDateTime.isBefore(eventEndDateTime);
+
             List<EventApplication> pendingApplications = eventApplicationRepository.findAllByEventAndStatus(event, EventApplicationStatus.PENDING);
             for (EventApplication application : pendingApplications) {
                 application.reject();
-                eventApplicationRepository.save(application);
+                eventApplicationRepository.saveAndFlush(application);
 
-                NotificationEvent.raise(new SelectionNotSelectedNotificationEvent(
-                        event.getId(),
-                        event.getName(),
-                        application.getId()
-                ));
+                if (shouldSendNotification) {
+                    NotificationEvent.raise(new SelectionNotSelectedNotificationEvent(
+                            event.getId(),
+                            event.getName(),
+                            application.getId()
+                    ));
+                }
             }
         }
     }

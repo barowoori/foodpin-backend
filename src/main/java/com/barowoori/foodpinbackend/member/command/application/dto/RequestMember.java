@@ -73,6 +73,13 @@ public class RequestMember {
         private String identityToken;
         @Schema(description = "소셜 인증 코드")
         private String authorizationCode;
+        @Schema(description = "플랫폼", example = "ANDROID")
+        private PlatformType platform;
+    }
+
+    public enum PlatformType {
+        ANDROID,
+        IOS
     }
 
     @Builder

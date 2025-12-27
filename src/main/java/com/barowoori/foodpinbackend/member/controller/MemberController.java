@@ -82,7 +82,8 @@ public class MemberController {
             "\n\n모든 요청의 Authorization 헤더에 accessToken을 담아서 사용(/reissued-token, /logout API는 refreshToken)" +
             "\n\naccessToken(유효기간 1시간) 만료(401 에러) 시 /reissued-token API로 액세스 토큰 재발급" +
             "\n\nrefreshToken(유효기간 30일)은 만료(401 에러) 시 /login API로 액세스, 리프레쉬 전부 재발급" +
-            "\n\nidentityToken(인증 토큰) : 애플-identityToken, 카카오-accessToken 전송 / authorizationCode(인증 코드)는 애플만 전송")
+            "\n\nidentityToken(인증 토큰) : 애플-identityToken, 카카오-accessToken 전송 / authorizationCode(인증 코드)는 애플만 전송" +
+            "\n\nplatform: ANDROID/IOS (안드로이드에서 애플 로그인하는 경우 반드시 ANDROID 입력)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "400", description = "인증 토큰이 유효하지 않은 경우[20010], " +

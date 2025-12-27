@@ -123,7 +123,7 @@ public class MemberService {
             throw new CustomException(MemberErrorCode.INVALID_IDENTITY_TOKEN);
         }
 
-        if (loginMemberRqDto.getSocialInfoDto().getType().equals(SocialLoginType.APPLE)) {
+        if (loginMemberRqDto.getSocialInfoDto().getType().equals(SocialLoginType.APPLE) && !Objects.equals(loginMemberRqDto.getPlatform(), RequestMember.PlatformType.ANDROID)) {
             if (Objects.equals(loginMemberRqDto.getAuthorizationCode(), null) || loginMemberRqDto.getAuthorizationCode().isEmpty()) {
                 throw new CustomException(MemberErrorCode.AUTH_CODE_EMPTY);
             }

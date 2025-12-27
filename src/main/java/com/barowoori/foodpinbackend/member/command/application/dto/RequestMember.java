@@ -8,6 +8,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.Set;
+
 public class RequestMember {
     @Builder
     @Data
@@ -90,5 +92,14 @@ public class RequestMember {
         private String nickname;
         @Schema(description = "파일 아이디")
         private String image;
+    }
+
+    @Builder
+    @Data
+    public static class SetInterestEventDto {
+        @Schema(description = "관심 행사 지역 코드 Set")
+        private Set<String> regionCodeSet;
+        @Schema(description = "관심 행사 카테고리 코드 Set")
+        private Set<String> categoryCodeSet;
     }
 }

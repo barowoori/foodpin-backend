@@ -294,6 +294,38 @@ public class MemberController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "관심 행사 조건 설정", description = "관심 행사 지역/카테고리 조건 등록 및 초기화")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "지역 코드 패턴이 잘못된 경우[70000], 카테고리를 못 찾을 경우[40003]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PutMapping("/v1/interest-events")
+    public ResponseEntity<CommonResponse<String>> setInterestEvent(@RequestBody RequestMember.SetInterestEventDto setInterestEventDto) {
+        memberService.setInterestEvent(setInterestEventDto);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Interest event set successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "관심 행사 조건 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping("/v1/interest-events")
+    public ResponseEntity<CommonResponse<ResponseMember.InterestEventDto>> getInterestEvent() {
+        ResponseMember.InterestEventDto interestEventDto = memberService.getInterestEvent();
+        CommonResponse<ResponseMember.InterestEventDto> commonResponse = CommonResponse.<ResponseMember.InterestEventDto>builder()
+                .data(interestEventDto)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
     @Operation(summary = "푸드트럭 좋아요/취소", description = "좋아요가 이미 있을 경우 좋아요 취소, 없을 경우 좋아요 등록")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),

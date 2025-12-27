@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.Set;
+
 public class ResponseMember {
     @Data
     @Builder
@@ -102,6 +104,22 @@ public class ResponseMember {
         public static CheckPhoneDto toDto(SocialLoginInfo socialLoginInfo){
             return CheckPhoneDto.builder()
                     .socialInfoDto(CommonMember.SocialInfoDto.toDto(socialLoginInfo))
+                    .build();
+        }
+    }
+
+    @Data
+    @Builder
+    public static class InterestEventDto {
+        @Schema(description = "관심 행사 지역 코드 Set")
+        private Set<String> regionCodeSet;
+        @Schema(description = "관심 행사 카테고리 코드 Set")
+        private Set<String> categoryCodeSet;
+
+        public static InterestEventDto toDto(Set<String> regionCodeSet, Set<String> categoryCodeSet) {
+            return InterestEventDto.builder()
+                    .regionCodeSet(regionCodeSet)
+                    .categoryCodeSet(categoryCodeSet)
                     .build();
         }
     }

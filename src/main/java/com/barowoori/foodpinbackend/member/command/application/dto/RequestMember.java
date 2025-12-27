@@ -8,6 +8,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.Set;
+
 public class RequestMember {
     @Builder
     @Data
@@ -73,6 +75,13 @@ public class RequestMember {
         private String identityToken;
         @Schema(description = "소셜 인증 코드")
         private String authorizationCode;
+        @Schema(description = "플랫폼", example = "ANDROID")
+        private PlatformType platform;
+    }
+
+    public enum PlatformType {
+        ANDROID,
+        IOS
     }
 
     @Builder
@@ -83,5 +92,14 @@ public class RequestMember {
         private String nickname;
         @Schema(description = "파일 아이디")
         private String image;
+    }
+
+    @Builder
+    @Data
+    public static class SetInterestEventDto {
+        @Schema(description = "관심 행사 지역 코드 Set")
+        private Set<String> regionCodeSet;
+        @Schema(description = "관심 행사 카테고리 코드 Set")
+        private Set<String> categoryCodeSet;
     }
 }

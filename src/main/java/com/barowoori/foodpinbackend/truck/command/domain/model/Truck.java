@@ -105,6 +105,12 @@ public class Truck {
     }
 
     public void delete(){
+        this.name = "(삭제됨) " + this.name;
+        this.isDeleted = true;
+    }
+
+    public void deleteByMember(){
+        this.name = "(탈퇴) " + this.name;
         this.isDeleted = true;
     }
 

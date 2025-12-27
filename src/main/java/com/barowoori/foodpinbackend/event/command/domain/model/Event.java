@@ -138,6 +138,7 @@ public class Event {
     }
 
     public void delete() {
+        this.name = "(삭제됨) " + this.name;
         this.isDeleted = true;
     }
 

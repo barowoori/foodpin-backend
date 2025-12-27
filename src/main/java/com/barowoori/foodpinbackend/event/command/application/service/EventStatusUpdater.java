@@ -29,8 +29,7 @@ public class EventStatusUpdater {
     public void closeRecruitingEventsByDeadline() {
         LocalDateTime now = LocalDateTime.now();
         List<Event> eventsToClose = eventRepository
-                .findByRecruitDetail_RecruitingStatusAndRecruitDetail_RecruitEndDateTimeLessThanEqual(
-                        EventRecruitingStatus.RECRUITING, now);
+                .findByRecruitDetail_RecruitingStatusAndRecruitDetail_RecruitEndDateTimeLessThanEqualAndIsDeletedFalse(EventRecruitingStatus.RECRUITING, now);
         for (Event event : eventsToClose) {
             event.updateStatus(EventRecruitingStatus.RECRUITMENT_CLOSED);
             List<EventApplication> pendingApplications = eventApplicationRepository.findAllByEventAndStatus(event, EventApplicationStatus.PENDING);

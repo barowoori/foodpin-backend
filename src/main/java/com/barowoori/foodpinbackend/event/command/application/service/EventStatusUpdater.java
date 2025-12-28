@@ -45,7 +45,7 @@ public class EventStatusUpdater {
             if (isEventEnded && Boolean.TRUE.equals(detail.getIsSelecting())) {
                 closeRecruitingAndSelection(event);
             } else if (isRecruitEndReached) {
-                closeRecruitingByDeadline(event, recruitEndDateTime, eventEndDateTime);
+                closeRecruitingByDeadline(event);
             }
         }
     }
@@ -53,10 +53,7 @@ public class EventStatusUpdater {
     private void closeRecruitingAndSelection(Event event) {
         EventRecruitDetail detail = event.getRecruitDetail();
         detail.closeSelection();
-
-        if (detail.getRecruitingStatus() == EventRecruitingStatus.RECRUITING) {
-            detail.updateStatus(EventRecruitingStatus.RECRUITMENT_CLOSED);
-        }
+        detail.updateStatus(EventRecruitingStatus.RECRUITMENT_CLOSED);
 
         List<EventApplication> pendingApplications =
                 eventApplicationRepository.findAllByEventAndStatus(event, EventApplicationStatus.PENDING);
@@ -86,12 +83,8 @@ public class EventStatusUpdater {
         }
     }
 
-    private void closeRecruitingByDeadline(Event event, LocalDateTime recruitEndDateTime, LocalDateTime eventEndDateTime) {
+    private void closeRecruitingByDeadline(Event event) {
         event.updateStatus(EventRecruitingStatus.RECRUITMENT_CLOSED);
-
-        boolean shouldSendNotification = recruitEndDateTime != null
-                && eventEndDateTime != null
-                && recruitEndDateTime.isBefore(eventEndDateTime);
 
         List<EventApplication> pendingApplications =
                 eventApplicationRepository.findAllByEventAndStatus(event, EventApplicationStatus.PENDING);
@@ -100,13 +93,11 @@ public class EventStatusUpdater {
             application.reject();
             eventApplicationRepository.save(application);
 
-            if (shouldSendNotification) {
-                NotificationEvent.raise(new SelectionNotSelectedNotificationEvent(
-                        event.getId(),
-                        event.getName(),
-                        application.getId()
-                ));
-            }
+            NotificationEvent.raise(new SelectionNotSelectedNotificationEvent(
+                    event.getId(),
+                    event.getName(),
+                    application.getId()
+            ));
         }
     }
 }

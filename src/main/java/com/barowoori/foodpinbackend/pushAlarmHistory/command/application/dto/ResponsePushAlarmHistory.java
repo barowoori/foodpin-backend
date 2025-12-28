@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 public class ResponsePushAlarmHistory {
     @Data
@@ -17,6 +18,7 @@ public class ResponsePushAlarmHistory {
         private NotificationType type;
         private NotificationTargetType notificationTargetType;
         private String targetId;
+        private Map<String, Object> params;
         private LocalDateTime createdAt;
 
         public static GetPushAlarmHistory of(PushAlarmHistory pushAlarmHistory){
@@ -26,6 +28,7 @@ public class ResponsePushAlarmHistory {
                     .type(pushAlarmHistory.getNotificationType())
                     .notificationTargetType(pushAlarmHistory.getNotificationTargetType())
                     .targetId(pushAlarmHistory.getTargetId())
+                    .params(pushAlarmHistory.getParams())
                     .createdAt(pushAlarmHistory.getCreateAt())
                     .build();
         }

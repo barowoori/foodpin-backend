@@ -3,6 +3,7 @@ package com.barowoori.foodpinbackend.notification.infra.domain;
 import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationTargetType;
 import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationType;
 import com.barowoori.foodpinbackend.notification.command.domain.service.NotificationService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 @Slf4j
@@ -45,7 +47,7 @@ public class FCMNotificationService implements NotificationService {
         }
     }
 
-    public void pushAlarmToToken(NotificationType type, String title, String content, String token, NotificationTargetType targetType, String targetId) {
+    public void pushAlarmToToken(NotificationType type, String title, String content, String token, NotificationTargetType targetType, String targetId, Map<String, Object> params) {
         try {
 
             if (token == null || token.isEmpty()) {
@@ -53,6 +55,12 @@ public class FCMNotificationService implements NotificationService {
             }
             if (targetId == null) {
                 targetId = "";
+            }
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            String paramsJson = null;
+            if(params != null){
+                paramsJson = objectMapper.writeValueAsString(params);
             }
 
             Notification notification = Notification.builder()
@@ -66,9 +74,11 @@ public class FCMNotificationService implements NotificationService {
                     .putData("type", type.name())
                     .putData("targetType", targetType.toString())
                     .putData("targetId", targetId)
+                    .putData("params", paramsJson)
                     .build();
             sendMessage(message);
             log.info("fcm content : {}", content);
+            log.info("fcm paramsJson : {}", paramsJson);
         } catch (Exception e) {
             log.info("token : {}, title : {}, content : {}", token, title, content);
 

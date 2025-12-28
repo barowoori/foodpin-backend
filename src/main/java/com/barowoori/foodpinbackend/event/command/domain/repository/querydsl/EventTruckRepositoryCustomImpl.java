@@ -172,9 +172,9 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
     }
 
     @Override
-    public List<MemberFcmInfoDto> findConfirmedEventTruckManagersFcmInfo(String eventId) {
+    public List<MemberForEventTruckFcmInfoDto> findConfirmedEventTruckManagersFcmInfo(String eventId) {
         return jpaQueryFactory
-                .selectDistinct(Projections.constructor(MemberFcmInfoDto.class, member.id, member.fcmToken))
+                .selectDistinct(Projections.constructor(MemberForEventTruckFcmInfoDto.class,event.id, event.name, member.id, member.fcmToken, truck.id))
                 .from(event)
                 .innerJoin(eventTruck).on(eventTruck.event.eq(event))
                 .innerJoin(eventTruck.truck, truck)

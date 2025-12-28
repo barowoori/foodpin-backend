@@ -15,6 +15,6 @@ public interface EventTruckRepositoryCustom {
     Boolean isConfirmedEventTruck(String eventId, String truckId);
     EventTruck findConfirmedEventTruck(String eventId, String truckId);
     List<MemberFcmInfoDto> findEventTruckManagersFcmInfo(String eventTruckId);
-    List<MemberFcmInfoDto> findConfirmedEventTruckManagersFcmInfo(String eventId);
+    List<MemberForEventTruckFcmInfoDto> findConfirmedEventTruckManagersFcmInfo(String eventId);
     List<MemberForEventTruckFcmInfoDto>  findPendingEventTruckManagersFcmInfo();
 }

@@ -3,12 +3,14 @@ package com.barowoori.foodpinbackend.pushAlarmHistory.command.domain.model;
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
 import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationTargetType;
 import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationType;
+import com.barowoori.foodpinbackend.pushAlarmHistory.command.application.service.JsonMapConverter;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Entity
 @Table(name = "push_alarm_history")
@@ -37,17 +39,22 @@ public class PushAlarmHistory {
     @Column(name = "target_id")
     private String targetId;
 
+    @Convert(converter = JsonMapConverter.class)
+    @Column(columnDefinition = "json")
+    private Map<String, Object> params;
+
     @Column(name = "content", columnDefinition = "TEXT")
     private String content;
 
     protected PushAlarmHistory(){}
 
     @Builder
-    public PushAlarmHistory(Member member, NotificationType notificationType, NotificationTargetType notificationTargetType, String targetId, String content) {
+    public PushAlarmHistory(Member member, NotificationType notificationType, NotificationTargetType notificationTargetType, Map<String, Object> params, String targetId, String content) {
         this.member = member;
         this.notificationType = notificationType;
         this.notificationTargetType = notificationTargetType;
         this.targetId = targetId;
+        this.params = params;
         this.content = content;
     }
 }

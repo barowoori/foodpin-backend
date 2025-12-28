@@ -15,6 +15,9 @@ public class JsonMapConverter
 
     @Override
     public String convertToDatabaseColumn(Map<String, Object> attribute) {
+        if (attribute == null || attribute.isEmpty()) {
+            return null;
+        }
         try {
             return objectMapper.writeValueAsString(attribute);
         } catch (Exception e) {
@@ -24,6 +27,9 @@ public class JsonMapConverter
 
     @Override
     public Map<String, Object> convertToEntityAttribute(String dbData) {
+        if (dbData == null || dbData.isBlank()) {
+            return Map.of();
+        }
         try {
             return objectMapper.readValue(
                     dbData, new TypeReference<>() {}

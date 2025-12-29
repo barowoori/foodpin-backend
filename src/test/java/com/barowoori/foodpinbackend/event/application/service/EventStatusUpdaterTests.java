@@ -6,10 +6,14 @@ import com.barowoori.foodpinbackend.event.command.domain.repository.EventApplica
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventDateRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventRecruitDetailRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventRepository;
+import com.barowoori.foodpinbackend.event.command.domain.repository.EventTruckDateRepository;
+import com.barowoori.foodpinbackend.event.command.domain.repository.EventTruckRepository;
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
 import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginInfo;
 import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginType;
 import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
+import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
+import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckRepository;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +35,9 @@ public class EventStatusUpdaterTests {
     @Autowired private EventRecruitDetailRepository recruitDetailRepository;
     @Autowired private EventDateRepository eventDateRepository;
     @Autowired private EventApplicationRepository eventApplicationRepository;
+    @Autowired private EventTruckRepository eventTruckRepository;
+    @Autowired private EventTruckDateRepository eventTruckDateRepository;
+    @Autowired private TruckRepository truckRepository;
     @Autowired private EventStatusUpdater eventStatusUpdater;
 
     @Test
@@ -38,6 +45,14 @@ public class EventStatusUpdaterTests {
     void testCloseRecruitingEventsByDeadline() {
         // given
         Event event = saveBasicEvent();
+        EventDate eventDate = eventDateRepository.save(EventDate.builder()
+                .event(event)
+                .date(LocalDate.now().plusDays(1))
+                .startTime(LocalTime.of(10, 0))
+                .endTime(LocalTime.of(18, 0))
+                .build());
+        event.getEventDates().add(eventDate);
+
         EventRecruitDetail detail = EventRecruitDetail.builder()
                 .event(event)
                 .recruitEndDateTime(LocalDateTime.now().minusDays(1))
@@ -53,12 +68,20 @@ public class EventStatusUpdaterTests {
         recruitDetailRepository.save(detail);
         event.initEventRecruitDetail(detail);
 
+        EventApplication application = eventApplicationRepository.save(EventApplication.builder()
+                .event(event)
+                .status(EventApplicationStatus.PENDING)
+                .isRead(false)
+                .build());
+
         // when
-        eventStatusUpdater.closeRecruitingEventsByDeadline();
+        eventStatusUpdater.updateEventStatuses();
 
         // then
         Event updated = eventRepository.findById(event.getId()).orElseThrow();
+        EventApplication updatedApplication = eventApplicationRepository.findById(application.getId()).orElseThrow();
         assertThat(updated.getRecruitDetail().getRecruitingStatus()).isEqualTo(EventRecruitingStatus.RECRUITMENT_CLOSED);
+        assertThat(updatedApplication.getStatus()).isEqualTo(EventApplicationStatus.REJECTED);
     }
 
     @Test
@@ -109,8 +132,24 @@ public class EventStatusUpdaterTests {
                 .isRead(false)
                 .build());
 
+        Truck truck = truckRepository.save(Truck.builder()
+                .name("테스트 푸드트럭")
+                .description("desc")
+                .build());
+
+        EventTruck eventTruck = eventTruckRepository.save(EventTruck.builder()
+                .event(event)
+                .truck(truck)
+                .status(EventTruckStatus.PENDING)
+                .build());
+        EventTruckDate eventTruckDate = eventTruckDateRepository.save(EventTruckDate.builder()
+                .eventDate(ed)
+                .eventTruck(eventTruck)
+                .build());
+        eventTruck.getDates().add(eventTruckDate);
+
         // when
-        eventStatusUpdater.closeSelectingEventsByEndDate();
+        eventStatusUpdater.updateEventStatuses();
 
         // then
         Event updatedEvent = eventRepository.findById(event.getId()).orElseThrow();
@@ -118,6 +157,8 @@ public class EventStatusUpdaterTests {
 
         assertThat(updatedEvent.getRecruitDetail().getIsSelecting()).isFalse();
         assertThat(updatedApp.getStatus()).isEqualTo(EventApplicationStatus.REJECTED);
+        assertThat(eventTruckRepository.findById(eventTruck.getId())).isEmpty();
+        assertThat(eventTruckDateRepository.findById(eventTruckDate.getId())).isEmpty();
     }
 
     private Event saveBasicEvent() {

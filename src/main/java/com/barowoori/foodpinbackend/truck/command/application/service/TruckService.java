@@ -92,6 +92,14 @@ public class TruckService {
                 .orElseThrow(() -> new CustomException(TruckErrorCode.NOT_FOUND_TRUCK));
     }
 
+    private Truck validateNotDeletedTruck(String truckId) {
+        Truck truck = truckRepository.findByIdAndIsDeleted(truckId, Boolean.FALSE);
+        if (truck == null) {
+            throw new CustomException(TruckErrorCode.NOT_FOUND_TRUCK);
+        }
+        return truck;
+    }
+
     private void validateTruckAccess(String truckId, String memberId) {
         TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(truckId, memberId);
         if (truckManager == null) {
@@ -454,6 +462,7 @@ public class TruckService {
 
     @Transactional(readOnly = true)
     public Page<TruckManagerSummary> getTruckManagerList(String truckId, Pageable pageable) {
+        validateNotDeletedTruck(truckId);
         validateTruckAccess(truckId, getMemberId());
         Page<TruckManagerSummary> truckManagerSummaries = truckManagerRepository.findTruckManagerPages(truckId, getMemberId(), pageable);
         return truckManagerSummaries.map(truckManagerSummary -> truckManagerSummary.convertToPreSignedUrl(imageManager));

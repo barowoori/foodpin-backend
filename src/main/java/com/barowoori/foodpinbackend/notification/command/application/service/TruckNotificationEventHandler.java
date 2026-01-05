@@ -121,7 +121,9 @@ public class TruckNotificationEventHandler {
         NotificationType type = NotificationType.TRUCK_SELECTION_CONFIRMED;
         NotificationTargetType targetType = NotificationTargetType.TRUCK_SELECTED_EVENT_LIST;
 
-        String content = type.getTemplate();
+        String content = type.format(Map.of(
+                "행사명", event.getEventName()
+        ));
         List<MemberFcmInfoDto> memberFcmInfoDtos = eventTruckRepository.findEventTruckManagersFcmInfo(event.getEventTruckId());
         System.out.println("notificationMessage : " + content);
         memberFcmInfoDtos.forEach(memberFcmInfoDto -> {

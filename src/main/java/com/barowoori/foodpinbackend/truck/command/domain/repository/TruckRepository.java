@@ -5,4 +5,5 @@ import com.barowoori.foodpinbackend.truck.command.domain.repository.querydsl.Tru
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TruckRepository extends JpaRepository<Truck, String>, TruckRepositoryCustom {
+    Truck findByIdAndIsDeleted(String id, Boolean isDeleted);
 }

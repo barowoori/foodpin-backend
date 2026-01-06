@@ -279,12 +279,15 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
 
     @Override
     public Page<Event> findCompletedEventManageList(String memberId, String status, Pageable pageable) {
-        List<Event> events = jpaQueryFactory.selectFrom(event)
-                .leftJoin(event.eventRegion, eventRegion)
+        List<String> eventIds = jpaQueryFactory
+                .select(event.id)
+                .distinct()
+                .from(event)
+                .innerJoin(event.eventRegion, eventRegion)
+                .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .leftJoin(event.eventDates, eventDate)
                 .leftJoin(event.categories, eventCategory)
                 .leftJoin(eventCategory.category, category)
-                .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .leftJoin(event.view, eventView)
                 .leftJoin(event.photos, eventPhoto)
                 .leftJoin(eventPhoto.file, file)
@@ -296,6 +299,20 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .orderBy(event.updatedAt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
+                .fetch();
+
+        if (eventIds.isEmpty()) {
+            return new PageImpl<>(List.of(), pageable, 0);
+        }
+
+        List<Event> events = jpaQueryFactory
+                .selectFrom(event)
+                .innerJoin(event.eventRegion, eventRegion).fetchJoin()
+                .innerJoin(event.recruitDetail, eventRecruitDetail).fetchJoin()
+                .leftJoin(event.photos, eventPhoto).fetchJoin()
+                .leftJoin(eventPhoto.file, file).fetchJoin()
+                .where(event.id.in(eventIds))
+                .orderBy(event.updatedAt.desc())
                 .fetch();
 
         Long total = jpaQueryFactory.select(event.countDistinct()).from(event)

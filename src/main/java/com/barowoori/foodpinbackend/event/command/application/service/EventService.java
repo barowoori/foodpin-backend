@@ -120,7 +120,7 @@ public class EventService {
                     .max(LocalDateTime::compareTo)
                     .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_DATE_NOT_FOUND));
 
-            createEventDto.getEventRecruitDto().setRecruitEndDateTime(lastEndDateTime);
+            createEventDto.getEventRecruitDto().setRecruitEndDateTime(lastEndDateTime.toLocalDate().atTime(23, 59, 59));
         }
         EventRecruitDetail eventRecruitDetail = createEventDto.getEventRecruitDto().toEntity(event);
         eventRecruitDetailRepository.save(eventRecruitDetail);
@@ -200,7 +200,7 @@ public class EventService {
                     .max(LocalDateTime::compareTo)
                     .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_DATE_NOT_FOUND));
 
-            eventRecruitDto.setRecruitEndDateTime(lastEndDateTime);
+            eventRecruitDto.setRecruitEndDateTime(lastEndDateTime.toLocalDate().atTime(23, 59, 59));
         }
         eventRecruitDetail.update(
                 eventRecruitDto.getRecruitEndDateTime(),

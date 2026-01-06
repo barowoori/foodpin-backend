@@ -102,6 +102,14 @@ public class EventManagementService {
         if (handleEventRecruitmentDto.getRecruitmentStatus().equals(EventRecruitingStatus.RECRUITMENT_CLOSED)) {
             event.updateStatus(EventRecruitingStatus.RECRUITMENT_CLOSED);
         } else if (handleEventRecruitmentDto.getRecruitmentStatus().equals(EventRecruitingStatus.RECRUITMENT_CANCELLED)) {
+            if (!event.getRecruitDetail().getRecruitingStatus().equals(EventRecruitingStatus.RECRUITING)) {
+                throw new CustomException(EventErrorCode.NOT_IN_PROGRESS_EVENT);
+            }
+            boolean hasConfirmedEventTruck = event.getEventTrucks().stream().anyMatch(eventTruck -> eventTruck.getStatus() == EventTruckStatus.CONFIRMED);
+            if (hasConfirmedEventTruck) {
+                throw new CustomException(EventErrorCode.CONFIRMED_EVENT_TRUCK_EXISTS);
+            }
+
             event.updateStatus(EventRecruitingStatus.RECRUITMENT_CANCELLED);
             NotificationEvent.raise(new EventRecruitmentCanceledNotificationEvent(event.getId(), event.getName()));
         } else throw new CustomException(EventErrorCode.WRONG_EVENT_RECRUITMENT_STATUS);

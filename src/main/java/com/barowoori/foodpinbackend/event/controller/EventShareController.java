@@ -30,7 +30,7 @@ public class EventShareController {
 
 
         model.addAttribute("title", "푸드핀");
-        model.addAttribute("description", event.getName() +" "+ calculateDDay(startDate));
+        model.addAttribute("description", event.getName() + calculateDDay(startDate));
         model.addAttribute("image", getImage(event.getEventMainPhotoUrl(imageManager)));
         model.addAttribute("url", "https://dev.barowoori.click/share/event/" + id);
         model.addAttribute("deepLink", "foodpin://events?eventId=" +id);
@@ -48,11 +48,11 @@ public class EventShareController {
         long days = ChronoUnit.DAYS.between(LocalDate.now(), targetDate);
 
         if (days > 0) {
-            return "D-" + days;
+            return " D-" + days;
         } else if (days == 0) {
-            return "D-DAY";
+            return " D-DAY";
         } else {
-            return "D+" + Math.abs(days);
+            return "";
         }
     }
 }

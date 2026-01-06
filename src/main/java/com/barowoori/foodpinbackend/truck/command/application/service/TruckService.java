@@ -485,4 +485,9 @@ public class TruckService {
                 .map(truckDocument -> ResponseTruck.GetTruckDocumentFile.of(truckDocument, imageManager))
                 .toList();
     }
+
+    @Transactional
+    public Truck getTruckById(String id){
+        return this.getTruck(id);
+    }
 }

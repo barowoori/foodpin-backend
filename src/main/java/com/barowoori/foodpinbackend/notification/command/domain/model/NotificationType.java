@@ -24,7 +24,6 @@ public enum NotificationType {
     RECRUITMENT_CANCELED("모집취소 알림","[{행사명}] 모집이 취소되었어요."),
 
     // 관심 행사 관련
-    //TODO 관심 행사 등록 즉시
     INTEREST_REGISTERED("관심 행사 등록 알림", "{행사지역} - {행사명}"),
     //TODO 관심 행사 모집마감일 6시간 전(모집마감일 ‘직접 입력’ 인 경우에만 해당(’선정시 마감’ 제외))
     INTEREST_DEADLINE_SOON("관심 행사 마감일 알림","관심 설정한 행사가 6시간 후 모집 마감됩니다.\n" +

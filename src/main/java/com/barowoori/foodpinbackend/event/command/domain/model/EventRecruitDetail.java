@@ -1,5 +1,6 @@
 package com.barowoori.foodpinbackend.event.command.domain.model;
 
+import com.barowoori.foodpinbackend.event.command.domain.service.EventDateCalculator;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -116,5 +117,13 @@ public class EventRecruitDetail {
 
     public void decreaseSelectedCount() {
         this.selectedCount -= 1;
+    }
+
+    public boolean isEventProgress(){
+        LocalDate minDate = EventDateCalculator.getMinDate(event);
+        LocalDate maxDate = EventDateCalculator.getMaxDate(event);
+        LocalDate now = LocalDate.now();
+        return (this.getRecruitingStatus().equals(EventRecruitingStatus.RECRUITMENT_CLOSED) && this.getIsSelecting().equals(true))
+                || (minDate.isBefore(now) || minDate.isEqual(now)) && (maxDate.isAfter(now) || maxDate.isEqual(now));
     }
 }

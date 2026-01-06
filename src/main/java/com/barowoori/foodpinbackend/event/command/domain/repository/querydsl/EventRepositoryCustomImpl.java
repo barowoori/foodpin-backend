@@ -357,7 +357,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
             filterBuilder.and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITMENT_CANCELLED));
 
         } else {
-            filterBuilder.and(eventRecruitDetail.isSelecting.isFalse());
+            filterBuilder.and(eventRecruitDetail.isSelecting.isFalse().and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITMENT_CLOSED)));
         }
         return filterBuilder;
     }

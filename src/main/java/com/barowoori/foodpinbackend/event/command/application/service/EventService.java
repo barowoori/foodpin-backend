@@ -426,4 +426,9 @@ public class EventService {
         return ResponseEvent.GetEventNoticeDetailForTruckDto.of(eventNotice);
 
     }
+
+    @Transactional
+    public Event getEventById(String id){
+        return this.getEvent(id);
+    }
 }

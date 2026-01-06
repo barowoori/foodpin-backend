@@ -39,7 +39,7 @@ public class EventStatusUpdater {
                     .max(LocalDateTime::compareTo)
                     .orElse(null);
 
-            boolean isEventEnded = eventEndDateTime != null && !eventEndDateTime.isAfter(now);
+            boolean isEventEnded = eventEndDateTime != null && !eventEndDateTime.toLocalDate().atTime(23, 59, 59).isAfter(now);
             boolean isRecruitEndReached = recruitEndDateTime != null && !recruitEndDateTime.isAfter(now);
 
             if (isEventEnded && Boolean.TRUE.equals(detail.getIsSelecting())) {
@@ -70,7 +70,11 @@ public class EventStatusUpdater {
         }
 
         List<EventTruck> eventTrucks = eventTruckRepository.findAllByEventAndStatus(event, EventTruckStatus.PENDING);
+        EventRecruitDetail eventRecruitDetail = event.getRecruitDetail();
+
         for (EventTruck eventTruck : eventTrucks) {
+            eventRecruitDetail.decreaseSelectedCount();
+
             List<EventTruckDate> eventTruckDates = eventTruck.getDates();
             eventTruckDateRepository.deleteAll(eventTruckDates);
             eventTruckRepository.delete(eventTruck);

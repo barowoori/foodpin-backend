@@ -122,7 +122,7 @@ public class EventService {
                     .max(LocalDateTime::compareTo)
                     .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_DATE_NOT_FOUND));
 
-            createEventDto.getEventRecruitDto().setRecruitEndDateTime(lastEndDateTime);
+            createEventDto.getEventRecruitDto().setRecruitEndDateTime(lastEndDateTime.toLocalDate().atTime(23, 59, 59));
         }
         EventRecruitDetail eventRecruitDetail = createEventDto.getEventRecruitDto().toEntity(event);
         eventRecruitDetailRepository.save(eventRecruitDetail);
@@ -207,7 +207,7 @@ public class EventService {
                     .max(LocalDateTime::compareTo)
                     .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_DATE_NOT_FOUND));
 
-            eventRecruitDto.setRecruitEndDateTime(lastEndDateTime);
+            eventRecruitDto.setRecruitEndDateTime(lastEndDateTime.toLocalDate().atTime(23, 59, 59));
         }
         eventRecruitDetail.update(
                 eventRecruitDto.getRecruitEndDateTime(),
@@ -270,6 +270,10 @@ public class EventService {
             throw new CustomException(EventErrorCode.ALREADY_IN_PROGRESS_EVENT);
         }
         if (eventRecruitDetail != null && eventRecruitDetail.getRecruitingStatus().equals(EventRecruitingStatus.RECRUITING)) {
+            boolean hasConfirmedEventTruck = event.getEventTrucks().stream().anyMatch(eventTruck -> eventTruck.getStatus() == EventTruckStatus.CONFIRMED);
+            if (hasConfirmedEventTruck) {
+                throw new CustomException(EventErrorCode.CONFIRMED_EVENT_TRUCK_EXISTS);
+            }
             eventRecruitDetail.updateStatus(EventRecruitingStatus.RECRUITMENT_CANCELLED);
             NotificationEvent.raise(new EventRecruitmentCanceledNotificationEvent(event.getId(), event.getName()));
         }

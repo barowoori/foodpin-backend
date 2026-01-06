@@ -263,6 +263,10 @@ public class EventService {
             throw new CustomException(EventErrorCode.ALREADY_IN_PROGRESS_EVENT);
         }
         if (eventRecruitDetail != null && eventRecruitDetail.getRecruitingStatus().equals(EventRecruitingStatus.RECRUITING)) {
+            boolean hasConfirmedEventTruck = event.getEventTrucks().stream().anyMatch(eventTruck -> eventTruck.getStatus() == EventTruckStatus.CONFIRMED);
+            if (hasConfirmedEventTruck) {
+                throw new CustomException(EventErrorCode.CONFIRMED_EVENT_TRUCK_EXISTS);
+            }
             eventRecruitDetail.updateStatus(EventRecruitingStatus.RECRUITMENT_CANCELLED);
             NotificationEvent.raise(new EventRecruitmentCanceledNotificationEvent(event.getId(), event.getName()));
         }

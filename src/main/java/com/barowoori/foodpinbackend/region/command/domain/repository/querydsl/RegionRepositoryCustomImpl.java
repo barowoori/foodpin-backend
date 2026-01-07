@@ -6,10 +6,7 @@ import com.barowoori.foodpinbackend.region.command.domain.model.*;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionInfo;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,6 +40,29 @@ public class RegionRepositoryCustomImpl implements RegionRepositoryCustom {
         }
     }
 
+    public Region findRegionByCode(String code) {
+        Map<String, String> codes = new HashMap<>();
+
+        Pattern pattern = Pattern.compile("(SI|DO|GU|GUN)([a-fA-F0-9\\-]+)");
+        Matcher matcher = pattern.matcher(code);
+
+        while (matcher.find()) {
+            codes.put(matcher.group(1), matcher.group(2));
+        }
+
+        if (codes.containsKey("GUN") && isExistGUN(codes.get("GUN"))) {
+            return findByGUN(codes.get("GUN"));
+        } else if (codes.containsKey("GU") && isExistGU(codes.get("GU"))) {
+            return findByGU(codes.get("GU"));
+        } else if (codes.containsKey("SI") && isExistSI(codes.get("SI"))) {
+            return findBySI(codes.get("SI"));
+        } else if (codes.containsKey("DO") && isExistDO(codes.get("DO"))) {
+            return findByDO(codes.get("DO"));
+        } else {
+            throw new CustomException(RegionErrorCode.NOT_CORRECT_REGION_CODE_PATTERN);
+        }
+    }
+
 
     private boolean isExistSI(String id) {
         QRegionSi regionSi = QRegionSi.regionSi;
@@ -62,6 +82,35 @@ public class RegionRepositoryCustomImpl implements RegionRepositoryCustom {
     private boolean isExistGUN(String id) {
         QRegionGun regionGun = QRegionGun.regionGun;
         return jpaQueryFactory.selectFrom(regionGun).where(regionGun.id.eq(id)).fetchFirst() != null;
+    }
+
+    private Region findBySI(String id) {
+        QRegionSi regionSi = QRegionSi.regionSi;
+        return jpaQueryFactory.selectFrom(regionSi).where(regionSi.id.eq(id)).fetchFirst();
+    }
+
+    private Region findByDO(String id) {
+        QRegionDo regionDo = QRegionDo.regionDo;
+        return jpaQueryFactory
+                .selectFrom(regionDo)
+                .where(regionDo.id.eq(id))
+                .fetchFirst();
+    }
+
+    private Region findByGU(String id) {
+        QRegionGu regionGu = QRegionGu.regionGu;
+        return jpaQueryFactory
+                .selectFrom(regionGu)
+                .where(regionGu.id.eq(id))
+                .fetchFirst();
+    }
+
+    private Region findByGUN(String id) {
+        QRegionGun regionGun = QRegionGun.regionGun;
+        return jpaQueryFactory
+                .selectFrom(regionGun)
+                .where(regionGun.id.eq(id))
+                .fetchFirst();
     }
 
 
@@ -138,5 +187,39 @@ public class RegionRepositoryCustomImpl implements RegionRepositoryCustom {
                         .or(regionGun.regionSi.id.in(regionSis))
                         .or(regionGun.regionGu.id.in(regionGus))
                 ).fetch();
+    }
+
+    public Map<RegionType, String> extractParentRegions(Region region) {
+        Map<RegionType, String> result = new EnumMap<>(RegionType.class);
+
+        if (region instanceof RegionGun gun) {
+            result.put(RegionType.REGION_GUN, gun.getId());
+            if (gun.getRegionGu() != null) {
+                result.put(RegionType.REGION_GU, gun.getRegionGu().getId());
+            }
+            if (gun.getRegionSi() != null) {
+                result.put(RegionType.REGION_SI, gun.getRegionSi().getId());
+            }
+            if (gun.getRegionDo() != null) {
+                result.put(RegionType.REGION_DO, gun.getRegionDo().getId());
+            }
+        }
+
+        if (region instanceof RegionGu gu) {
+            result.put(RegionType.REGION_GU, gu.getId());
+            result.put(RegionType.REGION_SI, gu.getRegionSi().getId());
+            result.put(RegionType.REGION_DO, gu.getRegionDo().getId());
+        }
+
+        if (region instanceof RegionSi si) {
+            result.put(RegionType.REGION_SI, si.getId());
+            result.put(RegionType.REGION_DO, si.getRegionDo().getId());
+        }
+
+        if (region instanceof RegionDo d) {
+            result.put(RegionType.REGION_DO, d.getId());
+        }
+
+        return result;
     }
 }

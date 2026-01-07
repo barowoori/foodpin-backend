@@ -21,6 +21,7 @@ public class EventApplicationList {
         private String photo;
         private List<String> menuNames;
         private Boolean approval;
+        private Boolean isDeleted;
 
         public static TruckInfo of(Truck truck, ImageManager imageManager) {
             return TruckInfo.builder()
@@ -29,6 +30,7 @@ public class EventApplicationList {
                     .photo(truck.getTruckMainPhotoUrl(imageManager))
                     .menuNames(truck.getSortedTruckMenuNames())
                     .approval(truck.approval())
+                    .isDeleted(truck.getIsDeleted())
                     .build();
         }
     }

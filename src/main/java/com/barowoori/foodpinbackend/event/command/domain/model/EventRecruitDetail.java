@@ -123,7 +123,6 @@ public class EventRecruitDetail {
         LocalDate minDate = EventDateCalculator.getMinDate(event);
         LocalDate maxDate = EventDateCalculator.getMaxDate(event);
         LocalDate now = LocalDate.now();
-        return (this.getRecruitingStatus().equals(EventRecruitingStatus.RECRUITMENT_CLOSED) && this.getIsSelecting().equals(true))
-                || (minDate.isBefore(now) || minDate.isEqual(now)) && (maxDate.isAfter(now) || maxDate.isEqual(now));
+        return (maxDate.isAfter(now) || maxDate.isEqual(now));
     }
 }

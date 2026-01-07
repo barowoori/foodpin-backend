@@ -22,6 +22,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -73,7 +75,11 @@ public class EventController {
     })
     @GetMapping(value = "/v1/{eventId}/detail")
     public ResponseEntity<CommonResponse<EventDetail>> getEventDetail(@Valid @PathVariable("eventId") String eventId) {
-        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String memberId = null;
+        if (authentication != null && authentication.isAuthenticated() && !(authentication instanceof AnonymousAuthenticationToken)) {
+            memberId = authentication.getName();
+        }
         EventDetail eventDetail = eventDetailService.getEventDetail(memberId, eventId);
         CommonResponse<EventDetail> commonResponse = CommonResponse.<EventDetail>builder()
                 .data(eventDetail)

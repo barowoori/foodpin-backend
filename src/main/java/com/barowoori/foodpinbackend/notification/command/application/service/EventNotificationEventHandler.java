@@ -8,6 +8,7 @@ import com.barowoori.foodpinbackend.event.command.domain.repository.dto.MemberFo
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.MemberForEventTruckFcmInfoDto;
 import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
+import com.barowoori.foodpinbackend.member.command.domain.repository.InterestEventRepository;
 import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
 import com.barowoori.foodpinbackend.notification.command.domain.model.*;
 import com.barowoori.foodpinbackend.notification.command.domain.model.event.*;
@@ -27,16 +28,18 @@ public class EventNotificationEventHandler {
     private final EventTruckRepository eventTruckRepository;
     private final MemberRepository memberRepository;
     private final PushAlarmHistoryRepository pushAlarmHistoryRepository;
+    private final InterestEventRepository interestEventRepository;
 
-    public EventNotificationEventHandler(NotificationService notificationService, EventRepository eventRepository, EventTruckRepository eventTruckRepository, MemberRepository memberRepository, PushAlarmHistoryRepository pushAlarmHistoryRepository) {
+    public EventNotificationEventHandler(NotificationService notificationService, EventRepository eventRepository, EventTruckRepository eventTruckRepository, MemberRepository memberRepository, PushAlarmHistoryRepository pushAlarmHistoryRepository, InterestEventRepository interestEventRepository) {
         this.notificationService = notificationService;
         this.eventRepository = eventRepository;
         this.eventTruckRepository = eventTruckRepository;
         this.memberRepository = memberRepository;
         this.pushAlarmHistoryRepository = pushAlarmHistoryRepository;
+        this.interestEventRepository = interestEventRepository;
     }
 
-    private void savePushAlarmHistory(String memberId, NotificationType notificationType, NotificationTargetType notificationTargetType, String targetId, String content) {
+    private void savePushAlarmHistory(String memberId, NotificationType notificationType, NotificationTargetType notificationTargetType, String targetId, Map<String, Object> params, String content) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
         PushAlarmHistory pushAlarmHistory = PushAlarmHistory.builder()
@@ -45,6 +48,7 @@ public class EventNotificationEventHandler {
                 .notificationTargetType(notificationTargetType)
                 .targetId(targetId)
                 .content(content)
+                .params(params)
                 .build();
         pushAlarmHistoryRepository.save(pushAlarmHistory);
     }
@@ -63,9 +67,11 @@ public class EventNotificationEventHandler {
         if (eventCreatorFcmInfo == null) {
             return;
         }
-        notificationService.pushAlarmToToken(type, type.getName(), content, eventCreatorFcmInfo.getFcmToken(), targetType, event.getEventApplicationId());
+        Map<String, Object> params = Map.of("eventApplicationId", event.getEventApplicationId());
 
-        savePushAlarmHistory(eventCreatorFcmInfo.getMemberId(), type, targetType, event.getEventApplicationId(), content);
+        notificationService.pushAlarmToToken(type, type.getName(), content, eventCreatorFcmInfo.getFcmToken(), targetType, event.getEventApplicationId(), params);
+
+        savePushAlarmHistory(eventCreatorFcmInfo.getMemberId(), type, targetType, event.getEventApplicationId(), params, content);
     }
 
     //선정 확정 알림 handler
@@ -83,9 +89,10 @@ public class EventNotificationEventHandler {
         if (eventCreatorFcmInfo == null) {
             return;
         }
-        notificationService.pushAlarmToToken(type, type.getName(), content, eventCreatorFcmInfo.getFcmToken(), targetType, event.getEventId());
+        Map<String, Object> params = Map.of("eventId", event.getEventId());
+        notificationService.pushAlarmToToken(type, type.getName(), content, eventCreatorFcmInfo.getFcmToken(), targetType, event.getEventId(), params);
 
-        savePushAlarmHistory(eventCreatorFcmInfo.getMemberId(), type, targetType, event.getEventId(), content);
+        savePushAlarmHistory(eventCreatorFcmInfo.getMemberId(), type, targetType, event.getEventId(), params, content);
     }
 
     //선정 취소 알림 handler
@@ -103,9 +110,10 @@ public class EventNotificationEventHandler {
         if (eventCreatorFcmInfo == null) {
             return;
         }
-        notificationService.pushAlarmToToken(type, type.getName(), content, eventCreatorFcmInfo.getFcmToken(), targetType, event.getEventId());
+        Map<String, Object> params = Map.of("eventId", event.getEventId());
+        notificationService.pushAlarmToToken(type, type.getName(), content, eventCreatorFcmInfo.getFcmToken(), targetType, event.getEventId(), params);
 
-        savePushAlarmHistory(eventCreatorFcmInfo.getMemberId(), type, targetType, event.getEventId(), content);
+        savePushAlarmHistory(eventCreatorFcmInfo.getMemberId(), type, targetType, event.getEventId(), params, content);
     }
 
     //회신 요청 알림 handler
@@ -115,16 +123,16 @@ public class EventNotificationEventHandler {
         NotificationTargetType targetType = NotificationTargetType.TRUCK_SELECTED_EVENT_LIST;
 
 
-        List<MemberForEventTruckFcmInfoDto>  memberFcmInfoDtos = eventTruckRepository.findPendingEventTruckManagersFcmInfo();
+        List<MemberForEventTruckFcmInfoDto> memberFcmInfoDtos = eventTruckRepository.findPendingEventTruckManagersFcmInfo();
         memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
             String content = type.format(Map.of(
                     "행사명", memberFcmInfoDto.getEventName()
             ));
             System.out.println("notificationMessage : " + content);
+            Map<String, Object> params = Map.of("truckId", memberFcmInfoDto.getTruckId());
+            notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, memberFcmInfoDto.getTruckId(), params);
 
-            notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, memberFcmInfoDto.getTruckId());
-
-            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, memberFcmInfoDto.getTruckId(), content);
+            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, memberFcmInfoDto.getTruckId(), params, content);
         });
     }
 
@@ -134,15 +142,17 @@ public class EventNotificationEventHandler {
         NotificationType type = NotificationType.SELECTION_ENDED;
         NotificationTargetType targetType = NotificationTargetType.EVENT_MANAGEMENT_LIST;
 
-        List<MemberForEventFcmInfoDto>  memberFcmInfoDtos = eventRepository.findSelectionNotEndedEventCreatorsFcmInfo();
+        List<MemberForEventFcmInfoDto> memberFcmInfoDtos = eventRepository.findSelectionNotEndedEventCreatorsFcmInfo();
 
         memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
-            String content = type.getTemplate();
+            String content = type.format(Map.of(
+                    "행사명", memberFcmInfoDto.getEventName()
+            ));
             System.out.println("notificationMessage : " + content);
+            Map<String, Object> params = Map.of("eventId", memberFcmInfoDto.getEventId());
+            notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, memberFcmInfoDto.getEventId(), params);
 
-            notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, memberFcmInfoDto.getEventId());
-
-            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, memberFcmInfoDto.getEventId(), content);
+            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, memberFcmInfoDto.getEventId(), params, content);
         });
     }
 
@@ -153,16 +163,38 @@ public class EventNotificationEventHandler {
         NotificationType type = NotificationType.RECRUITMENT_DEADLINE_SOON;
         NotificationTargetType targetType = NotificationTargetType.EVENT_DETAIL;
 
-        List<MemberForEventFcmInfoDto>  memberFcmInfoDtos = eventRepository.findRecruitmentDeadlineSoonEventCreatorsFcmInfo();
+        List<MemberForEventFcmInfoDto> memberFcmInfoDtos = eventRepository.findRecruitmentDeadlineSoonEventCreatorsFcmInfo();
 
         memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
             String content = type.format(Map.of(
                     "행사명", memberFcmInfoDto.getEventName()
             ));
             System.out.println("notificationMessage : " + content);
-            notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, memberFcmInfoDto.getEventId());
+            Map<String, Object> params = Map.of("eventId", memberFcmInfoDto.getEventId());
+            notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, memberFcmInfoDto.getEventId(), params);
 
-            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, memberFcmInfoDto.getEventId(), content);
+            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, memberFcmInfoDto.getEventId(), params, content);
         });
+    }
+
+    //관심 행사 등록 즉시 알림 handler
+    @EventListener(InterestRegisteredNotificationEvent.class)
+    public void handle(InterestRegisteredNotificationEvent event){
+        NotificationType type = NotificationType.INTEREST_REGISTERED;
+        NotificationTargetType targetType = NotificationTargetType.EVENT_DETAIL;
+        String content = type.format(Map.of(
+                "행사명", event.getEventName(),
+                "행사지역", event.getEventRegionName()
+        ));
+        List<MemberFcmInfoDto> memberFcmInfoDtos = interestEventRepository.findInterestEventMemberFcmInfo(event.getEventRegion(), event.getCategories());
+        memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
+
+            System.out.println("notificationMessage : " + content);
+            Map<String, Object> params = Map.of("eventId", event.getEventId());
+            notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, event.getEventId(), params);
+
+            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, event.getEventId(), params, content);
+        });
+
     }
 }

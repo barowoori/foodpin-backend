@@ -100,43 +100,49 @@ public class RegionFullNameGenerator {
     public String convertFormat(List<RegionCode> regionCodes) {
         Map<String, List<String>> grouped = regionCodes.stream()
                 .collect(Collectors.groupingBy(
-                        rc -> rc.getName().split(" ")[0], // 상위 지역
-                        LinkedHashMap::new,               // 입력 순서 유지
+                        rc -> rc.getName().split(" ")[0],
+                        LinkedHashMap::new,
                         Collectors.mapping(
-                                rc -> rc.getName().substring(rc.getName().indexOf(" ") + 1), // 하위만 추출
+                                rc -> {
+                                    String name = rc.getName();
+                                    int idx = name.indexOf(" ");
+                                    return idx == -1 ? "전체" : name.substring(idx + 1);
+                                },
                                 Collectors.toList()
                         )
                 ));
 
-        // 문자열 합치기
-        String result = grouped.entrySet().stream()
+        return grouped.entrySet().stream()
                 .map(entry -> entry.getKey() + " " + String.join(", ", entry.getValue()))
                 .collect(Collectors.joining(", "));
-
-        return result;
     }
 
     public String convertFormatByRegionName(List<String> regionNames) {
         Map<String, List<String>> grouped = regionNames.stream()
                 .collect(Collectors.groupingBy(
-                        rc -> rc.split(" ")[0], // 상위 지역
+                        rc -> rc.trim().split("\\s+", 2)[0], // 상위 지역
                         LinkedHashMap::new,
                         Collectors.mapping(rc -> {
-                            String[] parts = rc.split(" ");
-                            if (parts.length == 1) {
-                                return "전체";
-                            } else {
-                                return parts[1];
-                            }
+                            String[] parts = rc.trim().split("\\s+", 2);
+                            return parts.length == 1 ? "전체" : parts[1];
                         }, Collectors.toList())
                 ));
 
         return grouped.entrySet().stream()
                 .map(entry -> {
-                    if (entry.getValue().size() == 1 && "전체".equals(entry.getValue().get(0))) {
+                    List<String> values = entry.getValue();
+
+                    // 전체만 있는 경우
+                    if (values.size() == 1 && "전체".equals(values.get(0))) {
                         return entry.getKey() + " 전체";
                     }
-                    return entry.getKey() + " " + String.join(", ", entry.getValue());
+
+                    // 전체 + 하위 섞여 있으면 전체만 표시
+                    if (values.contains("전체")) {
+                        return entry.getKey() + " 전체";
+                    }
+
+                    return entry.getKey() + " " + String.join(", ", values);
                 })
                 .collect(Collectors.joining(", "));
     }

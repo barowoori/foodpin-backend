@@ -10,18 +10,22 @@ import com.barowoori.foodpinbackend.event.command.domain.exception.EventErrorCod
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.event.command.domain.repository.*;
 import com.barowoori.foodpinbackend.event.command.domain.service.EventDateCalculator;
+import com.barowoori.foodpinbackend.event.query.application.EventRegionFullNameGenerator;
 import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepository;
 import com.barowoori.foodpinbackend.member.command.domain.model.EventLike;
 import com.barowoori.foodpinbackend.member.command.domain.repository.EventLikeRepository;
 import com.barowoori.foodpinbackend.notification.command.domain.model.event.ApplicationReceivedNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.event.InterestRegisteredNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.event.SelectionCanceledNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.event.SelectionConfirmedNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.EventCastedNotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.truck.EventNoticePostedNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.EventRecruitmentCanceledNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.TruckSelectionConfirmedNotificationEvent;
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionDoRepository;
+import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionCode;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionInfo;
 import com.barowoori.foodpinbackend.truck.command.domain.exception.TruckErrorCode;
 import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
@@ -37,10 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -66,6 +67,7 @@ public class EventService {
     private final EventProposalRepository eventProposalRepository;
     private final EventTruckRepository eventTruckRepository;
     private final EventNoticeViewRepository eventNoticeViewRepository;
+    private final EventRegionFullNameGenerator eventRegionFullNameGenerator;
 
     private String getMemberId() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
@@ -111,7 +113,7 @@ public class EventService {
         if (regionInfo == null)
             throw new CustomException(EventErrorCode.EVENT_REGION_NOT_FOUND);
         EventRegion eventRegion = EventRegion.builder().regionType(regionInfo.getRegionType()).regionId(regionInfo.getRegionId()).event(event).build();
-        eventRegionRepository.save(eventRegion);
+        eventRegion = eventRegionRepository.save(eventRegion);
         event.initEventRegion(eventRegion);
 
         if (Objects.equals(createEventDto.getEventRecruitDto().getRecruitEndDateTime(), null)) {
@@ -130,13 +132,14 @@ public class EventService {
             EventDate eventDate = eventDateDto.toEntity(event);
             eventDateRepository.save(eventDate);
         });
-
+        List<Category> categories = new ArrayList<>();
         createEventDto.getEventCategoryCodeList().forEach(eventCategoryCode -> {
             Category category = categoryRepository.findByCode(eventCategoryCode);
             if (category == null)
                 throw new CustomException(EventErrorCode.EVENT_CATEGORY_NOT_FOUND);
             EventCategory eventCategory = EventCategory.builder().event(event).category(category).build();
             eventCategoryRepository.save(eventCategory);
+            categories.add(category);
         });
 
         if (!Objects.equals(createEventDto.getEventDocumentTypeList(), null) && !createEventDto.getEventDocumentTypeList().isEmpty()) {
@@ -146,7 +149,11 @@ public class EventService {
             });
         }
 
-        eventRepository.save(event);
+        Event registeredevent = eventRepository.save(event);
+        List<RegionCode> regionNames = eventRegionFullNameGenerator.findRegionCodesByEventId(registeredevent.getId());
+        String regionList = eventRegionFullNameGenerator.makeRegionList(regionNames);
+        NotificationEvent.raise(new InterestRegisteredNotificationEvent(registeredevent.getId(), registeredevent.getName(), regionList, eventRegion, categories));
+
     }
 
     @Transactional
@@ -370,6 +377,7 @@ public class EventService {
         if (handleEventTruckDto.getEventTruckStatus().equals(EventTruckStatus.CONFIRMED)) {
             eventTruck.confirm();
             NotificationEvent.raise(new SelectionConfirmedNotificationEvent(event.getId(), event.getName(), eventTruck.getTruck().getName(), eventTruck.getId()));
+            NotificationEvent.raise(new TruckSelectionConfirmedNotificationEvent(event.getId(), event.getName(), eventTruck.getId(), eventTruck.getTruck().getId()));
         } else if (handleEventTruckDto.getEventTruckStatus().equals(EventTruckStatus.REJECTED)) {
             EventRecruitDetail eventRecruitDetail = eventTruck.getEvent().getRecruitDetail();
             eventRecruitDetail.decreaseSelectedCount();
@@ -378,8 +386,6 @@ public class EventService {
         } else throw new CustomException(EventErrorCode.WRONG_EVENT_TRUCK_STATUS);
 
         eventTruckRepository.save(eventTruck);
-
-        NotificationEvent.raise(new TruckSelectionConfirmedNotificationEvent(event.getId(), eventTruck.getId(), eventTruck.getTruck().getId()));
     }
 
     @Transactional(readOnly = true)
@@ -419,5 +425,10 @@ public class EventService {
         }
         return ResponseEvent.GetEventNoticeDetailForTruckDto.of(eventNotice);
 
+    }
+
+    @Transactional
+    public Event getEventById(String id){
+        return this.getEvent(id);
     }
 }

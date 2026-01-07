@@ -40,7 +40,7 @@ public class SecurityConfig {
                                 ,"/api/members/v1/nickname/{nickname}/valid", "/api/members/v1/phone/{phone}/valid","/api/files/**","/api/documents/**", "/api/auth/apple/callback").permitAll()
                         .requestMatchers("/api/trucks/v1", "/api/trucks/v1/{truckId}/detail", "/api/events/v1", "/api/events/v1/{eventId}/detail",
                                 "/api/events/progress/status/{status}", "/api/trucks/v1/completed/status/{status}").hasAnyRole("NORMAL", "UNREGISTERED")
-                        .requestMatchers("**exception**").permitAll())
+                        .requestMatchers("**exception**", "/share/**").permitAll())
 
                 // 나머지 요청은 인증된 NORMAL 접근 가능
                 .authorizeHttpRequests(authorize-> authorize.anyRequest().hasRole("NORMAL"))

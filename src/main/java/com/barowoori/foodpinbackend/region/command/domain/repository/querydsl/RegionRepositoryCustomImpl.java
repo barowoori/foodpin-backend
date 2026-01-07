@@ -207,13 +207,19 @@ public class RegionRepositoryCustomImpl implements RegionRepositoryCustom {
 
         if (region instanceof RegionGu gu) {
             result.put(RegionType.REGION_GU, gu.getId());
-            result.put(RegionType.REGION_SI, gu.getRegionSi().getId());
-            result.put(RegionType.REGION_DO, gu.getRegionDo().getId());
+            if (gu.getRegionSi() != null) {
+                result.put(RegionType.REGION_SI, gu.getRegionSi().getId());
+            }
+            if (gu.getRegionDo() != null) {
+                result.put(RegionType.REGION_DO, gu.getRegionDo().getId());
+            }
         }
 
         if (region instanceof RegionSi si) {
             result.put(RegionType.REGION_SI, si.getId());
-            result.put(RegionType.REGION_DO, si.getRegionDo().getId());
+            if (si.getRegionDo() != null) {
+                result.put(RegionType.REGION_DO, si.getRegionDo().getId());
+            }
         }
 
         if (region instanceof RegionDo d) {

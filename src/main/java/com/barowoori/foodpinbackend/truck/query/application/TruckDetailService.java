@@ -52,12 +52,15 @@ public class TruckDetailService {
         }
         TruckDocumentManager documentManager = truckDocumentRepository.getDocumentManager(truckId);
         List<TruckMenu> truckMenus = truckMenuRepository.getMenuListWithPhotoByTruckId(truckId);
-        TruckLike truckLike = truckLikeRepository.findByMemberIdAndTruckId(memberId, truckId);
-        TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(truckId, memberId);
         List<RegionCode> regionNames = truckRegionFullNameGenerator.findRegionCodesByTruckId(truckId);
         String regionList = truckRegionFullNameGenerator.makeRegionList(regionNames);
         List<Category> categories = truckCategoryRepository.findCategoriesByTruckId(truckId);
         truck.addViews();
+        if (memberId == null){
+            return TruckDetail.of(null, truck, documentManager, regionNames, regionList, categories, truckMenus, false, imageManager);
+        }
+        TruckLike truckLike = truckLikeRepository.findByMemberIdAndTruckId(memberId, truckId);
+        TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(truckId, memberId);
         return TruckDetail.of(truckManager, truck, documentManager, regionNames, regionList, categories, truckMenus, truckLike != null, imageManager);
     }
 }

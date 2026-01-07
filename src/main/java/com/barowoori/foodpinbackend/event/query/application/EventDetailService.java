@@ -37,8 +37,11 @@ public class EventDetailService {
         }
         List<RegionCode> regionNames = eventRegionFullNameGenerator.findRegionCodesByEventId(eventId);
         String regionList = eventRegionFullNameGenerator.makeRegionList(regionNames);
-        EventLike eventLike = eventLikeRepository.findByMemberIdAndEventId(memberId, eventId);
         event.getView().addViews();
+        if (memberId == null){
+            return EventDetail.of(event, null, false, imageManager, regionNames, regionList);
+        }
+        EventLike eventLike = eventLikeRepository.findByMemberIdAndEventId(memberId, eventId);
         return EventDetail.of(event, memberId, eventLike != null, imageManager, regionNames, regionList);
     }
 }

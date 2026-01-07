@@ -29,9 +29,15 @@ public class RecruitInfo {
     }
 
     private static String convertStatus(EventRecruitDetail eventRecruitDetail) {
-        if (eventRecruitDetail.getRecruitingStatus().equals(EventRecruitingStatus.RECRUITMENT_CANCELLED)){
-            return eventRecruitDetail.getRecruitingStatus().toString();
-        }
+//        if (eventRecruitDetail.getRecruitingStatus().equals(EventRecruitingStatus.RECRUITING)){
+//            return eventRecruitDetail.getRecruitingStatus().toString();
+//        }
+//        if (eventRecruitDetail.getRecruitingStatus().equals(EventRecruitingStatus.RECRUITMENT_CLOSED)){
+//            return eventRecruitDetail.getRecruitingStatus().toString();
+//        }
+//        if (eventRecruitDetail.getRecruitingStatus().equals(EventRecruitingStatus.RECRUITMENT_CANCELLED)){
+//            return eventRecruitDetail.getRecruitingStatus().toString();
+//        }
         if (!eventRecruitDetail.isEventProgress()) {
             return "COMPLETED";
         }

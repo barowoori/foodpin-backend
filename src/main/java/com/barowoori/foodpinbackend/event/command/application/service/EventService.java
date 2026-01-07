@@ -24,6 +24,8 @@ import com.barowoori.foodpinbackend.notification.command.domain.model.truck.Even
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.EventNoticePostedNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.EventRecruitmentCanceledNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.TruckSelectionConfirmedNotificationEvent;
+import com.barowoori.foodpinbackend.region.command.domain.model.Region;
+import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionDoRepository;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionCode;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionInfo;
@@ -152,7 +154,10 @@ public class EventService {
         Event registeredevent = eventRepository.save(event);
         List<RegionCode> regionNames = eventRegionFullNameGenerator.findRegionCodesByEventId(registeredevent.getId());
         String regionList = eventRegionFullNameGenerator.makeRegionList(regionNames);
-        NotificationEvent.raise(new InterestRegisteredNotificationEvent(registeredevent.getId(), registeredevent.getName(), regionList, eventRegion, categories));
+
+        Region region = regionDoRepository.findRegionByCode(createEventDto.getRegionCode());
+        Map<RegionType, String> regionIds = regionDoRepository.extractParentRegions(region);
+        NotificationEvent.raise(new InterestRegisteredNotificationEvent(registeredevent.getId(), registeredevent.getName(), regionList, regionIds, categories));
 
     }
 

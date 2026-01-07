@@ -186,7 +186,7 @@ public class EventNotificationEventHandler {
                 "행사명", event.getEventName(),
                 "행사지역", event.getEventRegionName()
         ));
-        List<MemberFcmInfoDto> memberFcmInfoDtos = interestEventRepository.findInterestEventMemberFcmInfo(event.getEventRegion(), event.getCategories());
+        List<MemberFcmInfoDto> memberFcmInfoDtos = interestEventRepository.findInterestEventMemberFcmInfo(event.getRegionIds(), event.getCategories());
         memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
 
             System.out.println("notificationMessage : " + content);

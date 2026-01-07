@@ -196,6 +196,7 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
                 .innerJoin(truckManager).on(truck.eq(truckManager.truck))
                 .innerJoin(truckManager.member, member)
                 .where(
+                        truck.isDeleted.isFalse(),
                         eventTruck.status.eq(EventTruckStatus.PENDING),
                         eventTruck.createdAt.isNotNull(),
                         eventTruck.createdAt.loe(now.minusHours(24)),

@@ -31,7 +31,8 @@ public class EventRegion {
     @JoinColumn(name = "events_id")
     private Event event;
 
-    protected EventRegion(){}
+    protected EventRegion() {
+    }
 
     @Builder
     public EventRegion(RegionType regionType, String regionId, Event event) {
@@ -40,8 +41,21 @@ public class EventRegion {
         this.event = event;
     }
 
-    public void updateRegion(RegionType regionType, String regionId){
+    public void updateRegion(RegionType regionType, String regionId) {
         this.regionType = regionType;
         this.regionId = regionId;
+    }
+
+    public String getRegionCode() {
+        if (regionType.equals(RegionType.REGION_DO)) {
+            return "DO" + regionId;
+        }
+        if (regionType.equals(RegionType.REGION_SI)) {
+            return "SI" + regionId;
+        }
+        if (regionType.equals(RegionType.REGION_GU)) {
+            return "GU" + regionId;
+        }
+        return "GUN" + regionId;
     }
 }

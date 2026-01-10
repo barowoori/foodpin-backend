@@ -14,14 +14,16 @@ public class InterestRegisteredNotificationEvent extends NotificationEvent {
     private final String eventId;
     private final String eventName;
     private final String eventRegionName;
+    private final String eventCreatedBy;
     private final Map<RegionType, String> regionIds;
     private final List<Category> categories;
 
-    public InterestRegisteredNotificationEvent(String eventId, String eventName, String eventRegionName, Map<RegionType, String> regionIds, List<Category> categories) {
+    public InterestRegisteredNotificationEvent(String eventId, String eventName, String eventRegionName, String eventCreatedBy, Map<RegionType, String> regionIds, List<Category> categories) {
         super();
         this.eventId = eventId;
         this.eventName = eventName;
         this.eventRegionName = eventRegionName;
+        this.eventCreatedBy = eventCreatedBy;
         this.regionIds = regionIds;
         this.categories = categories;
     }

@@ -157,7 +157,7 @@ public class EventService {
 
         Region region = regionDoRepository.findRegionByCode(createEventDto.getRegionCode());
         Map<RegionType, String> regionIds = regionDoRepository.extractParentRegions(region);
-        NotificationEvent.raise(new InterestRegisteredNotificationEvent(registeredevent.getId(), registeredevent.getName(), regionList, regionIds, categories));
+        NotificationEvent.raise(new InterestRegisteredNotificationEvent(registeredevent.getId(), registeredevent.getName(), regionList, memberId, regionIds, categories));
 
     }
 

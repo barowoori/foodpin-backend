@@ -163,10 +163,11 @@ public class EventService {
         validateEventAccess(event, memberId);
         event.updateName(updateEventInfoDto.getName());
 
+        List<EventPhoto> photoList = eventPhotoRepository.findAllByEvent(event);
+        photoList.forEach(eventPhotoRepository::delete);
+        eventPhotoRepository.flush();
+
         if (!Objects.equals(updateEventInfoDto.getFileIdList(), null) && !updateEventInfoDto.getFileIdList().isEmpty()) {
-            List<EventPhoto> photoList = eventPhotoRepository.findAllByEvent(event);
-            photoList.forEach(eventPhotoRepository::delete);
-            eventPhotoRepository.flush();
             for (String fileId : updateEventInfoDto.getFileIdList()) {
                 File file = fileRepository.findById(fileId)
                         .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_PHOTO_NOT_FOUND));
@@ -262,18 +263,16 @@ public class EventService {
         validateEventAccess(event, getMemberId());
 
         EventRecruitDetail eventRecruitDetail = eventRecruitDetailRepository.findByEvent(event);
-        LocalDate minDate = EventDateCalculator.getMinDate(event);
         LocalDate maxDate = EventDateCalculator.getMaxDate(event);
         LocalDate now = LocalDate.now();
-        if ((eventRecruitDetail != null && eventRecruitDetail.getRecruitingStatus().equals(EventRecruitingStatus.RECRUITMENT_CLOSED) && eventRecruitDetail.getIsSelecting().equals(true))
-                || (minDate.isBefore(now) || minDate.isEqual(now)) && (maxDate.isAfter(now) || maxDate.isEqual(now))) {
-            throw new CustomException(EventErrorCode.ALREADY_IN_PROGRESS_EVENT);
+
+        boolean hasConfirmedEventTruck = event.getEventTrucks().stream().anyMatch(eventTruck -> eventTruck.getStatus() == EventTruckStatus.CONFIRMED);
+        boolean isWithinEventPeriod = maxDate.isAfter(now) || maxDate.isEqual(now);
+        if (hasConfirmedEventTruck && isWithinEventPeriod) {
+            throw new CustomException(EventErrorCode.CONFIRMED_EVENT_TRUCK_EXISTS);
         }
+
         if (eventRecruitDetail != null && eventRecruitDetail.getRecruitingStatus().equals(EventRecruitingStatus.RECRUITING)) {
-            boolean hasConfirmedEventTruck = event.getEventTrucks().stream().anyMatch(eventTruck -> eventTruck.getStatus() == EventTruckStatus.CONFIRMED);
-            if (hasConfirmedEventTruck) {
-                throw new CustomException(EventErrorCode.CONFIRMED_EVENT_TRUCK_EXISTS);
-            }
             eventRecruitDetail.updateStatus(EventRecruitingStatus.RECRUITMENT_CANCELLED);
             NotificationEvent.raise(new EventRecruitmentCanceledNotificationEvent(event.getId(), event.getName()));
         }
@@ -428,7 +427,7 @@ public class EventService {
     }
 
     @Transactional
-    public Event getEventById(String id){
+    public Event getEventById(String id) {
         return this.getEvent(id);
     }
 }

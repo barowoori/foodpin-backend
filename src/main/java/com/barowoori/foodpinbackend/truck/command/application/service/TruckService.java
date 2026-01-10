@@ -243,7 +243,7 @@ public class TruckService {
 
         List<TruckPhoto> photoList = truckPhotoRepository.findByTruckOrderByCreateAt(truck);
         photoList.forEach(truckPhotoRepository::delete);
-        truckRepository.flush();
+        truckPhotoRepository.flush();
         for (String fileId : updateTruckInfoDto.getFileIdList()) {
             File file = fileRepository.findById(fileId)
                     .orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_PHOTO_NOT_FOUND));

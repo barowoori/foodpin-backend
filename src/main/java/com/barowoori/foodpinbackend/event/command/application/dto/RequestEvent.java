@@ -103,7 +103,7 @@ public class RequestEvent {
 
         public EventRecruitDetail toEntity(Event event){
             return EventRecruitDetail.builder()
-                    .recruitEndDateTime(this.recruitEndDateTime)
+                    .recruitEndDateTime(this.recruitEndDateTime.withSecond(0))
                     .recruitCount(this.recruitCount)
                     .applicantCount(0)
                     .selectedCount(0)

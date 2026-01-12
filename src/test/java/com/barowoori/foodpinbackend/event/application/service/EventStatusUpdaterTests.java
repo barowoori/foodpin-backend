@@ -154,11 +154,11 @@ public class EventStatusUpdaterTests {
         // then
         Event updatedEvent = eventRepository.findById(event.getId()).orElseThrow();
         EventApplication updatedApp = eventApplicationRepository.findById(app.getId()).orElseThrow();
+        EventTruck updatedEventTruck = eventTruckRepository.findById(eventTruck.getId()).orElseThrow();
 
         assertThat(updatedEvent.getRecruitDetail().getIsSelecting()).isFalse();
         assertThat(updatedApp.getStatus()).isEqualTo(EventApplicationStatus.REJECTED);
-        assertThat(eventTruckRepository.findById(eventTruck.getId())).isEmpty();
-        assertThat(eventTruckDateRepository.findById(eventTruckDate.getId())).isEmpty();
+        assertThat(updatedEventTruck.getStatus()).isEqualTo(EventTruckStatus.REJECTED);
     }
 
     private Event saveBasicEvent() {

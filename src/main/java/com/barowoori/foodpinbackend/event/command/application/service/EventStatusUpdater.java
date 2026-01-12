@@ -74,10 +74,7 @@ public class EventStatusUpdater {
 
         for (EventTruck eventTruck : eventTrucks) {
             eventRecruitDetail.decreaseSelectedCount();
-
-            List<EventTruckDate> eventTruckDates = eventTruck.getDates();
-            eventTruckDateRepository.deleteAll(eventTruckDates);
-            eventTruckRepository.delete(eventTruck);
+            eventTruck.reject();
 
             NotificationEvent.raise(new SelectionCanceledNotificationEvent(
                     event.getId(),

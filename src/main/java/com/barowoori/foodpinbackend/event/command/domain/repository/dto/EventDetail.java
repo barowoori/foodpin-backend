@@ -43,7 +43,7 @@ public class EventDetail {
 
     public static EventDetail of(Event event, String memberId, Boolean isLike, ImageManager imageManager, List<RegionCode> regions, String regionList) {
         return EventDetail.builder()
-                .isEventManager(event.isCreator(memberId))
+                .isEventManager(memberId != null && event.isCreator(memberId))
                 .id(event.getId())
                 .photos(event.getEventPhotoFiles().stream()
                         .map(file -> Photo.of(file, imageManager)).toList())

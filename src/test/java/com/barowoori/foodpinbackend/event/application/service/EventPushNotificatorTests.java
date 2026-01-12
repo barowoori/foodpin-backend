@@ -395,9 +395,10 @@ public class EventPushNotificatorTests {
             void sendNotification_When6HoursLeft_BeforeRecruitEndDate() {
                 EventRecruitDetail detail = EventRecruitDetail.builder()
                         .event(event)
-                        .recruitEndDateTime(LocalDateTime.now().plusHours(6))
+                        .recruitEndDateTime(LocalDateTime.now().plusHours(6).withSecond(0).withNano(0))
                         .recruitingStatus(EventRecruitingStatus.RECRUITING)
                         .isSelecting(false)
+                        .isRecruitEndOnSelection(Boolean.FALSE)
                         .build();
                 detail = eventRecruitDetailRepository.save(detail);
 

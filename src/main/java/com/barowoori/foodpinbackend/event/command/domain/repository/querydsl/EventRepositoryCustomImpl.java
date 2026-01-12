@@ -392,7 +392,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .innerJoin(member).on(event.createdBy.eq(member.id))
                 .leftJoin(event.eventDates, eventDate)
-                .where(eventRecruitDetail.isSelecting.isTrue().and(event.createdAt.lt(LocalDate.now().atStartOfDay())))
+                .where(event.isDeleted.isFalse().and(eventRecruitDetail.isSelecting.isTrue()).and(event.createdAt.lt(LocalDate.now().atStartOfDay())))
                 .groupBy(event.id, event.name, member.id, member.fcmToken)
                 .having(eventDate.date.min().eq(tomorrow))
                 .fetch();
@@ -406,8 +406,19 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .from(event)
                 .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .innerJoin(member).on(event.createdBy.eq(member.id))
-                .where(eventRecruitDetail.recruitEndDateTime.between(standardTime.minusMinutes(1), standardTime.plusMinutes(1)
-                ))
+                .where(event.isDeleted.isFalse().and(event.recruitDetail.isRecruitEndOnSelection.isFalse()).and(eventRecruitDetail.recruitEndDateTime.eq(standardTime)))
+                .fetch();
+    }
+
+    @Override
+    public List<Event> findRecruitmentDeadlineSoonEvents() {
+        LocalDateTime standardTime = LocalDateTime.now().withSecond(0).withNano(0).plusHours(6);
+        return jpaQueryFactory
+                .selectFrom(event)
+                .innerJoin(event.recruitDetail, eventRecruitDetail)
+                .innerJoin(event.categories, eventCategory).fetchJoin()
+                .innerJoin(eventCategory.category, category).fetchJoin()
+                .where(event.isDeleted.isFalse().and(event.recruitDetail.isRecruitEndOnSelection.isFalse()).and(eventRecruitDetail.recruitEndDateTime.eq(standardTime)))
                 .fetch();
     }
 }

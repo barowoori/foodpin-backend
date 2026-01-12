@@ -2,10 +2,13 @@ package com.barowoori.foodpinbackend.notification.command.application.service;
 
 import com.barowoori.foodpinbackend.common.dto.MemberFcmInfoDto;
 import com.barowoori.foodpinbackend.common.exception.CustomException;
+import com.barowoori.foodpinbackend.event.command.domain.model.Event;
+import com.barowoori.foodpinbackend.event.command.domain.model.EventCategory;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventTruckRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.MemberForEventFcmInfoDto;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.MemberForEventTruckFcmInfoDto;
+import com.barowoori.foodpinbackend.event.query.application.EventRegionFullNameGenerator;
 import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
 import com.barowoori.foodpinbackend.member.command.domain.repository.InterestEventRepository;
@@ -15,6 +18,10 @@ import com.barowoori.foodpinbackend.notification.command.domain.model.event.*;
 import com.barowoori.foodpinbackend.notification.command.domain.service.NotificationService;
 import com.barowoori.foodpinbackend.pushAlarmHistory.command.domain.model.PushAlarmHistory;
 import com.barowoori.foodpinbackend.pushAlarmHistory.command.domain.repository.PushAlarmHistoryRepository;
+import com.barowoori.foodpinbackend.region.command.domain.model.Region;
+import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
+import com.barowoori.foodpinbackend.region.command.domain.repository.RegionDoRepository;
+import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionCode;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
@@ -29,14 +36,19 @@ public class EventNotificationEventHandler {
     private final MemberRepository memberRepository;
     private final PushAlarmHistoryRepository pushAlarmHistoryRepository;
     private final InterestEventRepository interestEventRepository;
+    private final EventRegionFullNameGenerator eventRegionFullNameGenerator;
+    private final RegionDoRepository regionDoRepository;
 
-    public EventNotificationEventHandler(NotificationService notificationService, EventRepository eventRepository, EventTruckRepository eventTruckRepository, MemberRepository memberRepository, PushAlarmHistoryRepository pushAlarmHistoryRepository, InterestEventRepository interestEventRepository) {
+    public EventNotificationEventHandler(NotificationService notificationService, EventRepository eventRepository, EventTruckRepository eventTruckRepository, MemberRepository memberRepository, PushAlarmHistoryRepository pushAlarmHistoryRepository, InterestEventRepository interestEventRepository,
+                                         EventRegionFullNameGenerator eventRegionFullNameGenerator, RegionDoRepository regionDoRepository) {
         this.notificationService = notificationService;
         this.eventRepository = eventRepository;
         this.eventTruckRepository = eventTruckRepository;
         this.memberRepository = memberRepository;
         this.pushAlarmHistoryRepository = pushAlarmHistoryRepository;
         this.interestEventRepository = interestEventRepository;
+        this.eventRegionFullNameGenerator = eventRegionFullNameGenerator;
+        this.regionDoRepository = regionDoRepository;
     }
 
     private void savePushAlarmHistory(String memberId, NotificationType notificationType, NotificationTargetType notificationTargetType, String targetId, Map<String, Object> params, String content) {
@@ -179,15 +191,17 @@ public class EventNotificationEventHandler {
 
     //관심 행사 등록 즉시 알림 handler
     @EventListener(InterestRegisteredNotificationEvent.class)
-    public void handle(InterestRegisteredNotificationEvent event){
+    public void handle(InterestRegisteredNotificationEvent event) {
         NotificationType type = NotificationType.INTEREST_REGISTERED;
         NotificationTargetType targetType = NotificationTargetType.EVENT_DETAIL;
         String content = type.format(Map.of(
                 "행사명", event.getEventName(),
                 "행사지역", event.getEventRegionName()
         ));
-        List<MemberFcmInfoDto> memberFcmInfoDtos = interestEventRepository.findInterestEventMemberFcmInfo(event.getEventRegion(), event.getCategories());
-        memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
+        List<MemberFcmInfoDto> memberFcmInfoDtos = interestEventRepository.findInterestEventMemberFcmInfo(event.getRegionIds(), event.getCategories());
+        memberFcmInfoDtos
+                .stream().filter(memberFcmInfoDto -> !memberFcmInfoDto.getMemberId().equals(event.getEventCreatedBy()))
+                .forEach(memberFcmInfoDto -> {
 
             System.out.println("notificationMessage : " + content);
             Map<String, Object> params = Map.of("eventId", event.getEventId());
@@ -195,6 +209,40 @@ public class EventNotificationEventHandler {
 
             savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, event.getEventId(), params, content);
         });
+    }
+
+    //관심 행사 마감일 알림 handler
+    @EventListener(InterestDeadlineSoonNotificationEvent.class)
+    public void handle(InterestDeadlineSoonNotificationEvent event) {
+        NotificationType type = NotificationType.INTEREST_DEADLINE_SOON;
+        NotificationTargetType targetType = NotificationTargetType.EVENT_DETAIL;
+        List<Event> events = eventRepository.findRecruitmentDeadlineSoonEvents();
+        events.forEach(e ->{
+
+            List<RegionCode> regionNames = eventRegionFullNameGenerator.findRegionCodesByEventId(e.getId());
+            String regionList = eventRegionFullNameGenerator.makeRegionList(regionNames);
+
+            Region region = regionDoRepository.findRegionByCode(e.getEventRegion().getRegionCode());
+            Map<RegionType, String> regionIds = regionDoRepository.extractParentRegions(region);
+            String content = type.format(Map.of(
+                    "행사명", e.getName(),
+                    "행사지역", regionList
+            ));
+
+            List<MemberFcmInfoDto> memberFcmInfoDtos = interestEventRepository.findInterestEventMemberFcmInfo(regionIds, e.getCategories().stream().map(EventCategory::getCategory).toList());
+            memberFcmInfoDtos
+                    .stream().filter(memberFcmInfoDto -> !memberFcmInfoDto.getMemberId().equals(e.getCreatedBy()))
+                    .forEach(memberFcmInfoDto -> {
+
+                System.out.println("notificationMessage : " + content);
+                Map<String, Object> params = Map.of("eventId", e.getId());
+                notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, e.getId(), params);
+
+                savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, e.getId(), params, content);
+            });
+        });
+
 
     }
+
 }

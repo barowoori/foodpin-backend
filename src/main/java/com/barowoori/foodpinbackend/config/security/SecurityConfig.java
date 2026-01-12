@@ -13,6 +13,11 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -26,6 +31,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
                 // REST API는 csrf 보안이 필요 없으므로 비활성화
                 .csrf(AbstractHttpConfigurer::disable)
 
@@ -35,15 +42,15 @@ public class SecurityConfig {
                 )
                 //리퀘스트에 대한 사용 권한 체크
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/v3/api-docs/**", "/swagger-resources/**", "/swagger-ui/**","/index.html",
+                        .requestMatchers("/v3/api-docs/**", "/swagger-resources/**", "/swagger-ui/**", "/index.html",
                                 "/api/members/v1/register", "/api/members/v1/register/temporary", "/api/members/v2/login/temporary", "/api/members/v2/login", "/api/members/v1/random-nickname"
-                                ,"/api/members/v1/nickname/{nickname}/valid", "/api/members/v1/phone/{phone}/valid","/api/files/**","/api/documents/**", "/api/auth/apple/callback").permitAll()
+                                , "/api/members/v1/nickname/{nickname}/valid", "/api/members/v1/phone/{phone}/valid", "/api/files/**", "/api/documents/**", "/api/auth/apple/callback").permitAll()
                         .requestMatchers("/api/trucks/v1", "/api/trucks/v1/{truckId}/detail", "/api/events/v1", "/api/events/v1/{eventId}/detail",
                                 "/api/events/progress/status/{status}", "/api/trucks/v1/completed/status/{status}").hasAnyRole("NORMAL", "UNREGISTERED")
                         .requestMatchers("**exception**", "/share/**").permitAll())
 
                 // 나머지 요청은 인증된 NORMAL 접근 가능
-                .authorizeHttpRequests(authorize-> authorize.anyRequest().hasRole("NORMAL"))
+                .authorizeHttpRequests(authorize -> authorize.anyRequest().hasRole("NORMAL"))
                 //우리 서비스에 대한 권한은 있지만 다른 권한일 경우
                 .exceptionHandling(handler -> handler.accessDeniedHandler(new CustomAccessDeniedHandler()))
                 //우리 서비스에 권한 자체가 없을 경우
@@ -54,4 +61,19 @@ public class SecurityConfig {
         return http.build();
     }
 
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        config.setAllowedOriginPatterns(List.of(
+                "https://foodpin-web.pages.dev"
+        ));
+        config.setAllowCredentials(true);
+
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("*");
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
 }

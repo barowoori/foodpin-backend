@@ -81,7 +81,8 @@ public class RequestMember {
 
     public enum PlatformType {
         ANDROID,
-        IOS
+        IOS,
+        WEB
     }
 
     @Builder

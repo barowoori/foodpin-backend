@@ -111,6 +111,7 @@ public class EventManagementService {
             }
 
             event.updateStatus(EventRecruitingStatus.RECRUITMENT_CANCELLED);
+            event.getRecruitDetail().closeSelection();
             NotificationEvent.raise(new EventRecruitmentCanceledNotificationEvent(event.getId(), event.getName()));
         } else throw new CustomException(EventErrorCode.WRONG_EVENT_RECRUITMENT_STATUS);
 

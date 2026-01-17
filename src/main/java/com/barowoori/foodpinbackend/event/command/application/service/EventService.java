@@ -279,6 +279,7 @@ public class EventService {
 
         if (eventRecruitDetail != null && eventRecruitDetail.getRecruitingStatus().equals(EventRecruitingStatus.RECRUITING)) {
             eventRecruitDetail.updateStatus(EventRecruitingStatus.RECRUITMENT_CANCELLED);
+            eventRecruitDetail.closeSelection();
             NotificationEvent.raise(new EventRecruitmentCanceledNotificationEvent(event.getId(), event.getName()));
         }
 

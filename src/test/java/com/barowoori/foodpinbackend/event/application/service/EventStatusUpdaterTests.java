@@ -45,6 +45,7 @@ public class EventStatusUpdaterTests {
     void testCloseRecruitingEventsByDeadline() {
         // given
         Event event = saveBasicEvent();
+
         EventDate eventDate = eventDateRepository.save(EventDate.builder()
                 .event(event)
                 .date(LocalDate.now().plusDays(1))
@@ -55,10 +56,10 @@ public class EventStatusUpdaterTests {
 
         EventRecruitDetail detail = EventRecruitDetail.builder()
                 .event(event)
-                .recruitEndDateTime(LocalDateTime.now().minusDays(1))
+                .recruitEndDateTime(LocalDateTime.now().minusMinutes(1))
                 .recruitingStatus(EventRecruitingStatus.RECRUITING)
                 .recruitCount(5)
-                .applicantCount(0)
+                .applicantCount(1)
                 .selectedCount(0)
                 .isSelecting(true)
                 .entryFee(0)
@@ -68,11 +69,13 @@ public class EventStatusUpdaterTests {
         recruitDetailRepository.save(detail);
         event.initEventRecruitDetail(detail);
 
-        EventApplication application = eventApplicationRepository.save(EventApplication.builder()
-                .event(event)
-                .status(EventApplicationStatus.PENDING)
-                .isRead(false)
-                .build());
+        EventApplication application = eventApplicationRepository.save(
+                EventApplication.builder()
+                        .event(event)
+                        .status(EventApplicationStatus.PENDING)
+                        .isRead(false)
+                        .build()
+        );
 
         // when
         eventStatusUpdater.updateEventStatuses();
@@ -80,29 +83,18 @@ public class EventStatusUpdaterTests {
         // then
         Event updated = eventRepository.findById(event.getId()).orElseThrow();
         EventApplication updatedApplication = eventApplicationRepository.findById(application.getId()).orElseThrow();
+
         assertThat(updated.getRecruitDetail().getRecruitingStatus()).isEqualTo(EventRecruitingStatus.RECRUITMENT_CLOSED);
         assertThat(updatedApplication.getStatus()).isEqualTo(EventApplicationStatus.REJECTED);
     }
+
 
     @Test
     @Transactional
     void testCloseSelectingEventsByEndDate() {
         // given
-        Member member = memberRepository.save(Member.builder()
-                .email("email")
-                .phone("01012341234")
-                .nickname("nickname")
-                .socialLoginInfo(new SocialLoginInfo(SocialLoginType.KAKAO, "id123"))
-                .build());
-        Event event = eventRepository.save(Event.builder()
-                .name("스케쥴러 테스트 이벤트")
-                .createdBy(member.getId())
-                .description("desc")
-                .guidelines("guideline")
-                .isDeleted(false)
-                .submissionEmail("test@example.com")
-                .documentSubmissionTarget(EventDocumentSubmissionTarget.ALL_APPLICANTS)
-                .build());
+        Event event = saveBasicEvent();
+
         EventDate ed = eventDateRepository.save(EventDate.builder()
                 .event(event)
                 .date(LocalDate.now().minusDays(1))
@@ -114,10 +106,10 @@ public class EventStatusUpdaterTests {
         EventRecruitDetail detail = EventRecruitDetail.builder()
                 .event(event)
                 .recruitEndDateTime(LocalDateTime.now().minusDays(2))
-                .recruitingStatus(EventRecruitingStatus.RECRUITING)
+                .recruitingStatus(EventRecruitingStatus.RECRUITMENT_CLOSED)
                 .recruitCount(5)
-                .applicantCount(0)
-                .selectedCount(0)
+                .applicantCount(1)
+                .selectedCount(1)
                 .isSelecting(true)
                 .entryFee(0)
                 .generatorRequirement(false)
@@ -125,12 +117,6 @@ public class EventStatusUpdaterTests {
                 .build();
         recruitDetailRepository.save(detail);
         event.initEventRecruitDetail(detail);
-
-        EventApplication app = eventApplicationRepository.save(EventApplication.builder()
-                .event(event)
-                .status(EventApplicationStatus.PENDING)
-                .isRead(false)
-                .build());
 
         Truck truck = truckRepository.save(Truck.builder()
                 .name("테스트 푸드트럭")
@@ -142,10 +128,13 @@ public class EventStatusUpdaterTests {
                 .truck(truck)
                 .status(EventTruckStatus.PENDING)
                 .build());
-        EventTruckDate eventTruckDate = eventTruckDateRepository.save(EventTruckDate.builder()
-                .eventDate(ed)
-                .eventTruck(eventTruck)
-                .build());
+
+        EventTruckDate eventTruckDate = eventTruckDateRepository.save(
+                EventTruckDate.builder()
+                        .eventDate(ed)
+                        .eventTruck(eventTruck)
+                        .build()
+        );
         eventTruck.getDates().add(eventTruckDate);
 
         // when
@@ -153,13 +142,12 @@ public class EventStatusUpdaterTests {
 
         // then
         Event updatedEvent = eventRepository.findById(event.getId()).orElseThrow();
-        EventApplication updatedApp = eventApplicationRepository.findById(app.getId()).orElseThrow();
         EventTruck updatedEventTruck = eventTruckRepository.findById(eventTruck.getId()).orElseThrow();
 
         assertThat(updatedEvent.getRecruitDetail().getIsSelecting()).isFalse();
-        assertThat(updatedApp.getStatus()).isEqualTo(EventApplicationStatus.REJECTED);
         assertThat(updatedEventTruck.getStatus()).isEqualTo(EventTruckStatus.REJECTED);
     }
+
 
     private Event saveBasicEvent() {
         Member memberBuilder = Member.builder()

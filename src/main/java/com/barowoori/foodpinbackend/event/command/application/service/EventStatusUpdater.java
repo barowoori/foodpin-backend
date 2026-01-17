@@ -27,40 +27,37 @@ public class EventStatusUpdater {
     @Scheduled(cron = "0 * * * * *")
     @Transactional
     public void updateEventStatuses() {
+        List<Event> selectingEvents = eventRepository.findByRecruitDetail_IsSelectingTrueAndIsDeletedFalse();
         LocalDateTime now = LocalDateTime.now();
-        List<Event> recruitingEvents = eventRepository
-                .findByRecruitDetail_RecruitingStatusAndIsDeletedFalse(EventRecruitingStatus.RECRUITING);
 
-        for (Event event : recruitingEvents) {
+        for (Event event : selectingEvents) {
             EventRecruitDetail detail = event.getRecruitDetail();
             LocalDateTime recruitEndDateTime = detail.getRecruitEndDateTime();
+            boolean isRecruitEndReached = recruitEndDateTime != null && !recruitEndDateTime.isAfter(now);
+
+            if (isRecruitEndReached && detail.getRecruitingStatus().equals(EventRecruitingStatus.RECRUITING)) {
+                closeRecruiting(event);
+            }
+
             LocalDateTime eventEndDateTime = event.getEventDates().stream()
                     .map(eventDate -> LocalDateTime.of(eventDate.getDate(), eventDate.getEndTime()))
                     .max(LocalDateTime::compareTo)
                     .orElse(null);
+            boolean isEventEnded = eventEndDateTime != null && eventEndDateTime.toLocalDate().atTime(23, 59, 59).isBefore(now);
 
-            boolean isEventEnded = eventEndDateTime != null && !eventEndDateTime.toLocalDate().atTime(23, 59, 59).isAfter(now);
-            boolean isRecruitEndReached = recruitEndDateTime != null && !recruitEndDateTime.isAfter(now);
-
-            if (isEventEnded && Boolean.TRUE.equals(detail.getIsSelecting())) {
-                closeRecruitingAndSelection(event);
-            } else if (isRecruitEndReached) {
-                closeRecruitingByDeadline(event);
+            if (isEventEnded) {
+                closeSelection(event);
             }
         }
     }
 
-    private void closeRecruitingAndSelection(Event event) {
-        EventRecruitDetail detail = event.getRecruitDetail();
-        detail.closeSelection();
-        detail.updateStatus(EventRecruitingStatus.RECRUITMENT_CLOSED);
+    private void closeRecruiting(Event event) {
+        event.updateStatus(EventRecruitingStatus.RECRUITMENT_CLOSED);
 
-        List<EventApplication> pendingApplications =
-                eventApplicationRepository.findAllByEventAndStatus(event, EventApplicationStatus.PENDING);
+        List<EventApplication> pendingApplications = eventApplicationRepository.findAllByEventAndStatus(event, EventApplicationStatus.PENDING);
 
         for (EventApplication application : pendingApplications) {
             application.reject();
-            eventApplicationRepository.save(application);
 
             NotificationEvent.raise(new SelectionNotSelectedNotificationEvent(
                     event.getId(),
@@ -68,36 +65,22 @@ public class EventStatusUpdater {
                     application.getId()
             ));
         }
+    }
 
-        List<EventTruck> eventTrucks = eventTruckRepository.findAllByEventAndStatus(event, EventTruckStatus.PENDING);
-        EventRecruitDetail eventRecruitDetail = event.getRecruitDetail();
+    private void closeSelection(Event event) {
+        EventRecruitDetail detail = event.getRecruitDetail();
+        detail.closeSelection();
 
-        for (EventTruck eventTruck : eventTrucks) {
-            eventRecruitDetail.decreaseSelectedCount();
+        List<EventTruck> pendingEventTrucks = eventTruckRepository.findAllByEventAndStatus(event, EventTruckStatus.PENDING);
+
+        for (EventTruck eventTruck : pendingEventTrucks) {
+            detail.decreaseSelectedCount();
             eventTruck.reject();
 
             NotificationEvent.raise(new SelectionCanceledNotificationEvent(
                     event.getId(),
                     event.getName(),
                     eventTruck.getTruck().getName()
-            ));
-        }
-    }
-
-    private void closeRecruitingByDeadline(Event event) {
-        event.updateStatus(EventRecruitingStatus.RECRUITMENT_CLOSED);
-
-        List<EventApplication> pendingApplications =
-                eventApplicationRepository.findAllByEventAndStatus(event, EventApplicationStatus.PENDING);
-
-        for (EventApplication application : pendingApplications) {
-            application.reject();
-            eventApplicationRepository.save(application);
-
-            NotificationEvent.raise(new SelectionNotSelectedNotificationEvent(
-                    event.getId(),
-                    event.getName(),
-                    application.getId()
             ));
         }
     }

@@ -2,6 +2,7 @@ package com.barowoori.foodpinbackend.member.command.application.dto;
 
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
+import com.barowoori.foodpinbackend.member.command.domain.model.ServiceType;
 import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginInfo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -120,6 +121,19 @@ public class ResponseMember {
             return InterestEventDto.builder()
                     .regionCodeSet(regionCodeSet)
                     .categoryCodeSet(categoryCodeSet)
+                    .build();
+        }
+    }
+
+    @Data
+    @Builder
+    public static class ServiceTypeDto {
+        @Schema(description = "서비스 유형")
+        private ServiceType serviceType;
+
+        public static ServiceTypeDto toDto(ServiceType serviceType){
+            return ServiceTypeDto.builder()
+                    .serviceType(serviceType)
                     .build();
         }
     }

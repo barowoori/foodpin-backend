@@ -437,4 +437,12 @@ public class MemberService {
             eventLikeRepository.delete(eventLike);
         }
     }
+
+    @Transactional(readOnly = true)
+    public ResponseMember.ServiceTypeDto getServiceType(){
+        Member member = getMember();
+        return ResponseMember.ServiceTypeDto.toDto(member.getServiceType());
+
+
+    }
 }

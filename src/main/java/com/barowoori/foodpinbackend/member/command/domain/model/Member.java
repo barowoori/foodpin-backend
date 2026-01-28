@@ -69,6 +69,10 @@ public class Member implements UserDetails {
     @Column(name = "is_deleted")
     private Boolean isDeleted = false;
 
+    @Column(name = "service_type")
+    @Enumerated(value = EnumType.STRING)
+    private ServiceType serviceType;
+
     protected Member() {
     }
 
@@ -157,5 +161,9 @@ public class Member implements UserDetails {
     @Override
     public String getUsername() {
         return String.valueOf(this.id);
+    }
+
+    public void updateServiceType(ServiceType serviceType) {
+        this.serviceType = serviceType;
     }
 }

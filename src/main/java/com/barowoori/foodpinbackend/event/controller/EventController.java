@@ -550,4 +550,22 @@ public class EventController {
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
+
+    @Operation(summary = "트럭 행사 참가 현황 조회", description = "트럭의 지원 / 진행중 / 종료 행사 현황을 조회함")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/trucks/{truckId}/event-dashboard")
+    public ResponseEntity<CommonResponse<ResponseEvent.GetTruckAppliedEventDashboard>> getTruckEventDashboard(@PathVariable(value = "truckId") String truckId) {
+        ResponseEvent.GetTruckAppliedEventDashboard dashboard = eventService.getTruckAppliedEventDashboard(truckId);
+
+        CommonResponse<ResponseEvent.GetTruckAppliedEventDashboard> commonResponse =
+                CommonResponse.<ResponseEvent.GetTruckAppliedEventDashboard>builder()
+                        .data(dashboard)
+                        .build();
+
+        return ResponseEntity.ok(commonResponse);
+    }
 }

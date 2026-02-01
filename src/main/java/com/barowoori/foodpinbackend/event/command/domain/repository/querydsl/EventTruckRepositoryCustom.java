@@ -17,4 +17,6 @@ public interface EventTruckRepositoryCustom {
     List<MemberFcmInfoDto> findEventTruckManagersFcmInfo(String eventTruckId);
     List<MemberForEventTruckFcmInfoDto> findConfirmedEventTruckManagersFcmInfo(String eventId);
     List<MemberForEventTruckFcmInfoDto>  findPendingEventTruckManagersFcmInfo();
+    Long findProgressEventsByTruckId(String truckId);
+    Long findCompletedEventsByTruckId(String truckId);
 }

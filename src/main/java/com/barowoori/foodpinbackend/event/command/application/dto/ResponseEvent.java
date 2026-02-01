@@ -70,6 +70,22 @@ public class ResponseEvent {
                     .createdAt(eventNotice.getCreatedAt())
                     .build();
         }
-
     }
+
+    @Builder
+    @Getter
+    public static class GetTruckAppliedEventDashboard {
+        private Integer appliedCount;
+        private Integer progressCount;
+        private Integer endCount;
+
+        public static GetTruckAppliedEventDashboard of(Integer appliedCount, Integer progressCount, Integer endCount) {
+            return GetTruckAppliedEventDashboard.builder()
+                    .appliedCount(appliedCount)
+                    .progressCount(progressCount)
+                    .endCount(endCount)
+                    .build();
+        }
+    }
+
 }

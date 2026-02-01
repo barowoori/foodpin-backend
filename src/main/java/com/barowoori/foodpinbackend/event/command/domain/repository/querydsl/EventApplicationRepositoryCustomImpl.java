@@ -117,6 +117,19 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
 
         return new PageImpl<>(eventApplications, pageable, total);
     }
+    @Override
+    public Long findTruckAppliedRecruitingApplications(String truckId) {
+        return jpaQueryFactory
+                .select(eventApplication.count())
+                .from(eventApplication)
+                .innerJoin(eventApplication.event, event)
+                .leftJoin(event.recruitDetail, eventRecruitDetail)
+                .where(
+                        truck.id.eq(truckId)
+                                .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
+                )
+                .fetchOne();
+    }
 
     private BooleanBuilder createStatusBuilder(String status) {
         BooleanBuilder filterBuilder = new BooleanBuilder();

@@ -436,4 +436,20 @@ public class EventService {
     public Event getEventById(String id) {
         return this.getEvent(id);
     }
+
+    @Transactional(readOnly = true)
+    public ResponseEvent.GetTruckAppliedEventDashboard getTruckAppliedEventDashboard(String truckId) {
+
+        Integer appliedCount = eventApplicationRepository.findTruckAppliedRecruitingApplications(truckId).intValue();
+
+        Integer progressCount = eventTruckRepository.findProgressEventsByTruckId(truckId).intValue();
+
+        Integer endCount = eventTruckRepository.findCompletedEventsByTruckId(truckId).intValue();
+
+        return ResponseEvent.GetTruckAppliedEventDashboard.of(
+                appliedCount,
+                progressCount,
+                endCount
+        );
+    }
 }

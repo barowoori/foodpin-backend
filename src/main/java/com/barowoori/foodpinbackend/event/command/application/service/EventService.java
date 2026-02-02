@@ -14,6 +14,7 @@ import com.barowoori.foodpinbackend.event.query.application.EventRegionFullNameG
 import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepository;
 import com.barowoori.foodpinbackend.member.command.domain.model.EventLike;
+import com.barowoori.foodpinbackend.member.command.domain.model.Member;
 import com.barowoori.foodpinbackend.member.command.domain.repository.EventLikeRepository;
 import com.barowoori.foodpinbackend.notification.command.domain.model.event.ApplicationReceivedNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationEvent;
@@ -436,4 +437,39 @@ public class EventService {
     public Event getEventById(String id) {
         return this.getEvent(id);
     }
+
+    @Transactional(readOnly = true)
+    public ResponseEvent.GetTruckAppliedEventDashboard getTruckAppliedEventDashboard(String truckId) {
+
+        Integer appliedCount = eventApplicationRepository.findTruckAppliedRecruitingApplications(truckId).intValue()
+                + eventTruckRepository.findPendingEventsByTruckId(truckId).intValue();
+
+        Integer progressCount = eventTruckRepository.findProgressEventsByTruckId(truckId).intValue();
+
+        Integer endCount = eventTruckRepository.findCompletedEventsByTruckId(truckId).intValue();
+
+        return ResponseEvent.GetTruckAppliedEventDashboard.of(
+                appliedCount,
+                progressCount,
+                endCount
+        );
+    }
+
+
+    @Transactional(readOnly = true)
+    public ResponseEvent.GetEventDashboard getEventDashboard() {
+        String memberId = getMemberId();
+        Integer recruitingCount = eventRepository.findCountRecruitingStatus(memberId).intValue();
+
+        Integer progressCount = eventRepository.findCountProgressStatus(memberId).intValue();
+
+        Integer endCount = eventRepository.findCountEndStatus(memberId).intValue();
+
+        return ResponseEvent.GetEventDashboard.of(
+                recruitingCount,
+                progressCount,
+                endCount
+        );
+    }
+
 }

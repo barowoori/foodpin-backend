@@ -70,6 +70,39 @@ public class ResponseEvent {
                     .createdAt(eventNotice.getCreatedAt())
                     .build();
         }
-
     }
+
+    @Builder
+    @Getter
+    public static class GetTruckAppliedEventDashboard {
+        private Integer appliedCount;
+        private Integer progressCount;
+        private Integer endCount;
+
+        public static GetTruckAppliedEventDashboard of(Integer appliedCount, Integer progressCount, Integer endCount) {
+            return GetTruckAppliedEventDashboard.builder()
+                    .appliedCount(appliedCount)
+                    .progressCount(progressCount)
+                    .endCount(endCount)
+                    .build();
+        }
+    }
+
+    @Builder
+    @Getter
+    public static class GetEventDashboard {
+        private Integer recruitingCount;
+        private Integer progressCount;
+        private Integer endCount;
+
+        public static GetEventDashboard of(Integer recruitingCount, Integer progressCount, Integer endCount) {
+            return GetEventDashboard.builder()
+                    .recruitingCount(recruitingCount)
+                    .progressCount(progressCount)
+                    .endCount(endCount)
+                    .build();
+        }
+    }
+
+
 }

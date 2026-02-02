@@ -31,6 +31,7 @@ import static com.barowoori.foodpinbackend.event.command.domain.model.QEventDocu
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventPhoto.eventPhoto;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventRecruitDetail.eventRecruitDetail;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventRegion.eventRegion;
+import static com.barowoori.foodpinbackend.event.command.domain.model.QEventTruck.eventTruck;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventView.eventView;
 import static com.barowoori.foodpinbackend.file.command.domain.model.QFile.file;
 import static com.barowoori.foodpinbackend.member.command.domain.model.QEventLike.eventLike;
@@ -420,5 +421,64 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .innerJoin(eventCategory.category, category).fetchJoin()
                 .where(event.isDeleted.isFalse().and(event.recruitDetail.isRecruitEndOnSelection.isFalse()).and(eventRecruitDetail.recruitEndDateTime.eq(standardTime)))
                 .fetch();
+    }
+
+    @Override
+    public Long findCountRecruitingStatus(String memberId) {
+        return jpaQueryFactory.select(event.count())
+                .from(event)
+                .join(event.recruitDetail, eventRecruitDetail)
+                .where(event.isDeleted.isFalse().and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING)).and(event.createdBy.eq(memberId)))
+                .fetchOne();
+    }
+
+    @Override
+    public Long findCountProgressStatus(String memberId) {
+        BooleanBuilder progressBuilder = new BooleanBuilder();
+        //모집마감이면서
+        progressBuilder.and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITMENT_CLOSED));
+
+        //이벤트가 아직 종료되지 않음
+        progressBuilder.and(
+                event.id.in(
+                        jpaQueryFactory
+                                .select(event.id)
+                                .from(event)
+                                .leftJoin(event.eventDates, eventDate)
+                                .groupBy(event.id)
+                                .having(eventDate.date.max().goe(LocalDate.now()))
+                )
+        );
+
+        return jpaQueryFactory.select(event.count())
+                .from(event)
+                .join(event.recruitDetail, eventRecruitDetail)
+                .where(event.isDeleted.isFalse().and(progressBuilder).and(event.createdBy.eq(memberId)))
+                .fetchOne();
+    }
+
+    @Override
+    public Long findCountEndStatus(String memberId) {
+        BooleanBuilder completedBuilder = new BooleanBuilder();
+        //모집취소이거나
+        completedBuilder.or(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITMENT_CANCELLED));
+
+        //이벤트가 종료됨 (가장 마지막 이벤트 날짜 < 오늘)
+        completedBuilder.or(
+                event.id.in(
+                        jpaQueryFactory
+                                .select(event.id)
+                                .from(event)
+                                .leftJoin(event.eventDates, eventDate)
+                                .groupBy(event.id)
+                                .having(eventDate.date.max().before(LocalDate.now()))
+                )
+        );
+
+        return jpaQueryFactory.select(event.count())
+                .from(event)
+                .join(event.recruitDetail, eventRecruitDetail)
+                .where(event.isDeleted.isFalse().and(event.createdBy.eq(memberId)).and(completedBuilder))
+                .fetchOne();
     }
 }

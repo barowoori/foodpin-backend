@@ -30,4 +30,7 @@ public interface EventRepositoryCustom {
     List<MemberForEventFcmInfoDto> findSelectionNotEndedEventCreatorsFcmInfo();
     List<MemberForEventFcmInfoDto> findRecruitmentDeadlineSoonEventCreatorsFcmInfo();
     List<Event> findRecruitmentDeadlineSoonEvents();
+    Long findCountRecruitingStatus(String memberId);
+    Long findCountProgressStatus(String memberId);
+    Long findCountEndStatus(String memberId);
 }

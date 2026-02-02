@@ -88,4 +88,21 @@ public class ResponseEvent {
         }
     }
 
+    @Builder
+    @Getter
+    public static class GetEventDashboard {
+        private Integer recruitingCount;
+        private Integer progressCount;
+        private Integer endCount;
+
+        public static GetEventDashboard of(Integer recruitingCount, Integer progressCount, Integer endCount) {
+            return GetEventDashboard.builder()
+                    .recruitingCount(recruitingCount)
+                    .progressCount(progressCount)
+                    .endCount(endCount)
+                    .build();
+        }
+    }
+
+
 }

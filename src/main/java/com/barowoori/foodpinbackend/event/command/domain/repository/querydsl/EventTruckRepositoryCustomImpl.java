@@ -210,6 +210,18 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
     }
 
     @Override
+    public Long findPendingEventsByTruckId(String truckId) {
+        return jpaQueryFactory
+                .select(eventTruck.count())
+                .from(eventTruck)
+                .where(
+                        eventTruck.truck.id.eq(truckId)
+                                .and(eventTruck.status.eq(EventTruckStatus.PENDING))
+                )
+                .fetchOne();
+    }
+
+    @Override
     public Long findProgressEventsByTruckId(String truckId) {
         // 진행중 조건
         BooleanBuilder progressBuilder = new BooleanBuilder();

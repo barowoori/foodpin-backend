@@ -275,6 +275,8 @@ public class MemberService {
         memberRepository.save(member);
     }
 
+    //todo 회원탈퇴 시 유저 프로필 사진 삭제 처리 필요
+    //todo 이미지 삭제 시에 우리 db에서만 미는 게 아니라 s3에 등록되어있는 파일도 삭제 처리 되는 건지 확인 필요
     @Transactional
     public void v2deleteMember(String refreshToken) {
         Member member = getMember();
@@ -436,6 +438,12 @@ public class MemberService {
         } else {
             eventLikeRepository.delete(eventLike);
         }
+    }
+
+    @Transactional
+    public void setServiceType(RequestMember.SetServiceTypeDto setServiceTypeDto) {
+        Member member = getMember();
+        member.updateServiceType(setServiceTypeDto.getServiceType());
     }
 
     @Transactional(readOnly = true)

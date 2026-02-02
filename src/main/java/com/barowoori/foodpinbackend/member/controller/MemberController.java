@@ -356,6 +356,23 @@ public class MemberController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "서비스 유형 설정", description = "서비스 유형은 ALL(모두), TRUCK(트럭), EVENT(행사)로 구성.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping("/v1/service-type")
+    public ResponseEntity<CommonResponse<String>> setServiceType(
+            @Valid @RequestBody RequestMember.SetServiceTypeDto setServiceTypeDto
+    ) {
+        memberService.setServiceType(setServiceTypeDto);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Service type set successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
     @Operation(summary = "서비스 유형 조회", description = "서비스 유형은 ALL(모두), TRUCK(트럭), EVENT(행사)로 구성되어 있으며, 서비스 유형이 설정되어 있지 않으면 serviceType은 null로 반환된다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),

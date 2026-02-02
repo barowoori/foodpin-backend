@@ -1,6 +1,7 @@
 package com.barowoori.foodpinbackend.member.command.application.dto;
 
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
+import com.barowoori.foodpinbackend.member.command.domain.model.ServiceType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
@@ -102,5 +103,13 @@ public class RequestMember {
         private Set<String> regionCodeSet;
         @Schema(description = "관심 행사 카테고리 코드 Set")
         private Set<String> categoryCodeSet;
+    }
+
+    @Builder
+    @Data
+    public static class SetServiceTypeDto {
+        @Schema(description = "서비스 유형", example = "TRUCK")
+        @NotNull(message = "서비스 유형이 비었습니다")
+        private ServiceType serviceType;
     }
 }

@@ -13,6 +13,7 @@ import lombok.experimental.SuperBuilder;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @SuperBuilder
@@ -73,6 +74,12 @@ public class TruckDetail {
         private Boolean gasUsage;
         private Boolean selfGenerationAvailability;
         private List<Photo> photos;
+        private Set<TruckColor> truckColors;
+        private TruckBodyType bodyType;
+        private Boolean isCatering;
+        private Set<TruckType> types;
+        private Set<PaymentMethod> paymentMethods;
+        private Set<ProofIssuanceType> proofIssuanceTypes;
 
         public static TruckInfo of(Truck truck, ImageManager imageManager) {
             return TruckInfo.builder()
@@ -85,6 +92,12 @@ public class TruckDetail {
                     .photos(truck.getTruckPhotoFiles().stream()
                             .map(file -> Photo.of(file, imageManager))
                             .toList())
+                    .truckColors(truck.getColors())
+                    .bodyType(truck.getBodyType())
+                    .isCatering(truck.getIsCatering())
+                    .types(truck.getTypes())
+                    .paymentMethods(truck.getPaymentMethods())
+                    .proofIssuanceTypes(truck.getProofIssuanceTypes())
                     .build();
         }
     }
@@ -145,11 +158,13 @@ public class TruckDetail {
     public static class TruckDocumentInfo{
         private DocumentType type;
         private LocalDate date;
+        private TruckDocumentStatus status;
 
         public static TruckDocumentInfo of(TruckDocument truckDocument){
             return TruckDocumentInfo.builder()
                     .type(truckDocument.getType())
                     .date(truckDocument.getUpdatedAt().toLocalDate())
+                    .status(truckDocument.getStatus())
                     .build();
         }
     }

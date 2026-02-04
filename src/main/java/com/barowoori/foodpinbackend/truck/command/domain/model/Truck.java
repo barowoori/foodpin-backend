@@ -4,6 +4,7 @@ import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.region.command.domain.query.application.RegionSearchProcessor;
+import com.barowoori.foodpinbackend.truck.command.domain.service.*;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,10 +13,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Table(name = "trucks")
@@ -74,11 +72,38 @@ public class Truck {
     @OneToMany(mappedBy = "truck")
     private Set<TruckRegion> regions;
 
+    @Column(name = "colors")
+    @Convert(converter = TruckColorSetConverter.class)
+    private Set<TruckColor> colors = new HashSet<>();
+
+    @Column(name = "body_type")
+    @Enumerated(value = EnumType.STRING)
+    private TruckBodyType bodyType;
+
+    @Column(name = "is_catering")
+    private Boolean isCatering;
+
+    @Column(name = "types")
+    @Convert(converter = TruckTypeSetConverter.class)
+    private Set<TruckType> types = new HashSet<>();
+
+    @Column(name = "payment_methods")
+    @Convert(converter = PaymentMethodSetConverter.class)
+    private Set<PaymentMethod> paymentMethods = new HashSet<>();
+
+    @Column(name = "proof_issuance_types")
+    @Convert(converter = ProofIssuanceTypeSetConverter.class)
+    private Set<ProofIssuanceType> proofIssuanceTypes = new HashSet<>();
+
+    @Column(name = "avg_menu_price")
+    private Integer avgMenuPrice;
+
     protected Truck() {
     }
 
     @Builder
-    public Truck(String name, LocalDateTime updatedAt, String updatedBy, String description, Boolean electricityUsage, Boolean gasUsage, Boolean selfGenerationAvailability, Boolean isDeleted, Integer views) {
+    public Truck(String name, LocalDateTime updatedAt, String updatedBy, String description, Boolean electricityUsage, Boolean gasUsage, Boolean selfGenerationAvailability, Boolean isDeleted, Integer views,
+                 Set<TruckColor> colors, TruckBodyType bodyType, Boolean isCatering, Set<TruckType> types, Set<PaymentMethod> paymentMethods, Set<ProofIssuanceType> proofIssuanceTypes) {
         this.name = name;
         this.updatedAt = updatedAt;
         this.updatedBy = updatedBy;
@@ -88,6 +113,12 @@ public class Truck {
         this.selfGenerationAvailability = selfGenerationAvailability;
         this.isDeleted = isDeleted;
         this.views = views;
+        this.colors = colors;
+        this.bodyType = bodyType;
+        this.isCatering = isCatering;
+        this.types = types;
+        this.paymentMethods = paymentMethods;
+        this.proofIssuanceTypes = proofIssuanceTypes;
     }
 
     public void update(String name, String updatedBy, String description, Boolean electricityUsage, Boolean gasUsage, Boolean selfGenerationAvailability) {
@@ -164,5 +195,25 @@ public class Truck {
                 .map(truckRegion ->
                         regionSearchProcessor.findFullRegionName(truckRegion.getRegionType(), truckRegion.getRegionId()))
                 .toList();
+    }
+
+    public void updateAvgMenuPrice() {
+        if (menus == null || menus.isEmpty()) {
+            this.avgMenuPrice = null;
+            return;
+        }
+
+        int sum = menus.stream()
+                .map(TruckMenu::getPrice)
+                .filter(Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .sum();
+
+        int count = (int) menus.stream()
+                .map(TruckMenu::getPrice)
+                .filter(Objects::nonNull)
+                .count();
+
+        this.avgMenuPrice = count == 0 ? null : sum / count;
     }
 }

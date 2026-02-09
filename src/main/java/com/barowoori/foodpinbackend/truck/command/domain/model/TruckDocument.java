@@ -69,10 +69,9 @@ public class TruckDocument {
         this.rejectionReason = rejectionReason;
     }
 
-    public void update(LocalDateTime updatedAt, String updatedBy, Boolean approval) {
+    public void update(LocalDateTime updatedAt, String updatedBy) {
         this.updatedAt = updatedAt;
         this.updatedBy = updatedBy;
-        this.approval = approval;
     }
 
     public void updateStatus(TruckDocumentStatus status){

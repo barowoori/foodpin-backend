@@ -300,6 +300,25 @@ public class TruckController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "트럭 결제 정보 수정")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
+                    "멤버를 못 찾을 경우[20004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PutMapping(value = "/v1/{truckId}/payment")
+    public ResponseEntity<CommonResponse<String>> updateTruckPayment(@Valid @PathVariable("truckId") String truckId,
+                                                                     @Valid @RequestBody RequestTruck.UpdateTruckPaymentDto updateTruckPaymentDto) {
+        truckService.updateTruckPayment(truckId, updateTruckPaymentDto);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Truck payment updated successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
     @Operation(summary = "트럭 서류 수정/신규 등록", description = "요청으로 보낸 서류 타입이 기존에 존재하면 수정, 없으면 신규 등록" +
             "\n\n사업자 등록증의 경우 사업자 정보 createBusinessRegistrationDto를, 그 외 서류의 경우 사진 파일 id 리스트를 같이 보내야 함")
     @ApiResponses(value = {

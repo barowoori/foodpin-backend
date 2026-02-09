@@ -5,6 +5,7 @@ import com.barowoori.foodpinbackend.common.exception.ErrorResponse;
 import com.barowoori.foodpinbackend.truck.command.application.dto.RequestTruck;
 import com.barowoori.foodpinbackend.truck.command.application.dto.ResponseTruck;
 import com.barowoori.foodpinbackend.truck.command.application.service.TruckService;
+import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckDetail;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckList;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckManagerSummary;
@@ -32,6 +33,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @Tag(name = "트럭 API")
 @RequiredArgsConstructor
@@ -174,9 +176,17 @@ public class TruckController {
     public ResponseEntity<CommonResponse<Page<TruckList>>> getTruckList(@RequestParam(value = "region", required = false) List<String> regionCodes,
                                                                         @RequestParam(value = "category", required = false) List<String> categoryNames,
                                                                         @RequestParam(value = "search", required = false) String searchTerm,
+                                                                        @RequestParam(value = "types", required = false) Set<TruckType> types,
+                                                                        @RequestParam(value = "colors", required = false) Set<TruckColor> colors,
+                                                                        @RequestParam(value = "bodyTypes", required = false) Set<TruckBodyType> bodyTypes,
+                                                                        @RequestParam(value = "paymentMethods", required = false) Set<PaymentMethod> paymentMethods,
+                                                                        @RequestParam(value = "proofIssuanceTypes", required = false) Set<ProofIssuanceType> proofIssuanceTypes,
+                                                                        @RequestParam(value = "minAvgMenuPrice", required = false) Integer minAvgMenuPrice,
+                                                                        @RequestParam(value = "maxAvgMenuPrice", required = false) Integer maxAvgMenuPrice,
                                                                         @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        Page<TruckList> truckLists = truckListService.findTruckList(regionCodes, categoryNames, searchTerm, pageable);
+        Page<TruckList> truckLists = truckListService.findTruckList(regionCodes, categoryNames, searchTerm, types, minAvgMenuPrice, maxAvgMenuPrice,
+                colors, bodyTypes, paymentMethods, proofIssuanceTypes, pageable);
         CommonResponse<Page<TruckList>> commonResponse = CommonResponse.<Page<TruckList>>builder()
                 .data(truckLists)
                 .build();
@@ -193,10 +203,18 @@ public class TruckController {
     public ResponseEntity<CommonResponse<Page<TruckList>>> getLikeTruckList(@RequestParam(value = "region", required = false) List<String> regionCodes,
                                                                             @RequestParam(value = "category", required = false) List<String> categoryNames,
                                                                             @RequestParam(value = "search", required = false) String searchTerm,
+                                                                            @RequestParam(value = "types", required = false) Set<TruckType> types,
+                                                                            @RequestParam(value = "colors", required = false) Set<TruckColor> colors,
+                                                                            @RequestParam(value = "bodyTypes", required = false) Set<TruckBodyType> bodyTypes,
+                                                                            @RequestParam(value = "paymentMethods", required = false) Set<PaymentMethod> paymentMethods,
+                                                                            @RequestParam(value = "proofIssuanceTypes", required = false) Set<ProofIssuanceType> proofIssuanceTypes,
+                                                                            @RequestParam(value = "minAvgMenuPrice", required = false) Integer minAvgMenuPrice,
+                                                                            @RequestParam(value = "maxAvgMenuPrice", required = false) Integer maxAvgMenuPrice,
                                                                             @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
-        Page<TruckList> truckLists = truckListService.findLikeTruckByTruckList(memberId, regionCodes, categoryNames, searchTerm, pageable);
+        Page<TruckList> truckLists = truckListService.findLikeTruckByTruckList(memberId, regionCodes, categoryNames, searchTerm, types, minAvgMenuPrice, maxAvgMenuPrice,
+                colors, bodyTypes, paymentMethods, proofIssuanceTypes, pageable);
         CommonResponse<Page<TruckList>> commonResponse = CommonResponse.<Page<TruckList>>builder()
                 .data(truckLists)
                 .build();

@@ -8,7 +8,7 @@ import com.barowoori.foodpinbackend.region.command.domain.repository.RegionDoRep
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionGuRepository;
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionGunRepository;
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionSiRepository;
-import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
+import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckDocumentRepository;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckMenuRepository;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckRegionRepository;
@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Component
 public class TruckListService {
@@ -62,11 +63,21 @@ public class TruckListService {
     }
 
     @Transactional(readOnly = true)
-    public Page<TruckList> findTruckList(List<String> regionCodes, List<String> categoryNames, String searchTerm, Pageable pageable) {
+    public Page<TruckList> findTruckList( List<String> regionCodes,
+                                          List<String> categoryNames,
+                                          String searchTerm,
+                                          Set<TruckType> types,
+                                          Integer minAvgMenuPrice,
+                                          Integer maxAvgMenuPrice,
+                                          Set<TruckColor> colors,
+                                          Set<TruckBodyType> bodyTypes,
+                                          Set<PaymentMethod> paymentMethods,
+                                          Set<ProofIssuanceType> proofIssuanceTypes,
+                                          Pageable pageable) {
         RegionSearchProcessor regionSearchProcessor = getRegionSearchProcessor();
-
         Map<RegionType, List<String>> regionIds = regionDoRepository.findRegionIdsByFilter(regionCodes);
-        Page<Truck> trucks = truckRepository.findTruckListByFilter(searchTerm, categoryNames, regionIds, pageable);
+        Page<Truck> trucks = truckRepository.findTruckListByFilter(searchTerm, categoryNames, regionIds, types, minAvgMenuPrice, maxAvgMenuPrice,
+                colors, bodyTypes, paymentMethods, proofIssuanceTypes, pageable);
         List<String> truckIds = trucks.map(Truck::getId).stream().toList();
         Map<String, List<DocumentType>> documents = truckDocumentRepository.getDocumentTypeByTruckIds(truckIds);
 
@@ -78,11 +89,22 @@ public class TruckListService {
     }
 
     @Transactional(readOnly = true)
-    public Page<TruckList> findLikeTruckByTruckList(String memberId, List<String> regionCodes, List<String> categoryNames, String searchTerm, Pageable pageable) {
+    public Page<TruckList> findLikeTruckByTruckList(String memberId, List<String> regionCodes,
+                                                    List<String> categoryNames,
+                                                    String searchTerm,
+                                                    Set<TruckType> types,
+                                                    Integer minAvgMenuPrice,
+                                                    Integer maxAvgMenuPrice,
+                                                    Set<TruckColor> colors,
+                                                    Set<TruckBodyType> bodyTypes,
+                                                    Set<PaymentMethod> paymentMethods,
+                                                    Set<ProofIssuanceType> proofIssuanceTypes,
+                                                    Pageable pageable) {
         RegionSearchProcessor regionSearchProcessor = getRegionSearchProcessor();
 
         Map<RegionType, List<String>> regionIds = regionDoRepository.findRegionIdsByFilter(regionCodes);
-        Page<Truck> trucks = truckRepository.findLikeTruckListByFilter(memberId, searchTerm, categoryNames, regionIds, pageable);
+        Page<Truck> trucks = truckRepository.findLikeTruckListByFilter(memberId, searchTerm, categoryNames, regionIds, types, minAvgMenuPrice, maxAvgMenuPrice,
+                colors, bodyTypes, paymentMethods, proofIssuanceTypes, pageable);
         List<String> truckIds = trucks.map(Truck::getId).stream().toList();
         Map<String, List<DocumentType>> documents = truckDocumentRepository.getDocumentTypeByTruckIds(truckIds);
         return trucks.map(truck -> {

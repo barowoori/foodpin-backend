@@ -67,7 +67,7 @@ public class Truck {
     private Set<TruckDocument> documents;
 
     @OneToMany(mappedBy = "truck")
-    private Set<TruckCategory> categories ;
+    private Set<TruckCategory> categories;
 
     @OneToMany(mappedBy = "truck")
     private Set<TruckRegion> regions;
@@ -174,6 +174,18 @@ public class Truck {
         }
         return this.menus.stream()
                 .sorted(Comparator.comparing(TruckMenu::getCreateAt))
+                .toList();
+    }
+
+    public List<String> getFirstTwoCreatedTruckMenuPhotos(ImageManager imageManager){
+        if(this.menus == null){
+            return new ArrayList<>();
+        }
+        return this.menus.stream()
+                .sorted(Comparator.comparing(TruckMenu::getCreateAt))
+                .map(menu -> menu.getTruckMenuMainPhotoUrl(imageManager))
+                .filter(Objects::nonNull)
+                .limit(2)
                 .toList();
     }
 

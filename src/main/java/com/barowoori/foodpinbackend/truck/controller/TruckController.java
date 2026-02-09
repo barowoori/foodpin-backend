@@ -280,7 +280,7 @@ public class TruckController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
-    @Operation(summary = "트럭 카테고리 및 메뉴 수정")
+    @Operation(summary = "트럭 메뉴 정보 수정")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",

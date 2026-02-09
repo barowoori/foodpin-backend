@@ -20,6 +20,8 @@ public class TruckList {
     private String regionList;
     private List<String> menuNames;
     private String photo;
+    private Integer avgMenuPrice;
+    private List<String> menuPhotos;
 
     public static TruckList of(Truck truck, List<DocumentType> documents, List<String> regions, String regionList, ImageManager imageManager) {
 
@@ -31,6 +33,8 @@ public class TruckList {
                 .regionList(regionList)
                 .menuNames(truck.getSortedTruckMenuNames())
                 .photo(truck.getTruckMainPhotoUrl(imageManager))
+                .avgMenuPrice(truck.getAvgMenuPrice())
+                .menuPhotos(truck.getFirstTwoCreatedTruckMenuPhotos(imageManager))
                 .build();
     }
 }

@@ -195,7 +195,19 @@ public class Truck {
                 .toList();
     }
 
-    public List<String> getSortedTruckMenuNames() {
+    public List<String> getFirstTwoCreatedTruckMenuPhotos(ImageManager imageManager){
+        if(this.menus == null){
+            return new ArrayList<>();
+        }
+        return this.menus.stream()
+                .sorted(Comparator.comparing(TruckMenu::getCreateAt))
+                .map(menu -> menu.getTruckMenuMainPhotoUrl(imageManager))
+                .filter(Objects::nonNull)
+                .limit(2)
+                .toList();
+    }
+
+    public List<String> getSortedTruckMenuNames(){
         return getSortedTruckMenus().stream().map(TruckMenu::getName).toList();
     }
 

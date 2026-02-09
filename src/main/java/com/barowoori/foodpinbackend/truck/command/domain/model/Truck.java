@@ -121,45 +121,63 @@ public class Truck {
         this.proofIssuanceTypes = proofIssuanceTypes;
     }
 
-    public void update(String name, String updatedBy, String description, Boolean electricityUsage, Boolean gasUsage, Boolean selfGenerationAvailability) {
+    public void updateBasicInfo(String name, String updatedBy, String description, Set<TruckColor> colors, TruckBodyType bodyType) {
         this.name = name;
         this.updatedBy = updatedBy;
         this.description = description;
+        this.colors = colors;
+        this.bodyType = bodyType;
+    }
+
+    public void updateOperationInfo(String updatedBy, Boolean electricityUsage, Boolean gasUsage, Boolean selfGenerationAvailability) {
+        this.updatedBy = updatedBy;
         this.electricityUsage = electricityUsage;
         this.gasUsage = gasUsage;
         this.selfGenerationAvailability = selfGenerationAvailability;
     }
-  
+
+    public void updateMenuInfo(String updatedBy, Set<TruckType> types, Boolean isCatering) {
+        this.updatedBy = updatedBy;
+        this.isCatering = isCatering;
+        this.types = types;
+    }
+
+    public void updatePaymentInfo(String updatedBy, Set<PaymentMethod> paymentMethods, Set<ProofIssuanceType> proofIssuanceTypes) {
+        this.updatedBy = updatedBy;
+        this.paymentMethods = paymentMethods;
+        this.proofIssuanceTypes = proofIssuanceTypes;
+    }
+
     public void addViews() {
         this.views = this.views + 1;
 
     }
 
-    public void delete(){
+    public void delete() {
         this.name = "(삭제됨) " + this.name;
         this.isDeleted = true;
     }
 
-    public void deleteByMember(){
+    public void deleteByMember() {
         this.name = "(탈퇴) " + this.name;
         this.isDeleted = true;
     }
 
-    public Boolean approval(){
-        if (this.documents == null){
+    public Boolean approval() {
+        if (this.documents == null) {
             return Boolean.FALSE;
         }
-       return this.documents.stream().anyMatch(doc -> doc.getType().equals(DocumentType.BUSINESS_REGISTRATION));
+        return this.documents.stream().anyMatch(doc -> doc.getType().equals(DocumentType.BUSINESS_REGISTRATION));
     }
 
-    public String getTruckMainPhotoUrl(ImageManager imageManager){
+    public String getTruckMainPhotoUrl(ImageManager imageManager) {
         return getTruckPhotoFiles().stream()
                 .map(file -> imageManager.getPreSignUrl(file.getPath()))
                 .findFirst().orElse(null);
     }
 
-    public List<File> getTruckPhotoFiles(){
-        if (this.photos == null){
+    public List<File> getTruckPhotoFiles() {
+        if (this.photos == null) {
             return new ArrayList<>();
         }
         return this.photos.stream()
@@ -168,8 +186,8 @@ public class Truck {
                 .toList();
     }
 
-    public List<TruckMenu> getSortedTruckMenus(){
-        if(this.menus == null){
+    public List<TruckMenu> getSortedTruckMenus() {
+        if (this.menus == null) {
             return new ArrayList<>();
         }
         return this.menus.stream()
@@ -193,8 +211,8 @@ public class Truck {
         return getSortedTruckMenus().stream().map(TruckMenu::getName).toList();
     }
 
-    public List<TruckRegion> getSortedTruckRegions(){
-        if(this.regions == null){
+    public List<TruckRegion> getSortedTruckRegions() {
+        if (this.regions == null) {
             return new ArrayList<>();
         }
         return this.regions.stream()
@@ -202,27 +220,25 @@ public class Truck {
                 .toList();
     }
 
-    public List<String> getTruckRegionNames(RegionSearchProcessor regionSearchProcessor){
+    public List<String> getTruckRegionNames(RegionSearchProcessor regionSearchProcessor) {
         return getSortedTruckRegions().stream()
                 .map(truckRegion ->
                         regionSearchProcessor.findFullRegionName(truckRegion.getRegionType(), truckRegion.getRegionId()))
                 .toList();
     }
 
-    public void updateAvgMenuPrice() {
-        if (menus == null || menus.isEmpty()) {
+    public void updateAvgMenuPrice(List<Integer> prices) {
+        if (prices == null || prices.isEmpty()) {
             this.avgMenuPrice = null;
             return;
         }
 
-        int sum = menus.stream()
-                .map(TruckMenu::getPrice)
+        int sum = prices.stream()
                 .filter(Objects::nonNull)
                 .mapToInt(Integer::intValue)
                 .sum();
 
-        int count = (int) menus.stream()
-                .map(TruckMenu::getPrice)
+        int count = (int) prices.stream()
                 .filter(Objects::nonNull)
                 .count();
 

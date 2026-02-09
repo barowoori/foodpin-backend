@@ -68,6 +68,30 @@ public class RequestTruck {
         @NotEmpty
         private List<String> fileIdList;
 
+        @Schema(description = "트럭 색상")
+        @NotEmpty
+        private Set<TruckColor> truckColors;
+
+        @Schema(description = "차량 형태")
+        @NotNull
+        private TruckBodyType bodyType;
+
+        @Schema(description = "케이터링 가능 여부")
+        @NotNull
+        private Boolean isCatering;
+
+        @Schema(description = "트럭 유형")
+        @NotEmpty
+        private Set<TruckType> types;
+
+        @Schema(description = "결제 방식")
+        @NotEmpty
+        private Set<PaymentMethod> paymentMethods;
+
+        @Schema(description = "증빙 발급 유형")
+        @NotEmpty
+        private Set<ProofIssuanceType> proofIssuanceTypes;
+
         public Truck toEntity(String creator){
             return Truck.builder()
                     .name(this.name)
@@ -76,6 +100,12 @@ public class RequestTruck {
                     .electricityUsage(this.electricityUsage)
                     .gasUsage(this.gasUsage)
                     .selfGenerationAvailability(this.selfGenerationAvailability)
+                    .colors(this.truckColors)
+                    .bodyType(this.bodyType)
+                    .isCatering(this.isCatering)
+                    .types(this.types)
+                    .paymentMethods(this.paymentMethods)
+                    .proofIssuanceTypes(this.proofIssuanceTypes)
                     .views(0)
                     .isDeleted(Boolean.FALSE)
                     .build();
@@ -118,10 +148,6 @@ public class RequestTruck {
         @Valid
         private RequestDocument.CreateBusinessRegistrationDto createBusinessRegistrationDto;
 
-        @Schema(description = "트럭 서류 검증 여부")
-        @NotNull
-        private Boolean approval;
-
         @Schema(description = "트럭 서류 사진 파일 id 리스트")
         private List<String> fileIdList;
 
@@ -130,7 +156,6 @@ public class RequestTruck {
                     .updatedBy(updatedBy)
                     .type(this.type)
                     .documentId(documentId)
-                    .approval(this.approval)
                     .truck(truck)
                     .build();
         }
@@ -139,7 +164,6 @@ public class RequestTruck {
             return TruckDocument.builder()
                     .updatedBy(updatedBy)
                     .type(this.type)
-                    .approval(this.approval)
                     .truck(truck)
                     .build();
         }
@@ -161,6 +185,14 @@ public class RequestTruck {
         @Schema(description = "트럭 사진 파일 id 리스트")
         @NotEmpty
         private List<String> fileIdList;
+
+        @Schema(description = "트럭 색상")
+        @NotEmpty
+        private Set<TruckColor> truckColors;
+
+        @Schema(description = "차량 형태")
+        @NotNull
+        private TruckBodyType bodyType;
     }
 
     @Getter
@@ -188,9 +220,28 @@ public class RequestTruck {
         @NotEmpty
         private Set<String> truckCategoryCodeSet;
 
+        @Schema(description = "트럭 유형")
+        @NotEmpty
+        private Set<TruckType> types;
+
+        @Schema(description = "케이터링 가능 여부")
+        @NotNull
+        private Boolean isCatering;
+
         @Valid
         @NotEmpty
         private List<TruckMenuDto> truckMenuDtoList;
+    }
+
+    @Getter
+    public static class UpdateTruckPaymentDto{
+        @Schema(description = "결제 방식")
+        @NotEmpty
+        private Set<PaymentMethod> paymentMethods;
+
+        @Schema(description = "증빙 발급 유형")
+        @NotEmpty
+        private Set<ProofIssuanceType> proofIssuanceTypes;
     }
 
     @Getter

@@ -121,7 +121,14 @@ public class TruckService {
 
         // 트럭 생성
         Truck truck = createTruckDto.getTruckInfoDto().toEntity(memberId);
+
+        List<Integer> createdMenuPrices = createTruckDto.getTruckMenuDtoList().stream()
+                .map(RequestTruck.TruckMenuDto::getPrice)
+                .toList();
+        truck.updateAvgMenuPrice(createdMenuPrices);
+
         truckRepository.save(truck);
+
         // 트럭 사진 생성
         for (String fileId : createTruckDto.getTruckInfoDto().getFileIdList()) {
             File file = fileRepository.findById(fileId)
@@ -238,7 +245,13 @@ public class TruckService {
         String memberId = getMemberId();
         Truck truck = getTruck(truckId);
         validateTruckAccess(truck.getId(), memberId);
-        truck.update(updateTruckInfoDto.getName(), memberId, updateTruckInfoDto.getDescription(), truck.getElectricityUsage(), truck.getGasUsage(), truck.getSelfGenerationAvailability());
+        truck.updateBasicInfo(
+                updateTruckInfoDto.getName(),
+                memberId,
+                updateTruckInfoDto.getDescription(),
+                updateTruckInfoDto.getTruckColors(),
+                updateTruckInfoDto.getBodyType()
+        );
         truckRepository.save(truck);
 
         List<TruckPhoto> photoList = truckPhotoRepository.findByTruckOrderByCreateAt(truck);
@@ -257,7 +270,12 @@ public class TruckService {
         String memberId = getMemberId();
         Truck truck = getTruck(truckId);
         validateTruckAccess(truck.getId(), memberId);
-        truck.update(truck.getName(), memberId, truck.getDescription(), updateTruckOperationDto.getElectricityUsage(), updateTruckOperationDto.getGasUsage(), updateTruckOperationDto.getSelfGenerationAvailability());
+        truck.updateOperationInfo(
+                memberId,
+                updateTruckOperationDto.getElectricityUsage(),
+                updateTruckOperationDto.getGasUsage(),
+                updateTruckOperationDto.getSelfGenerationAvailability()
+        );
         truckRepository.save(truck);
 
         List<TruckRegion> truckRegionList = truckRegionRepository.findAllByTruck(truck);
@@ -278,6 +296,8 @@ public class TruckService {
         String memberId = getMemberId();
         Truck truck = getTruck(truckId);
         validateTruckAccess(truck.getId(), memberId);
+        truck.updateMenuInfo(memberId, updateTruckMenuDto.getTypes(), updateTruckMenuDto.getIsCatering());
+        truckRepository.save(truck);
 
         List<TruckCategory> truckCategoryList = truckCategoryRepository.findAllByTruck(truck);
         truckCategoryList.forEach(truckCategoryRepository::delete);
@@ -315,6 +335,20 @@ public class TruckService {
                 }
             }
         }
+
+        List<Integer> createdMenuPrices = updateTruckMenuDto.getTruckMenuDtoList().stream()
+                .map(RequestTruck.TruckMenuDto::getPrice)
+                .toList();
+        truck.updateAvgMenuPrice(createdMenuPrices);
+    }
+
+    @Transactional
+    public void updateTruckPayment(String truckId, RequestTruck.UpdateTruckPaymentDto updateTruckPaymentDto) {
+        String memberId = getMemberId();
+        Truck truck = getTruck(truckId);
+        validateTruckAccess(truck.getId(), memberId);
+        truck.updatePaymentInfo(memberId, updateTruckPaymentDto.getPaymentMethods(), updateTruckPaymentDto.getProofIssuanceTypes());
+        truckRepository.save(truck);
     }
 
     @Transactional
@@ -345,7 +379,7 @@ public class TruckService {
                             dto.getCreateBusinessRegistrationDto().getRepresentativeName(),
                             dto.getCreateBusinessRegistrationDto().getOpeningDate());
                     businessRegistrationRepository.save(br);
-                    existingDoc.update(LocalDateTime.now(), memberId, dto.getApproval());
+                    existingDoc.update(LocalDateTime.now(), memberId);
                     truckDocumentRepository.save(existingDoc);
                 }
             } else if (dto.getFileIdList() != null && !dto.getFileIdList().isEmpty()) {
@@ -359,7 +393,7 @@ public class TruckService {
                     List<TruckDocumentPhoto> existingPhotos = truckDocumentPhotoRepository.findByTruckDocumentId(existingDoc.getId());
                     existingPhotos.forEach(truckDocumentPhotoRepository::delete);
                     saveTruckDocumentPhotos(dto.getFileIdList(), existingDoc, memberId);
-                    existingDoc.update(LocalDateTime.now(), memberId, dto.getApproval());
+                    existingDoc.update(LocalDateTime.now(), memberId);
                     truckDocumentRepository.save(existingDoc);
                 }
             } else {
@@ -487,7 +521,7 @@ public class TruckService {
     }
 
     @Transactional
-    public Truck getTruckById(String id){
+    public Truck getTruckById(String id) {
         return this.getTruck(id);
     }
 }

@@ -129,16 +129,16 @@ public class Truck {
         this.bodyType = bodyType;
     }
 
-    public void updateOperationInfo(String updatedBy, Boolean electricityUsage, Boolean gasUsage, Boolean selfGenerationAvailability) {
+    public void updateOperationInfo(String updatedBy, Boolean electricityUsage, Boolean gasUsage, Boolean selfGenerationAvailability, Boolean isCatering) {
         this.updatedBy = updatedBy;
         this.electricityUsage = electricityUsage;
         this.gasUsage = gasUsage;
         this.selfGenerationAvailability = selfGenerationAvailability;
+        this.isCatering = isCatering;
     }
 
-    public void updateMenuInfo(String updatedBy, Set<TruckType> types, Boolean isCatering) {
+    public void updateMenuInfo(String updatedBy, Set<TruckType> types) {
         this.updatedBy = updatedBy;
-        this.isCatering = isCatering;
         this.types = types;
     }
 

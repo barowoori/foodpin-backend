@@ -274,7 +274,8 @@ public class TruckService {
                 memberId,
                 updateTruckOperationDto.getElectricityUsage(),
                 updateTruckOperationDto.getGasUsage(),
-                updateTruckOperationDto.getSelfGenerationAvailability()
+                updateTruckOperationDto.getSelfGenerationAvailability(),
+                updateTruckOperationDto.getIsCatering()
         );
         truckRepository.save(truck);
 
@@ -296,7 +297,7 @@ public class TruckService {
         String memberId = getMemberId();
         Truck truck = getTruck(truckId);
         validateTruckAccess(truck.getId(), memberId);
-        truck.updateMenuInfo(memberId, updateTruckMenuDto.getTypes(), updateTruckMenuDto.getIsCatering());
+        truck.updateMenuInfo(memberId, updateTruckMenuDto.getTypes());
         truckRepository.save(truck);
 
         List<TruckCategory> truckCategoryList = truckCategoryRepository.findAllByTruck(truck);

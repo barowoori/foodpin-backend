@@ -212,6 +212,10 @@ public class RequestTruck {
         @Schema(description = "트럭 지역 코드 Set")
         @NotEmpty
         private Set<String> truckRegionCodeSet;
+
+        @Schema(description = "케이터링 가능 여부")
+        @NotNull
+        private Boolean isCatering;
     }
 
     @Getter
@@ -223,10 +227,6 @@ public class RequestTruck {
         @Schema(description = "트럭 유형")
         @NotEmpty
         private Set<TruckType> types;
-
-        @Schema(description = "케이터링 가능 여부")
-        @NotNull
-        private Boolean isCatering;
 
         @Valid
         @NotEmpty

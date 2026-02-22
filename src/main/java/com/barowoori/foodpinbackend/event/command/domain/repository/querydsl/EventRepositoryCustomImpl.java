@@ -5,12 +5,14 @@ import com.barowoori.foodpinbackend.common.dto.MemberFcmInfoDto;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.MemberForEventFcmInfoDto;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
+import com.barowoori.foodpinbackend.truck.command.domain.model.TruckType;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.StringPath;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -22,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static com.barowoori.foodpinbackend.category.command.domain.model.QCategory.category;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEvent.event;
@@ -31,7 +34,6 @@ import static com.barowoori.foodpinbackend.event.command.domain.model.QEventDocu
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventPhoto.eventPhoto;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventRecruitDetail.eventRecruitDetail;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventRegion.eventRegion;
-import static com.barowoori.foodpinbackend.event.command.domain.model.QEventTruck.eventTruck;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventView.eventView;
 import static com.barowoori.foodpinbackend.file.command.domain.model.QFile.file;
 import static com.barowoori.foodpinbackend.member.command.domain.model.QEventLike.eventLike;
@@ -62,7 +64,9 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
     @Override
     public Page<Event> findEventListByFilter(String searchTerm, Map<RegionType, List<String>> regionIds,
                                              LocalDate startDate, LocalDate endDate,
-                                             List<String> categoryCodes, Pageable pageable) {
+                                             List<String> categoryCodes,
+                                             EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes,
+                                             Pageable pageable) {
         List<Event> events = jpaQueryFactory.selectDistinct(event)
                 .from(event)
                 .leftJoin(event.eventRegion, eventRegion)
@@ -77,7 +81,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                         event.isDeleted.isFalse()
                                 .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
                                 .and(
-                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, event, eventDate, category)
+                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, event, eventDate, category)
                                                 .and(regionFilterCondition(regionIds))
                                 )
                 )
@@ -96,7 +100,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                         event.isDeleted.isFalse()
                                 .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
                                 .and(
-                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, event, eventDate, category)
+                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, event, eventDate, category)
                                                 .and(regionFilterCondition(regionIds))
                                 )
                 )
@@ -108,7 +112,9 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
     @Override
     public Page<Event> findLikeEventListByFilter(String memberId, String searchTerm, Map<RegionType, List<String>> regionIds,
                                                  LocalDate startDate, LocalDate endDate,
-                                                 List<String> categoryCodes, Pageable pageable) {
+                                                 List<String> categoryCodes,
+                                                 EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes,
+                                                 Pageable pageable) {
         List<Event> events = jpaQueryFactory.selectDistinct(event)
                 .from(event)
                 .innerJoin(eventLike).on(eventLike.event.eq(event).and(eventLike.member.id.eq(memberId)))
@@ -123,7 +129,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .where(
                         event.isDeleted.isFalse()
                                 .and(
-                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, event, eventDate, category)
+                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, event, eventDate, category)
                                                 .and(regionFilterCondition(regionIds))
                                 )
                 )
@@ -142,7 +148,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .where(
                         event.isDeleted.isFalse()
                                 .and(
-                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, event, eventDate, category)
+                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, event, eventDate, category)
                                                 .and(regionFilterCondition(regionIds))
                                 )
                 )
@@ -170,13 +176,52 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
     }
 
     public BooleanBuilder createFilterBuilder(String searchTerm, List<String> categoryCodes, LocalDate startDate, LocalDate endDate,
+                                              EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes,
                                               QEvent event, QEventDate eventDate, QCategory category) {
         BooleanBuilder filterBuilder = new BooleanBuilder();
         addSearchTermFilter(event, searchTerm, filterBuilder);
         addCategoryFilter(category, categoryCodes, filterBuilder);
         addPeriodFilter(eventDate, startDate, endDate, filterBuilder);
-
+        addTruckTypeFilter(truckTypes, filterBuilder);
+        addEventTypeFilter(type, filterBuilder);
+        addExpectedParticipantsFilter(expectedParticipants, filterBuilder);
         return filterBuilder;
+    }
+
+    private void addEventTypeFilter(EventType type, BooleanBuilder builder) {
+        if (type == null) {
+            return;
+        }
+        builder.and(event.type.eq(type));
+    }
+
+    private void addExpectedParticipantsFilter(ExpectedParticipants expectedParticipants, BooleanBuilder builder) {
+        if (expectedParticipants == null) {
+            return;
+        }
+        builder.and(event.expectedParticipants.eq(expectedParticipants));
+    }
+
+    private void addTruckTypeFilter(Set<TruckType> types, BooleanBuilder builder) {
+        if (types == null || types.isEmpty()) {
+            return;
+        }
+
+        BooleanBuilder typeBuilder = new BooleanBuilder();
+
+        // QTruck.truck.types 대신 DB 컬럼명을 stringPath로 사용
+        StringPath typesPath = Expressions.stringPath("truckTypes"); // 실제 컬럼명 사용
+
+        for (TruckType type : types) {
+            typeBuilder.or(
+                    Expressions.stringTemplate(
+                            "CONCAT(',', {0}, ',')",
+                            typesPath
+                    ).contains("," + type.name() + ",")
+            );
+        }
+
+        builder.and(typeBuilder);
     }
 
     private void addSearchTermFilter(QEvent event, String searchTerm, BooleanBuilder builder) {
@@ -480,5 +525,13 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .join(event.recruitDetail, eventRecruitDetail)
                 .where(event.isDeleted.isFalse().and(event.createdBy.eq(memberId)).and(completedBuilder))
                 .fetchOne();
+    }
+
+    public String getEventPhone(String eventId) {
+        return jpaQueryFactory
+                .select(event.contact)
+                .from(event)
+                .where(event.id.eq(eventId))
+                .fetchFirst();
     }
 }

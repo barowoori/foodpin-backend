@@ -55,7 +55,7 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
     @Override
     public Page<Truck> findTruckListByFilter(String searchTerm, List<String> categoryCodes, Map<RegionType, List<String>> regionIds,
                                              Set<TruckType> types, Integer minAvgMenuPrice,  Integer maxAvgMenuPrice, Set<TruckColor> colors, Set<TruckBodyType> bodyTypes,
-                                             Set<PaymentMethod> paymentMethods, Set<ProofIssuanceType> proofIssuanceTypes,
+                                             Set<PaymentMethod> paymentMethods, Set<ProofIssuanceType> proofIssuanceTypes, Boolean isCatering,
                                              Pageable pageable) {
         List<Tuple> result = jpaQueryFactory.selectDistinct(truck.id, truck.createdAt, truck.views)
                 .from(truck)
@@ -67,7 +67,7 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
                         truck.isDeleted.isFalse()
                                 .and(
                                         createFilterBuilder(searchTerm, categoryCodes,
-                                                types, minAvgMenuPrice, maxAvgMenuPrice, colors, bodyTypes, paymentMethods, proofIssuanceTypes,
+                                                types, minAvgMenuPrice, maxAvgMenuPrice, colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering,
                                                 truck, category, truckMenu
                                         )
                                                 .and(regionFilterCondition(regionIds))
@@ -103,7 +103,7 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
                         truck.isDeleted.isFalse()
                                 .and(
                                         createFilterBuilder(searchTerm, categoryCodes,
-                                                types, minAvgMenuPrice, maxAvgMenuPrice, colors, bodyTypes, paymentMethods, proofIssuanceTypes,
+                                                types, minAvgMenuPrice, maxAvgMenuPrice, colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering,
                                                 truck, category, truckMenu
                                         )
                                                 .and(regionFilterCondition(regionIds))
@@ -117,7 +117,7 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
     @Override
     public Page<Truck> findLikeTruckListByFilter(String memberId, String searchTerm, List<String> categoryCodes, Map<RegionType, List<String>> regionIds,
                                                  Set<TruckType> types, Integer minAvgMenuPrice,  Integer maxAvgMenuPrice, Set<TruckColor> colors, Set<TruckBodyType> bodyTypes,
-                                                 Set<PaymentMethod> paymentMethods, Set<ProofIssuanceType> proofIssuanceTypes,
+                                                 Set<PaymentMethod> paymentMethods, Set<ProofIssuanceType> proofIssuanceTypes, Boolean isCatering,
                                                  Pageable pageable) {
         List<Tuple> result = jpaQueryFactory.selectDistinct(truck.id, truck.createdAt, truck.views)
                 .from(truck)
@@ -130,7 +130,7 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
                         truck.isDeleted.isFalse()
                                 .and(
                                         createFilterBuilder(searchTerm, categoryCodes,
-                                                types, minAvgMenuPrice, maxAvgMenuPrice, colors, bodyTypes, paymentMethods, proofIssuanceTypes,
+                                                types, minAvgMenuPrice, maxAvgMenuPrice, colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering,
                                                 truck, category, truckMenu
                                         )
                                                 .and(regionFilterCondition(regionIds))
@@ -169,7 +169,7 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
                         truck.isDeleted.isFalse()
                                 .and(
                                         createFilterBuilder(searchTerm, categoryCodes,
-                                                types, minAvgMenuPrice, maxAvgMenuPrice, colors, bodyTypes, paymentMethods, proofIssuanceTypes,
+                                                types, minAvgMenuPrice, maxAvgMenuPrice, colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering,
                                                 truck, category, truckMenu
                                         )
                                                 .and(regionFilterCondition(regionIds))
@@ -189,6 +189,7 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
                                               Set<TruckBodyType> bodyTypes,
                                               Set<PaymentMethod> paymentMethods,
                                               Set<ProofIssuanceType> proofIssuanceTypes,
+                                              Boolean isCatering,
                                               QTruck truck,
                                               QCategory category,
                                               QTruckMenu truckMenu) {
@@ -203,6 +204,7 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
         addColorFilter(colors, builder);
         addPaymentMethodFilter(paymentMethods, builder);
         addProofIssuanceTypeFilter(proofIssuanceTypes, builder);
+        addCateringFilter(isCatering, builder);
         return builder;
     }
 
@@ -315,6 +317,13 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
         }
 
         builder.and(proofBuilder);
+    }
+
+    private void addCateringFilter(Boolean isCatering, BooleanBuilder builder){
+        if (isCatering == null) {
+            return;
+        }
+        builder.and(truck.isCatering.eq(isCatering));
     }
 
 

@@ -105,4 +105,16 @@ public class ResponseEvent {
     }
 
 
+    @Builder
+    @Getter
+    public static class GetEventContactDto {
+        private String phone;
+
+        public static GetEventContactDto of(String phone) {
+            return GetEventContactDto.builder()
+                    .phone(phone)
+                    .build();
+        }
+    }
+
 }

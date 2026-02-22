@@ -1,12 +1,15 @@
 package com.barowoori.foodpinbackend.event.query.application;
 
 import com.barowoori.foodpinbackend.event.command.domain.model.Event;
+import com.barowoori.foodpinbackend.event.command.domain.model.EventType;
+import com.barowoori.foodpinbackend.event.command.domain.model.ExpectedParticipants;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventRegionRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventList;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionDoRepository;
+import com.barowoori.foodpinbackend.truck.command.domain.model.TruckType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -15,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Component
 public class EventListService {
@@ -36,9 +40,11 @@ public class EventListService {
     @Transactional(readOnly = true)
     public Page<EventList> findEventList(String searchTerm, List<String> regionCodes,
                                          LocalDate startDate, LocalDate endDate,
-                                         List<String> categoryCodes, Pageable pageable) {
+                                         List<String> categoryCodes,
+                                         EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes,
+                                         Pageable pageable) {
         Map<RegionType, List<String>> regionIds = regionDoRepository.findRegionIdsByFilter(regionCodes);
-        Page<Event> events = eventRepository.findEventListByFilter(searchTerm, regionIds, startDate, endDate, categoryCodes, pageable);
+        Page<Event> events = eventRepository.findEventListByFilter(searchTerm, regionIds, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, pageable);
         List<String> eventIds = events.map(Event::getId).stream().toList();
         Map<String, List<String>> regionNames = eventRegionFullNameGenerator.findRegionNamesByEventIds(eventIds);
 
@@ -48,9 +54,11 @@ public class EventListService {
     @Transactional(readOnly = true)
     public Page<EventList> findLikeEventList(String memberId, String searchTerm, List<String> regionCodes,
                                              LocalDate startDate, LocalDate endDate,
-                                             List<String> categoryCodes, Pageable pageable) {
+                                             List<String> categoryCodes,
+                                             EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes,
+                                             Pageable pageable) {
         Map<RegionType, List<String>> regionIds = regionDoRepository.findRegionIdsByFilter(regionCodes);
-        Page<Event> events = eventRepository.findLikeEventListByFilter(memberId, searchTerm, regionIds, startDate, endDate, categoryCodes, pageable);
+        Page<Event> events = eventRepository.findLikeEventListByFilter(memberId, searchTerm, regionIds, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, pageable);
         List<String> eventIds = events.map(Event::getId).stream().toList();
         Map<String, List<String>> regionNames = eventRegionFullNameGenerator.findRegionNamesByEventIds(eventIds);
 

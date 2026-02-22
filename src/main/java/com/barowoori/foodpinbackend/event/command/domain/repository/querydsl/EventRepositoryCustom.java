@@ -2,8 +2,11 @@ package com.barowoori.foodpinbackend.event.command.domain.repository.querydsl;
 
 import com.barowoori.foodpinbackend.common.dto.MemberFcmInfoDto;
 import com.barowoori.foodpinbackend.event.command.domain.model.Event;
+import com.barowoori.foodpinbackend.event.command.domain.model.EventType;
+import com.barowoori.foodpinbackend.event.command.domain.model.ExpectedParticipants;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.MemberForEventFcmInfoDto;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
+import com.barowoori.foodpinbackend.truck.command.domain.model.TruckType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -11,15 +14,19 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface EventRepositoryCustom {
     Page<Event> findEventListByFilter(String searchTerm, Map<RegionType, List<String>> regionIds,
                                       LocalDate startDate, LocalDate endDate,
-                                      List<String> categoryCodes, Pageable pageable);
+                                      List<String> categoryCodes,
+                                      EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes,
+                                      Pageable pageable);
     Event findEventDetail(String eventId);
     Page<Event> findLikeEventListByFilter(String memberId, String searchTerm, Map<RegionType, List<String>> regionIds,
                                           LocalDate startDate, LocalDate endDate,
-                                          List<String> categoryCodes, Pageable pageable);
+                                          List<String> categoryCodes,
+                                          EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Pageable pageable);
 
     List<Event> findEndedEventsByIsSelecting(LocalDateTime now, Boolean isSelecting);
 
@@ -33,4 +40,5 @@ public interface EventRepositoryCustom {
     Long findCountRecruitingStatus(String memberId);
     Long findCountProgressStatus(String memberId);
     Long findCountEndStatus(String memberId);
+    String getEventPhone(String eventId);
 }

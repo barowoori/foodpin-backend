@@ -13,11 +13,11 @@ public interface TruckRepositoryCustom {
     Truck getTruckWithPhotoById(String id);
     Page<Truck> findTruckListByFilter(String searchTerm, List<String> categoryCodes, Map<RegionType, List<String>> regionIds,
                                       Set<TruckType> types, Integer minAvgMenuPrice,  Integer maxAvgMenuPrice, Set<TruckColor> colors, Set<TruckBodyType> bodyTypes,
-                                      Set<PaymentMethod> paymentMethods, Set<ProofIssuanceType> proofIssuanceTypes,
+                                      Set<PaymentMethod> paymentMethods, Set<ProofIssuanceType> proofIssuanceTypes, Boolean isCatering,
                                       Pageable pageable);
     Page<Truck> findLikeTruckListByFilter(String memberId, String searchTerm, List<String> categoryCodes, Map<RegionType, List<String>> regionIds,
                                           Set<TruckType> types, Integer minAvgMenuPrice,  Integer maxAvgMenuPrice, Set<TruckColor> colors, Set<TruckBodyType> bodyTypes,
-                                          Set<PaymentMethod> paymentMethods, Set<ProofIssuanceType> proofIssuanceTypes,
+                                          Set<PaymentMethod> paymentMethods, Set<ProofIssuanceType> proofIssuanceTypes, Boolean isCatering,
                                           Pageable pageable);
     Page<Truck> findApplicableTrucks(String memberId, Pageable pageable);
     List<Truck> findAllApplicableTrucks(String memberId);

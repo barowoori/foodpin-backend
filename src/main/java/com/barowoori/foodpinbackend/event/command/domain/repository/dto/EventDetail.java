@@ -6,6 +6,7 @@ import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionCode;
+import com.barowoori.foodpinbackend.truck.command.domain.model.TruckType;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckDetail;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Builder
@@ -33,6 +35,13 @@ public class EventDetail {
     private Boolean generatorRequirement;
     private List<CategoryInfo> categories;
     private List<DocumentType> documents;
+    private EventType type;
+    private Set<TruckType> truckTypes;
+    private ExpectedParticipants expectedParticipants;
+    private SaleType saleType;
+    private PriceRange priceRange;
+    private String cateringDetail;
+    private String contact;
     private String description;
     private String guidelines;
     private Boolean isFullAttendanceRequired;
@@ -58,6 +67,13 @@ public class EventDetail {
                 .generatorRequirement(event.getRecruitDetail().getGeneratorRequirement())
                 .categories(event.getCategories().stream().map(EventCategory::getCategory).map(CategoryInfo::of).toList())
                 .documents(event.getDocuments().stream().map(EventDocument::getType).toList())
+                .type(event.getType())
+                .truckTypes(event.getTruckTypes())
+                .expectedParticipants(event.getExpectedParticipants())
+                .saleType(event.getSaleType())
+                .priceRange(event.getPriceRange())
+                .cateringDetail(event.getCateringDetail())
+                .contact(memberId != null && event.isCreator(memberId) ? event.getContact() : null)
                 .description(event.getDescription())
                 .guidelines(event.getGuidelines())
                 .isLike(isLike)

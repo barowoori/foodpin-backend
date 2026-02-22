@@ -73,11 +73,12 @@ public class TruckListService {
                                           Set<TruckBodyType> bodyTypes,
                                           Set<PaymentMethod> paymentMethods,
                                           Set<ProofIssuanceType> proofIssuanceTypes,
+                                          Boolean isCatering,
                                           Pageable pageable) {
         RegionSearchProcessor regionSearchProcessor = getRegionSearchProcessor();
         Map<RegionType, List<String>> regionIds = regionDoRepository.findRegionIdsByFilter(regionCodes);
         Page<Truck> trucks = truckRepository.findTruckListByFilter(searchTerm, categoryNames, regionIds, types, minAvgMenuPrice, maxAvgMenuPrice,
-                colors, bodyTypes, paymentMethods, proofIssuanceTypes, pageable);
+                colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering, pageable);
         List<String> truckIds = trucks.map(Truck::getId).stream().toList();
         Map<String, List<DocumentType>> documents = truckDocumentRepository.getDocumentTypeByTruckIds(truckIds);
 
@@ -99,12 +100,13 @@ public class TruckListService {
                                                     Set<TruckBodyType> bodyTypes,
                                                     Set<PaymentMethod> paymentMethods,
                                                     Set<ProofIssuanceType> proofIssuanceTypes,
+                                                    Boolean isCatering,
                                                     Pageable pageable) {
         RegionSearchProcessor regionSearchProcessor = getRegionSearchProcessor();
 
         Map<RegionType, List<String>> regionIds = regionDoRepository.findRegionIdsByFilter(regionCodes);
         Page<Truck> trucks = truckRepository.findLikeTruckListByFilter(memberId, searchTerm, categoryNames, regionIds, types, minAvgMenuPrice, maxAvgMenuPrice,
-                colors, bodyTypes, paymentMethods, proofIssuanceTypes, pageable);
+                colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering, pageable);
         List<String> truckIds = trucks.map(Truck::getId).stream().toList();
         Map<String, List<DocumentType>> documents = truckDocumentRepository.getDocumentTypeByTruckIds(truckIds);
         return trucks.map(truck -> {

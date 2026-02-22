@@ -2,6 +2,7 @@ package com.barowoori.foodpinbackend.truck.command.domain.repository.querydsl;
 
 import com.barowoori.foodpinbackend.common.dto.MemberFcmInfoDto;
 import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
+import com.barowoori.foodpinbackend.truck.command.domain.model.TruckManagerRole;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckManagerSummary;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.CaseBuilder;
@@ -75,5 +76,16 @@ public class TruckManagerRepositoryCustomImpl implements TruckManagerRepositoryC
                 .innerJoin(truckManager.member, member)
                 .where(truckManager.truck.id.eq(truckId))
                 .fetch();
+    }
+
+    @Override
+    public String getTruckOwnerPhone(String truckId) {
+        return jpaQueryFactory
+                .select(member.phone)
+                .from(truckManager)
+                .innerJoin(truckManager.truck, truck)
+                .innerJoin(truckManager.member, member)
+                .where(truck.id.eq(truckId).and(truckManager.role.eq(TruckManagerRole.OWNER)))
+                .fetchFirst();
     }
 }

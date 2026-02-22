@@ -91,4 +91,16 @@ public class ResponseTruck {
                     .build();
         }
     }
+
+    @Builder
+    @Data
+    public static class GetTruckManagerContactDto {
+        private String phone;
+
+        public static GetTruckManagerContactDto of(String phone) {
+            return GetTruckManagerContactDto.builder()
+                    .phone(phone)
+                    .build();
+        }
+    }
 }

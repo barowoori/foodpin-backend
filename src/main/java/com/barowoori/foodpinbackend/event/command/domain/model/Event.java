@@ -4,9 +4,12 @@ import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckPhoto;
+import com.barowoori.foodpinbackend.truck.command.domain.model.TruckType;
+import com.barowoori.foodpinbackend.truck.command.domain.service.TruckTypeSetConverter;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
+import org.checkerframework.checker.units.qual.C;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -14,9 +17,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Table(name = "events")
@@ -69,6 +70,32 @@ public class Event {
     @OneToOne(mappedBy = "event")
     private EventRegion eventRegion;
 
+    @Enumerated(value = EnumType.STRING)
+    @Column(name = "type")
+    private EventType type;
+
+    @Column(name = "truck_types")
+    @Convert(converter = TruckTypeSetConverter.class)
+    private Set<TruckType> truckTypes = new HashSet<>();
+
+    @Enumerated(value = EnumType.STRING)
+    @Column(name = "expected_participants")
+    private ExpectedParticipants expectedParticipants;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sale_type")
+    private SaleType saleType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "price_range")
+    private PriceRange priceRange;
+
+    @Column(name = "catering_detail")
+    private String cateringDetail;
+
+    @Column(name = "contact")
+    private String contact;
+
     @OneToMany(mappedBy = "event")
     private List<EventPhoto> photos = new ArrayList<>();
 
@@ -91,7 +118,8 @@ public class Event {
     @Builder
 
     public Event(String createdBy, String name, String description, String guidelines, Boolean isDeleted,
-                 EventDocumentSubmissionTarget documentSubmissionTarget, String submissionEmail) {
+                 EventDocumentSubmissionTarget documentSubmissionTarget, String submissionEmail, EventType type,
+                 ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, SaleType saleType, PriceRange priceRange, String cateringDetail, String contact) {
         this.createdBy = createdBy;
         this.name = name;
         this.description = description;
@@ -99,6 +127,13 @@ public class Event {
         this.isDeleted = isDeleted;
         this.documentSubmissionTarget = documentSubmissionTarget;
         this.submissionEmail = submissionEmail;
+        this.type = type;
+        this.expectedParticipants = expectedParticipants;
+        this.truckTypes = truckTypes;
+        this.saleType = saleType;
+        this.priceRange = priceRange;
+        this.cateringDetail = cateringDetail;
+        this.contact = contact;
     }
 
     public void updateName(String name) {
@@ -153,7 +188,7 @@ public class Event {
     }
 
     public List<File> getEventPhotoFiles() {
-        if(this.photos == null){
+        if (this.photos == null) {
             return new ArrayList<>();
         }
         return photos.stream()
@@ -163,7 +198,7 @@ public class Event {
     }
 
     public List<EventDate> getSortedEventDates() {
-        if(this.eventDates == null){
+        if (this.eventDates == null) {
             return new ArrayList<>();
         }
         return eventDates.stream()
@@ -172,7 +207,7 @@ public class Event {
     }
 
     public List<EventTruck> getConfirmedEventTrucks() {
-        if(this.eventTrucks == null){
+        if (this.eventTrucks == null) {
             return new ArrayList<>();
         }
         return this.eventTrucks.stream()
@@ -180,7 +215,7 @@ public class Event {
                 .toList();
     }
 
-    public List<DocumentType> getEventDocumentTypes(){
+    public List<DocumentType> getEventDocumentTypes() {
         return this.documents.stream().map(EventDocument::getType).toList();
     }
 }

@@ -9,13 +9,17 @@ import com.barowoori.foodpinbackend.event.command.application.dto.ResponseEvent;
 import com.barowoori.foodpinbackend.event.command.domain.exception.EventErrorCode;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.event.command.domain.repository.*;
+import com.barowoori.foodpinbackend.event.command.domain.service.EventContactAccessLogService;
 import com.barowoori.foodpinbackend.event.command.domain.service.EventDateCalculator;
 import com.barowoori.foodpinbackend.event.query.application.EventRegionFullNameGenerator;
 import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepository;
+import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
 import com.barowoori.foodpinbackend.member.command.domain.model.EventLike;
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
+import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginType;
 import com.barowoori.foodpinbackend.member.command.domain.repository.EventLikeRepository;
+import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
 import com.barowoori.foodpinbackend.notification.command.domain.model.event.ApplicationReceivedNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.event.InterestRegisteredNotificationEvent;
@@ -30,9 +34,9 @@ import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionDoRepository;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionCode;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionInfo;
+import com.barowoori.foodpinbackend.truck.command.application.dto.ResponseTruck;
 import com.barowoori.foodpinbackend.truck.command.domain.exception.TruckErrorCode;
-import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
-import com.barowoori.foodpinbackend.truck.command.domain.model.TruckManager;
+import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckManagerRepository;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckRepository;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +44,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -71,6 +76,8 @@ public class EventService {
     private final EventTruckRepository eventTruckRepository;
     private final EventNoticeViewRepository eventNoticeViewRepository;
     private final EventRegionFullNameGenerator eventRegionFullNameGenerator;
+    private final EventContactAccessLogService eventContactAccessLogService;
+    private final MemberRepository memberRepository;
 
     private String getMemberId() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
@@ -472,4 +479,38 @@ public class EventService {
         );
     }
 
+    @Transactional
+    public ResponseEvent.GetEventContactDto getEventContact(String eventId){
+        String memberId = null;
+        try {
+            memberId = getMemberId();
+            Member member = memberRepository.findById(memberId)
+                    .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+
+            if (member.getSocialLoginInfo().getType().equals(SocialLoginType.UNREGISTERED)) {
+                throw new CustomException(EventErrorCode.EVENT_CONTACT_ACCESS_DENIED);
+            }
+
+            String phone = eventRepository.getEventPhone(eventId);
+            eventContactAccessLogService.saveEventContactAccessLog(
+                    EventContactAccessLog.builder()
+                            .eventId(eventId)
+                            .memberId(memberId)
+                            .accessStatus(AccessStatus.SUCCESS)
+                            .build()
+            );
+
+            return ResponseEvent.GetEventContactDto.of(phone);
+        } catch (Exception e) {
+            eventContactAccessLogService.saveEventContactAccessLog(
+                    EventContactAccessLog.builder()
+                            .eventId(eventId)
+                            .memberId(memberId)
+                            .accessStatus(AccessStatus.FAIL)
+                            .failureReason(e.getMessage())
+                            .build()
+            );
+            throw e;
+        }
+    }
 }

@@ -5,8 +5,12 @@ import com.barowoori.foodpinbackend.common.exception.ErrorResponse;
 import com.barowoori.foodpinbackend.event.command.application.dto.RequestEvent;
 import com.barowoori.foodpinbackend.event.command.application.dto.ResponseEvent;
 import com.barowoori.foodpinbackend.event.command.application.service.EventService;
+import com.barowoori.foodpinbackend.event.command.domain.model.EventType;
+import com.barowoori.foodpinbackend.event.command.domain.model.ExpectedParticipants;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.*;
 import com.barowoori.foodpinbackend.event.query.application.*;
+import com.barowoori.foodpinbackend.truck.command.application.dto.ResponseTruck;
+import com.barowoori.foodpinbackend.truck.command.domain.model.TruckType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -29,6 +33,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @Tag(name = "행사 API")
 @RequiredArgsConstructor
@@ -100,9 +105,12 @@ public class EventController {
                                                                         @RequestParam(value = "search", required = false) String searchTerm,
                                                                         @RequestParam(value = "startDate", required = false) LocalDate startDate,
                                                                         @RequestParam(value = "endDate", required = false) LocalDate endDate,
+                                                                        @RequestParam(value = "type", required = false) EventType type,
+                                                                        @RequestParam(value = "expectedParticipants", required = false) ExpectedParticipants expectedParticipants,
+                                                                        @RequestParam(value = "truckTypes", required = false) Set<TruckType> truckTypes,
                                                                         @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        Page<EventList> eventLists = eventListService.findEventList(searchTerm, regionCodes, startDate, endDate, categoryCodes, pageable);
+        Page<EventList> eventLists = eventListService.findEventList(searchTerm, regionCodes, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, pageable);
         CommonResponse<Page<EventList>> commonResponse = CommonResponse.<Page<EventList>>builder()
                 .data(eventLists)
                 .build();
@@ -121,10 +129,13 @@ public class EventController {
                                                                             @RequestParam(value = "search", required = false) String searchTerm,
                                                                             @RequestParam(value = "startDate", required = false) LocalDate startDate,
                                                                             @RequestParam(value = "endDate", required = false) LocalDate endDate,
+                                                                            @RequestParam(value = "type", required = false) EventType type,
+                                                                            @RequestParam(value = "expectedParticipants", required = false) ExpectedParticipants expectedParticipants,
+                                                                            @RequestParam(value = "truckTypes", required = false) Set<TruckType> truckTypes,
                                                                             @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
-        Page<EventList> eventLists = eventListService.findLikeEventList(memberId, searchTerm, regionCodes, startDate, endDate, categoryCodes, pageable);
+        Page<EventList> eventLists = eventListService.findLikeEventList(memberId, searchTerm, regionCodes, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, pageable);
         CommonResponse<Page<EventList>> commonResponse = CommonResponse.<Page<EventList>>builder()
                 .data(eventLists)
                 .build();
@@ -371,7 +382,7 @@ public class EventController {
     public ResponseEntity<CommonResponse<EventAppliedTruckDetail>> getEventAppliedTruckInfo(@PathVariable(value = "eventApplicationId") String eventApplicationId) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
-       EventAppliedTruckDetail response = eventAppliedTruckDetailService.getEventAppliedTruckDetail(eventApplicationId);
+        EventAppliedTruckDetail response = eventAppliedTruckDetailService.getEventAppliedTruckDetail(eventApplicationId);
         CommonResponse<EventAppliedTruckDetail> commonResponse = CommonResponse.<EventAppliedTruckDetail>builder()
                 .data(response)
                 .build();
@@ -586,5 +597,24 @@ public class EventController {
                         .build();
 
         return ResponseEntity.ok(commonResponse);
+    }
+
+    @Operation(summary = "행사 연락처 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "행사를 못 찾을 경우[40000], " +
+                    "멤버를 못 찾을 경우[20004]" + "비회원일 경우[40027]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/{eventId}/contact")
+    public ResponseEntity<CommonResponse<ResponseEvent.GetEventContactDto>> getEventContact(@Valid @PathVariable("eventId") String eventId) {
+
+        ResponseEvent.GetEventContactDto response = eventService.getEventContact(eventId);
+        CommonResponse<ResponseEvent.GetEventContactDto> commonResponse = CommonResponse.<ResponseEvent.GetEventContactDto>builder()
+                .data(response)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 }

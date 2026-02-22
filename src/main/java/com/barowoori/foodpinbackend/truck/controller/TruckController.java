@@ -183,10 +183,11 @@ public class TruckController {
                                                                         @RequestParam(value = "proofIssuanceTypes", required = false) Set<ProofIssuanceType> proofIssuanceTypes,
                                                                         @RequestParam(value = "minAvgMenuPrice", required = false) Integer minAvgMenuPrice,
                                                                         @RequestParam(value = "maxAvgMenuPrice", required = false) Integer maxAvgMenuPrice,
+                                                                        @RequestParam(value = "isCatering", required = false) Boolean isCatering,
                                                                         @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Page<TruckList> truckLists = truckListService.findTruckList(regionCodes, categoryNames, searchTerm, types, minAvgMenuPrice, maxAvgMenuPrice,
-                colors, bodyTypes, paymentMethods, proofIssuanceTypes, pageable);
+                colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering, pageable);
         CommonResponse<Page<TruckList>> commonResponse = CommonResponse.<Page<TruckList>>builder()
                 .data(truckLists)
                 .build();
@@ -210,11 +211,12 @@ public class TruckController {
                                                                             @RequestParam(value = "proofIssuanceTypes", required = false) Set<ProofIssuanceType> proofIssuanceTypes,
                                                                             @RequestParam(value = "minAvgMenuPrice", required = false) Integer minAvgMenuPrice,
                                                                             @RequestParam(value = "maxAvgMenuPrice", required = false) Integer maxAvgMenuPrice,
+                                                                            @RequestParam(value = "isCatering", required = false) Boolean isCatering,
                                                                             @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Page<TruckList> truckLists = truckListService.findLikeTruckByTruckList(memberId, regionCodes, categoryNames, searchTerm, types, minAvgMenuPrice, maxAvgMenuPrice,
-                colors, bodyTypes, paymentMethods, proofIssuanceTypes, pageable);
+                colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering, pageable);
         CommonResponse<Page<TruckList>> commonResponse = CommonResponse.<Page<TruckList>>builder()
                 .data(truckLists)
                 .build();
@@ -435,6 +437,25 @@ public class TruckController {
         truckService.deleteTruck(truckId, false);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Truck deleted successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "트럭 연락처 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
+                    "멤버를 못 찾을 경우[20004]" + "비회원일 경우[30013]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/{truckId}/contact")
+    public ResponseEntity<CommonResponse<ResponseTruck.GetTruckManagerContactDto>> getTruckManagerContract(@Valid @PathVariable("truckId") String truckId) {
+
+        ResponseTruck.GetTruckManagerContactDto response = truckService.getTruckManagerContract(truckId);
+        CommonResponse<ResponseTruck.GetTruckManagerContactDto> commonResponse = CommonResponse.<ResponseTruck.GetTruckManagerContactDto>builder()
+                .data(response)
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }

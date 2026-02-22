@@ -7,7 +7,6 @@ import com.barowoori.foodpinbackend.document.command.domain.model.BusinessRegist
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.document.command.domain.repository.BusinessRegistrationRepository;
 import com.barowoori.foodpinbackend.event.command.application.service.EventService;
-import com.barowoori.foodpinbackend.event.command.domain.exception.EventErrorCode;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventApplicationRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventTruckRepository;
@@ -17,6 +16,7 @@ import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepositor
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
+import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginType;
 import com.barowoori.foodpinbackend.member.command.domain.model.TruckLike;
 import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
 import com.barowoori.foodpinbackend.member.command.domain.repository.TruckLikeRepository;
@@ -40,21 +40,21 @@ import com.barowoori.foodpinbackend.truck.command.application.dto.ResponseTruck;
 import com.barowoori.foodpinbackend.truck.command.domain.exception.TruckErrorCode;
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.*;
-import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckDocumentManager;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckManagerSummary;
+import com.barowoori.foodpinbackend.truck.command.domain.service.TruckContactAccessLogService;
 import com.barowoori.foodpinbackend.truck.command.domain.service.TruckManagerInvitationGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -82,6 +82,7 @@ public class TruckService {
     private final EventService eventService;
     private final TruckLikeRepository truckLikeRepository;
     private final EventTruckRepository eventTruckRepository;
+    private final TruckContactAccessLogService truckContactAccessLogService;
 
     private String getMemberId() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
@@ -524,4 +525,44 @@ public class TruckService {
     public Truck getTruckById(String id) {
         return this.getTruck(id);
     }
+
+
+    @Transactional
+    public ResponseTruck.GetTruckManagerContactDto getTruckManagerContract(String truckId) {
+        String memberId = null;
+        try {
+            memberId = getMemberId();
+            Member member = memberRepository.findById(memberId)
+                    .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+            if (member.getSocialLoginInfo().getType().equals(SocialLoginType.UNREGISTERED)) {
+                throw new CustomException(TruckErrorCode.TRUCK_CONTACT_ACCESS_DENIED);
+            }
+
+            String phone = truckManagerRepository.getTruckOwnerPhone(truckId);
+            if (phone == null) {
+                throw new CustomException(TruckErrorCode.TRUCK_MANAGER_NOT_FOUND);
+            }
+            truckContactAccessLogService.saveTruckContactAccessLog(
+                    TruckContactAccessLog.builder()
+                            .truckId(truckId)
+                            .memberId(memberId)
+                            .accessStatus(AccessStatus.SUCCESS)
+                            .build()
+            );
+
+            return ResponseTruck.GetTruckManagerContactDto.of(phone);
+        } catch (Exception e) {
+            truckContactAccessLogService.saveTruckContactAccessLog(
+                    TruckContactAccessLog.builder()
+                            .truckId(truckId)
+                            .memberId(memberId)
+                            .accessStatus(AccessStatus.FAIL)
+                            .failureReason(e.getMessage())
+                            .build()
+            );
+            throw e;
+        }
+    }
+
+
 }

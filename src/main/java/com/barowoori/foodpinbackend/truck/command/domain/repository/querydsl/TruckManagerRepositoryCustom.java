@@ -12,4 +12,5 @@ public interface TruckManagerRepositoryCustom {
     Page<TruckManagerSummary> findTruckManagerPages(String truckId, String memberId, Pageable pageable);
     List<Truck> findOwnedTrucks(String memberId);
     List<MemberFcmInfoDto> findTruckManagersFcmInfo(String truckId);
+    String getTruckOwnerPhone(String truckId);
 }

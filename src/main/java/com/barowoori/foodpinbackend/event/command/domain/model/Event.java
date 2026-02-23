@@ -3,21 +3,21 @@ package com.barowoori.foodpinbackend.event.command.domain.model;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
-import com.barowoori.foodpinbackend.truck.command.domain.model.TruckPhoto;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckType;
 import com.barowoori.foodpinbackend.truck.command.domain.service.TruckTypeSetConverter;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
-import org.checkerframework.checker.units.qual.C;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "events")
@@ -99,7 +99,6 @@ public class Event {
     @OneToMany(mappedBy = "event")
     private List<EventPhoto> photos = new ArrayList<>();
 
-
     @OneToMany(mappedBy = "event")
     private List<EventDate> eventDates = new ArrayList<>();
 
@@ -116,10 +115,10 @@ public class Event {
     }
 
     @Builder
-
     public Event(String createdBy, String name, String description, String guidelines, Boolean isDeleted,
                  EventDocumentSubmissionTarget documentSubmissionTarget, String submissionEmail, EventType type,
-                 ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, SaleType saleType, PriceRange priceRange, String cateringDetail, String contact) {
+                 ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, SaleType saleType,
+                 PriceRange priceRange, String cateringDetail, String contact) {
         this.createdBy = createdBy;
         this.name = name;
         this.description = description;
@@ -129,30 +128,39 @@ public class Event {
         this.submissionEmail = submissionEmail;
         this.type = type;
         this.expectedParticipants = expectedParticipants;
-        this.truckTypes = truckTypes;
+        this.truckTypes = truckTypes != null ? new HashSet<>(truckTypes) : new HashSet<>();
         this.saleType = saleType;
         this.priceRange = priceRange;
         this.cateringDetail = cateringDetail;
         this.contact = contact;
     }
 
-    public void updateName(String name) {
+    public void updateBasicInfo(String name, EventType type, ExpectedParticipants expectedParticipants) {
         this.name = name;
+        this.type = type;
+        this.expectedParticipants = expectedParticipants;
     }
 
-    public void updateDescription(String description) {
+    public void updateDetailInfo(String description, String guidelines, String contact) {
         this.description = description;
-    }
-
-    public void updateGuidelines(String guidelines) {
         this.guidelines = guidelines;
+        this.contact = contact;
     }
 
-    public void updateSubmissionEmail(String submissionEmail) {
+    public void updateTargetInfo(Set<TruckType> truckTypes, SaleType saleType, PriceRange priceRange, String cateringDetail) {
+        this.truckTypes = truckTypes != null ? new HashSet<>(truckTypes) : new HashSet<>();
+        this.saleType = saleType;
+        if (saleType == SaleType.NORMAL) {
+            this.priceRange = priceRange;
+            this.cateringDetail = null;
+            return;
+        }
+        this.priceRange = null;
+        this.cateringDetail = cateringDetail;
+    }
+
+    public void updateDocumentInfo(String submissionEmail, EventDocumentSubmissionTarget documentSubmissionTarget) {
         this.submissionEmail = submissionEmail;
-    }
-
-    public void updateDocumentSubmissionTarget(EventDocumentSubmissionTarget documentSubmissionTarget) {
         this.documentSubmissionTarget = documentSubmissionTarget;
     }
 

@@ -62,7 +62,6 @@ public class EventStatusUpdaterTests {
                 .applicantCount(1)
                 .selectedCount(0)
                 .isSelecting(true)
-                .entryFee(0)
                 .generatorRequirement(false)
                 .electricitySupportAvailability(true)
                 .build();
@@ -111,7 +110,6 @@ public class EventStatusUpdaterTests {
                 .applicantCount(1)
                 .selectedCount(1)
                 .isSelecting(true)
-                .entryFee(0)
                 .generatorRequirement(false)
                 .electricitySupportAvailability(true)
                 .build();

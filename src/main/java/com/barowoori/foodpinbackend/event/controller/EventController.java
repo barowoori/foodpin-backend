@@ -51,8 +51,7 @@ public class EventController {
     private final EventAppliedTruckDetailService eventAppliedTruckDetailService;
     private final EventTruckDetailService eventTruckDetailService;
 
-    @Operation(summary = "행사 생성", description = "사진의 경우 파일 저장 api로 업로드 후 반환된 파일 id 리스트로 전달"
-            + "\n\n서류 타입 : BUSINESS_REGISTRATION(사업자등록증), BUSINESS_LICENSE(영업신고증), VEHICLE_REGISTRATION(자동차등록증), SANITATION_EDUCATION(위생교육필증), HEALTH_CERTIFICATE(보건증), GAS_SAFETY_INSPECTION_CERTIFICATE(가스안전점검필증)")
+    @Operation(summary = "행사 생성", description = "사진의 경우 파일 저장 api로 업로드 후 반환된 파일 id 리스트로 전달")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
@@ -171,10 +170,28 @@ public class EventController {
     })
     @PutMapping(value = "/v1/{eventId}/recruit")
     public ResponseEntity<CommonResponse<String>> updateEventRecruit(@Valid @PathVariable("eventId") String eventId,
-                                                                     @Valid @RequestBody RequestEvent.EventRecruitDto eventRecruitDto) {
+                                                                     @Valid @RequestBody RequestEvent.UpdateEventRecruitDto eventRecruitDto) {
         eventService.updateEventRecruit(eventId, eventRecruitDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Event recruit info updated successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "행사 모집 대상 수정")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "카테고리를 못 찾을 경우[40003]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PutMapping(value = "/v1/{eventId}/target")
+    public ResponseEntity<CommonResponse<String>> updateEventTarget(@Valid @PathVariable("eventId") String eventId,
+                                                                    @Valid @RequestBody RequestEvent.UpdateEventTargetDto updateEventTargetDto) {
+        eventService.updateEventTarget(eventId, updateEventTargetDto);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Event target info updated successfully.")
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
@@ -184,7 +201,7 @@ public class EventController {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "지역을 못 찾을 경우[40002]",
+            @ApiResponse(responseCode = "404", description = "행사 모집 정보를 못 찾을 경우[40004]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PutMapping(value = "/v1/{eventId}/detail")

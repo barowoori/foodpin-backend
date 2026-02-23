@@ -34,7 +34,6 @@ import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionDoRepository;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionCode;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionInfo;
-import com.barowoori.foodpinbackend.truck.command.application.dto.ResponseTruck;
 import com.barowoori.foodpinbackend.truck.command.domain.exception.TruckErrorCode;
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckManagerRepository;
@@ -44,13 +43,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -104,6 +101,17 @@ public class EventService {
         String memberId = getMemberId();
 
         Event event = createEventDto.getEventInfoDto().toEntity(memberId);
+        event.updateDetailInfo(
+                createEventDto.getEventDetailDto().getDescription(),
+                createEventDto.getEventDetailDto().getGuidelines(),
+                createEventDto.getEventDetailDto().getContact()
+        );
+        event.updateTargetInfo(
+                createEventDto.getEventTargetDto().getTruckTypes(),
+                createEventDto.getEventTargetDto().getSaleType(),
+                createEventDto.getEventTargetDto().getPriceRange(),
+                createEventDto.getEventTargetDto().getCateringDetail()
+        );
         eventRepository.save(event);
 
         if (!Objects.equals(createEventDto.getEventInfoDto().getFileIdList(), null) && !createEventDto.getEventInfoDto().getFileIdList().isEmpty()) {
@@ -119,7 +127,7 @@ public class EventService {
         eventViewRepository.save(eventView);
         event.initEventView(eventView);
 
-        RegionInfo regionInfo = regionDoRepository.findByCode(createEventDto.getRegionCode());
+        RegionInfo regionInfo = regionDoRepository.findByCode(createEventDto.getEventInfoDto().getRegionCode());
         if (regionInfo == null)
             throw new CustomException(EventErrorCode.EVENT_REGION_NOT_FOUND);
         EventRegion eventRegion = EventRegion.builder().regionType(regionInfo.getRegionType()).regionId(regionInfo.getRegionId()).event(event).build();
@@ -127,23 +135,27 @@ public class EventService {
         event.initEventRegion(eventRegion);
 
         if (Objects.equals(createEventDto.getEventRecruitDto().getRecruitEndDateTime(), null)) {
-            LocalDateTime lastEndDateTime = createEventDto.getEventDateDtoList().stream()
+            LocalDateTime lastEndDateTime = createEventDto.getEventInfoDto().getEventDateDtoList().stream()
                     .map(dto -> LocalDateTime.of(dto.getDate(), dto.getEndTime()))
                     .max(LocalDateTime::compareTo)
                     .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_DATE_NOT_FOUND));
 
             createEventDto.getEventRecruitDto().setRecruitEndDateTime(lastEndDateTime.toLocalDate().atTime(23, 59, 59));
         }
-        EventRecruitDetail eventRecruitDetail = createEventDto.getEventRecruitDto().toEntity(event);
+        EventRecruitDetail eventRecruitDetail = createEventDto.getEventRecruitDto().toEntity(
+                event,
+                createEventDto.getEventDetailDto().getGeneratorRequirement(),
+                createEventDto.getEventDetailDto().getElectricitySupportAvailability()
+        );
         eventRecruitDetailRepository.save(eventRecruitDetail);
         event.initEventRecruitDetail(eventRecruitDetail);
 
-        createEventDto.getEventDateDtoList().forEach(eventDateDto -> {
+        createEventDto.getEventInfoDto().getEventDateDtoList().forEach(eventDateDto -> {
             EventDate eventDate = eventDateDto.toEntity(event);
             eventDateRepository.save(eventDate);
         });
         List<Category> categories = new ArrayList<>();
-        createEventDto.getEventCategoryCodeList().forEach(eventCategoryCode -> {
+        createEventDto.getEventTargetDto().getEventCategoryCodeList().forEach(eventCategoryCode -> {
             Category category = categoryRepository.findByCode(eventCategoryCode);
             if (category == null)
                 throw new CustomException(EventErrorCode.EVENT_CATEGORY_NOT_FOUND);
@@ -152,18 +164,11 @@ public class EventService {
             categories.add(category);
         });
 
-        if (!Objects.equals(createEventDto.getEventDocumentTypeList(), null) && !createEventDto.getEventDocumentTypeList().isEmpty()) {
-            createEventDto.getEventDocumentTypeList().forEach(documentType -> {
-                EventDocument eventDocument = EventDocument.builder().event(event).type(documentType).build();
-                eventDocumentRepository.save(eventDocument);
-            });
-        }
-
         Event registeredevent = eventRepository.save(event);
         List<RegionCode> regionNames = eventRegionFullNameGenerator.findRegionCodesByEventId(registeredevent.getId());
         String regionList = eventRegionFullNameGenerator.makeRegionList(regionNames);
 
-        Region region = regionDoRepository.findRegionByCode(createEventDto.getRegionCode());
+        Region region = regionDoRepository.findRegionByCode(createEventDto.getEventInfoDto().getRegionCode());
         Map<RegionType, String> regionIds = regionDoRepository.extractParentRegions(region);
         NotificationEvent.raise(new InterestRegisteredNotificationEvent(registeredevent.getId(), registeredevent.getName(), regionList, memberId, regionIds, categories));
 
@@ -174,7 +179,11 @@ public class EventService {
         String memberId = getMemberId();
         Event event = getEvent(eventId);
         validateEventAccess(event, memberId);
-        event.updateName(updateEventInfoDto.getName());
+        event.updateBasicInfo(
+                updateEventInfoDto.getName(),
+                updateEventInfoDto.getType(),
+                updateEventInfoDto.getExpectedParticipants()
+        );
 
         List<EventPhoto> photoList = eventPhotoRepository.findAllByEvent(event);
         photoList.forEach(eventPhotoRepository::delete);
@@ -209,7 +218,7 @@ public class EventService {
     }
 
     @Transactional
-    public void updateEventRecruit(String eventId, RequestEvent.EventRecruitDto eventRecruitDto) {
+    public void updateEventRecruit(String eventId, RequestEvent.UpdateEventRecruitDto eventRecruitDto) {
         Event event = getEvent(eventId);
         validateEventAccess(event, getMemberId());
         EventRecruitDetail eventRecruitDetail = eventRecruitDetailRepository.findByEvent(event);
@@ -227,9 +236,9 @@ public class EventService {
                 eventRecruitDto.getRecruitEndDateTime(),
                 eventRecruitDto.getRecruitCount(),
                 eventRecruitDto.getIsFullAttendanceRequired(),
-                eventRecruitDto.getGeneratorRequirement(),
-                eventRecruitDto.getElectricitySupportAvailability(),
-                eventRecruitDto.getEntryFee(),
+                eventRecruitDetail.getGeneratorRequirement(),
+                eventRecruitDetail.getElectricitySupportAvailability(),
+                eventRecruitDetail.getEntryFee(),
                 eventRecruitDto.getIsRecruitEndOnSelection()
         );
         eventRecruitDetailRepository.save(eventRecruitDetail);
@@ -240,17 +249,52 @@ public class EventService {
     public void updateEventDetail(String eventId, RequestEvent.UpdateEventDetailDto updateEventDetailDto) {
         Event event = getEvent(eventId);
         validateEventAccess(event, getMemberId());
+        EventRecruitDetail eventRecruitDetail = eventRecruitDetailRepository.findByEvent(event);
+        if (eventRecruitDetail == null) {
+            throw new CustomException(EventErrorCode.EVENT_RECRUIT_DETAIL_NOT_FOUND);
+        }
+
+        eventRecruitDetail.update(
+                eventRecruitDetail.getRecruitEndDateTime(),
+                eventRecruitDetail.getRecruitCount(),
+                eventRecruitDetail.getIsFullAttendanceRequired(),
+                updateEventDetailDto.getGeneratorRequirement(),
+                updateEventDetailDto.getElectricitySupportAvailability(),
+                eventRecruitDetail.getEntryFee(),
+                eventRecruitDetail.getIsRecruitEndOnSelection()
+        );
+
+        event.updateDetailInfo(
+                updateEventDetailDto.getDescription(),
+                updateEventDetailDto.getGuidelines(),
+                updateEventDetailDto.getContact()
+        );
+        eventRecruitDetailRepository.save(eventRecruitDetail);
+        eventRepository.save(event);
+    }
+
+    @Transactional
+    public void updateEventTarget(String eventId, RequestEvent.UpdateEventTargetDto updateEventTargetDto) {
+        Event event = getEvent(eventId);
+        validateEventAccess(event, getMemberId());
+
         List<EventCategory> eventCategoryList = eventCategoryRepository.findAllByEvent(event);
         eventCategoryList.forEach(eventCategoryRepository::delete);
-        updateEventDetailDto.getEventCategoryCodeList().forEach(eventCategoryCode -> {
+        updateEventTargetDto.getEventCategoryCodeList().forEach(eventCategoryCode -> {
             Category category = categoryRepository.findByCode(eventCategoryCode);
             if (category == null)
                 throw new CustomException(EventErrorCode.EVENT_CATEGORY_NOT_FOUND);
             EventCategory eventCategory = EventCategory.builder().event(event).category(category).build();
             eventCategoryRepository.save(eventCategory);
         });
-        event.updateDescription(updateEventDetailDto.getDescription());
-        event.updateGuidelines(updateEventDetailDto.getGuidelines());
+
+        event.updateTargetInfo(
+                updateEventTargetDto.getTruckTypes(),
+                updateEventTargetDto.getSaleType(),
+                updateEventTargetDto.getPriceRange(),
+                updateEventTargetDto.getCateringDetail()
+        );
+
         eventRepository.save(event);
     }
 
@@ -259,14 +303,19 @@ public class EventService {
         Event event = getEvent(eventId);
         validateEventAccess(event, getMemberId());
         List<EventDocument> eventDocumentList = eventDocumentRepository.findByEventId(eventId);
-        if (eventDocumentList != null)
+        if (eventDocumentList != null) {
             eventDocumentList.forEach(eventDocumentRepository::delete);
-        updateEventDocumentDto.getEventDocumentTypeList().forEach(documentType -> {
-            EventDocument eventDocument = EventDocument.builder().event(event).type(documentType).build();
-            eventDocumentRepository.save(eventDocument);
-        });
-        event.updateSubmissionEmail(updateEventDocumentDto.getSubmissionEmail());
-        event.updateDocumentSubmissionTarget(updateEventDocumentDto.getDocumentSubmissionTarget());
+        }
+        if (updateEventDocumentDto.getEventDocumentTypeList() != null) {
+            updateEventDocumentDto.getEventDocumentTypeList().forEach(documentType -> {
+                EventDocument eventDocument = EventDocument.builder().event(event).type(documentType).build();
+                eventDocumentRepository.save(eventDocument);
+            });
+        }
+        event.updateDocumentInfo(
+                updateEventDocumentDto.getSubmissionEmail(),
+                updateEventDocumentDto.getDocumentSubmissionTarget()
+        );
         eventRepository.save(event);
     }
 

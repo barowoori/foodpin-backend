@@ -67,7 +67,7 @@ public class EventRecruitDetail {
 
     @Builder
     public EventRecruitDetail(LocalDateTime recruitEndDateTime, Integer recruitCount, Integer applicantCount, Integer selectedCount,
-                              Boolean generatorRequirement, Boolean electricitySupportAvailability, Integer entryFee,
+                              Boolean generatorRequirement, Boolean electricitySupportAvailability,
                               EventRecruitingStatus recruitingStatus, Boolean isSelecting,
                               Event event, Boolean isFullAttendanceRequired,Boolean isRecruitEndOnSelection) {
         this.recruitEndDateTime = recruitEndDateTime;
@@ -77,7 +77,6 @@ public class EventRecruitDetail {
         this.event = event;
         this.generatorRequirement = generatorRequirement;
         this.electricitySupportAvailability = electricitySupportAvailability;
-        this.entryFee = entryFee;
         this.recruitingStatus = recruitingStatus;
         this.isSelecting = isSelecting;
         this.isFullAttendanceRequired = isFullAttendanceRequired;

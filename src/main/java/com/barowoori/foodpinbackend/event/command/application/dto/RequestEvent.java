@@ -1,6 +1,7 @@
 package com.barowoori.foodpinbackend.event.command.application.dto;
 
 import com.barowoori.foodpinbackend.common.validation.UnicodeSize;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
@@ -144,6 +145,7 @@ public class RequestEvent {
         @Schema(description = "케이터링 세부 정보")
         private String cateringDetail;
 
+        @JsonIgnore
         @AssertTrue(message = "일반판매는 희망 가격대가 필요하고, 케이터링은 세부 정보가 필요합니다.")
         public boolean isValidSaleTypeFields() {
             if (saleType == null) {
@@ -273,6 +275,7 @@ public class RequestEvent {
         @Schema(description = "케이터링 세부 정보")
         private String cateringDetail;
 
+        @JsonIgnore
         @AssertTrue(message = "일반판매는 희망 가격대가 필요하고, 케이터링은 세부 정보가 필요합니다.")
         public boolean isValidSaleTypeFields() {
             if (saleType == null) {

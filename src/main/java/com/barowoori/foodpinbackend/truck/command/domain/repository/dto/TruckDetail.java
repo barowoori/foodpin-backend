@@ -24,20 +24,27 @@ public class TruckDetail {
     private TruckInfo truck;
     private List<DocumentType> documents;
     private List<TruckDocumentInfo> documentInfos;
+    private Boolean businessRegistrationApproved;
     private List<RegionCode> regions;
     private List<CategoryInfo> categories;
     private List<MenuInfo> menus;
     private Boolean isLike;
     private String regionList;
 
-    public static TruckDetail of(TruckManager truckManager, Truck truck, TruckDocumentManager truckDocumentManager, List<RegionCode> regions, String regionList, List<Category> categories,List<TruckMenu> truckMenus, Boolean isLike, ImageManager imageManager) {
+    public static TruckDetail of(TruckManager truckManager, Truck truck, TruckDocumentManager truckDocumentManager, List<RegionCode> regions, String regionList, List<Category> categories, List<TruckMenu> truckMenus, Boolean isLike, ImageManager imageManager) {
         return TruckDetail.builder()
                 .isTruckManager(truckManager != null)
                 .isAvailableUpdate(checkAvailableUpdate(truckManager))
                 .isAvailableDelete(checkAvailableDelete(truckManager))
                 .truck(TruckInfo.of(truck, imageManager))
                 .documents(truckDocumentManager.getTypes())
+
                 .documentInfos(truckDocumentManager.getDocuments().stream().map(TruckDocumentInfo::of).toList())
+                .businessRegistrationApproved(
+                        truckDocumentManager.getDocuments() != null? truckDocumentManager.getDocuments().stream()
+                                .filter(document -> document.getType().equals(DocumentType.BUSINESS_REGISTRATION))
+                                .map(TruckDocument::getStatus)
+                                .anyMatch(status -> status.equals(TruckDocumentStatus.APPROVED)) : Boolean.FALSE)
                 .regions(regions)
                 .categories(categories.stream()
                         .sorted(Comparator.comparing(Category::getCode))
@@ -145,6 +152,7 @@ public class TruckDetail {
     public static class Photo {
         private String id;
         private String path;
+
         public static Photo of(File file, ImageManager imageManager) {
             return Photo.builder()
                     .id(file.getId())
@@ -155,12 +163,12 @@ public class TruckDetail {
 
     @Getter
     @Builder
-    public static class TruckDocumentInfo{
+    public static class TruckDocumentInfo {
         private DocumentType type;
         private LocalDate date;
         private TruckDocumentStatus status;
 
-        public static TruckDocumentInfo of(TruckDocument truckDocument){
+        public static TruckDocumentInfo of(TruckDocument truckDocument) {
             return TruckDocumentInfo.builder()
                     .type(truckDocument.getType())
                     .date(truckDocument.getUpdatedAt().toLocalDate())

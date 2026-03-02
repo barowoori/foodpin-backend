@@ -7,6 +7,7 @@ import com.barowoori.foodpinbackend.file.command.domain.model.QFile;
 import com.barowoori.foodpinbackend.truck.command.domain.model.QTruck;
 import com.barowoori.foodpinbackend.truck.command.domain.model.QTruckDocument;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckDocument;
+import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckDocumentInfoDto;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckDocumentManager;
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -46,18 +47,28 @@ public class TruckDocumentRepositoryCustomImpl implements TruckDocumentRepositor
     }
 
     @Override
-    public Map<String, List<DocumentType>> getDocumentTypeByTruckIds(List<String> truckIds) {
+    public Map<String, List<TruckDocumentInfoDto>> getDocumentTypeByTruckIds(List<String> truckIds) {
+
         QTruckDocument truckDocument = QTruckDocument.truckDocument;
         QTruck truck = QTruck.truck;
-        List<Tuple> results = jpaQueryFactory.select(truck.id, truckDocument.type)
+
+        List<Tuple> results = jpaQueryFactory
+                .select(truck.id, truckDocument.type, truckDocument.status)
                 .from(truckDocument)
-                .join(truckDocument.truck, truck).on(truckDocument.truck.id.in(truckIds))
+                .join(truckDocument.truck, truck)
+                .where(truck.id.in(truckIds))
                 .fetch();
 
         return results.stream()
                 .collect(Collectors.groupingBy(
                         tuple -> tuple.get(truck.id),
-                        Collectors.mapping(tuple -> tuple.get(truckDocument.type), Collectors.toList())
+                        Collectors.mapping(
+                                tuple -> new TruckDocumentInfoDto(
+                                        tuple.get(truckDocument.type),
+                                        tuple.get(truckDocument.status)
+                                ),
+                                Collectors.toList()
+                        )
                 ));
     }
 

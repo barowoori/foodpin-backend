@@ -108,9 +108,10 @@ public class EventController {
                                                                         @RequestParam(value = "type", required = false) EventType type,
                                                                         @RequestParam(value = "expectedParticipants", required = false) ExpectedParticipants expectedParticipants,
                                                                         @RequestParam(value = "truckTypes", required = false) Set<TruckType> truckTypes,
+                                                                        @RequestParam(value = "isCatering", required = false) Boolean isCatering,
                                                                         @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        Page<EventList> eventLists = eventListService.findEventList(searchTerm, regionCodes, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, pageable);
+        Page<EventList> eventLists = eventListService.findEventList(searchTerm, regionCodes, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, isCatering, pageable);
         CommonResponse<Page<EventList>> commonResponse = CommonResponse.<Page<EventList>>builder()
                 .data(eventLists)
                 .build();
@@ -132,10 +133,11 @@ public class EventController {
                                                                             @RequestParam(value = "type", required = false) EventType type,
                                                                             @RequestParam(value = "expectedParticipants", required = false) ExpectedParticipants expectedParticipants,
                                                                             @RequestParam(value = "truckTypes", required = false) Set<TruckType> truckTypes,
+                                                                            @RequestParam(value = "isCatering", required = false) Boolean isCatering,
                                                                             @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
-        Page<EventList> eventLists = eventListService.findLikeEventList(memberId, searchTerm, regionCodes, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, pageable);
+        Page<EventList> eventLists = eventListService.findLikeEventList(memberId, searchTerm, regionCodes, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, isCatering, pageable);
         CommonResponse<Page<EventList>> commonResponse = CommonResponse.<Page<EventList>>builder()
                 .data(eventLists)
                 .build();

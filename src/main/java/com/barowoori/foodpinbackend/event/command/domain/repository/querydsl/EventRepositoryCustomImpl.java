@@ -38,6 +38,7 @@ import static com.barowoori.foodpinbackend.event.command.domain.model.QEventView
 import static com.barowoori.foodpinbackend.file.command.domain.model.QFile.file;
 import static com.barowoori.foodpinbackend.member.command.domain.model.QEventLike.eventLike;
 import static com.barowoori.foodpinbackend.member.command.domain.model.QMember.member;
+import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruck.truck;
 
 public class EventRepositoryCustomImpl implements EventRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
@@ -65,7 +66,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
     public Page<Event> findEventListByFilter(String searchTerm, Map<RegionType, List<String>> regionIds,
                                              LocalDate startDate, LocalDate endDate,
                                              List<String> categoryCodes,
-                                             EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes,
+                                             EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering,
                                              Pageable pageable) {
         List<Event> events = jpaQueryFactory.selectDistinct(event)
                 .from(event)
@@ -81,7 +82,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                         event.isDeleted.isFalse()
                                 .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
                                 .and(
-                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, event, eventDate, category)
+                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering, event, eventDate, category)
                                                 .and(regionFilterCondition(regionIds))
                                 )
                 )
@@ -100,7 +101,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                         event.isDeleted.isFalse()
                                 .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
                                 .and(
-                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, event, eventDate, category)
+                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering, event, eventDate, category)
                                                 .and(regionFilterCondition(regionIds))
                                 )
                 )
@@ -113,7 +114,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
     public Page<Event> findLikeEventListByFilter(String memberId, String searchTerm, Map<RegionType, List<String>> regionIds,
                                                  LocalDate startDate, LocalDate endDate,
                                                  List<String> categoryCodes,
-                                                 EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes,
+                                                 EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering,
                                                  Pageable pageable) {
         List<Event> events = jpaQueryFactory.selectDistinct(event)
                 .from(event)
@@ -129,7 +130,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .where(
                         event.isDeleted.isFalse()
                                 .and(
-                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, event, eventDate, category)
+                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering, event, eventDate, category)
                                                 .and(regionFilterCondition(regionIds))
                                 )
                 )
@@ -148,7 +149,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .where(
                         event.isDeleted.isFalse()
                                 .and(
-                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, event, eventDate, category)
+                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering, event, eventDate, category)
                                                 .and(regionFilterCondition(regionIds))
                                 )
                 )
@@ -176,7 +177,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
     }
 
     public BooleanBuilder createFilterBuilder(String searchTerm, List<String> categoryCodes, LocalDate startDate, LocalDate endDate,
-                                              EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes,
+                                              EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering,
                                               QEvent event, QEventDate eventDate, QCategory category) {
         BooleanBuilder filterBuilder = new BooleanBuilder();
         addSearchTermFilter(event, searchTerm, filterBuilder);
@@ -185,6 +186,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
         addTruckTypeFilter(truckTypes, filterBuilder);
         addEventTypeFilter(type, filterBuilder);
         addExpectedParticipantsFilter(expectedParticipants, filterBuilder);
+        addCateringFilter(isCatering, filterBuilder);
         return filterBuilder;
     }
 
@@ -253,6 +255,17 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .or(eventRegion.regionId.in(regionIds.get(RegionType.REGION_SI)).and(eventRegion.regionType.eq(RegionType.REGION_SI)))
                 .or(eventRegion.regionId.in(regionIds.get(RegionType.REGION_GU)).and(eventRegion.regionType.eq(RegionType.REGION_GU)))
                 .or(eventRegion.regionId.in(regionIds.get(RegionType.REGION_GUN)).and(eventRegion.regionType.eq(RegionType.REGION_GUN)));
+    }
+
+    private void addCateringFilter(Boolean isCatering, BooleanBuilder builder) {
+        if (isCatering == null) {
+            return;
+        }
+
+        if (!isCatering) {//일반판매일 경우
+            return;
+        }
+        builder.and(event.saleType.eq(SaleType.CATERING));
     }
 
     private List<OrderSpecifier> getOrderSpecifier(Sort sort) {

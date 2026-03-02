@@ -41,10 +41,10 @@ public class EventListService {
     public Page<EventList> findEventList(String searchTerm, List<String> regionCodes,
                                          LocalDate startDate, LocalDate endDate,
                                          List<String> categoryCodes,
-                                         EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes,
+                                         EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering,
                                          Pageable pageable) {
         Map<RegionType, List<String>> regionIds = regionDoRepository.findRegionIdsByFilter(regionCodes);
-        Page<Event> events = eventRepository.findEventListByFilter(searchTerm, regionIds, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, pageable);
+        Page<Event> events = eventRepository.findEventListByFilter(searchTerm, regionIds, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, isCatering, pageable);
         List<String> eventIds = events.map(Event::getId).stream().toList();
         Map<String, List<String>> regionNames = eventRegionFullNameGenerator.findRegionNamesByEventIds(eventIds);
 
@@ -55,10 +55,10 @@ public class EventListService {
     public Page<EventList> findLikeEventList(String memberId, String searchTerm, List<String> regionCodes,
                                              LocalDate startDate, LocalDate endDate,
                                              List<String> categoryCodes,
-                                             EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes,
+                                             EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering,
                                              Pageable pageable) {
         Map<RegionType, List<String>> regionIds = regionDoRepository.findRegionIdsByFilter(regionCodes);
-        Page<Event> events = eventRepository.findLikeEventListByFilter(memberId, searchTerm, regionIds, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, pageable);
+        Page<Event> events = eventRepository.findLikeEventListByFilter(memberId, searchTerm, regionIds, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, isCatering, pageable);
         List<String> eventIds = events.map(Event::getId).stream().toList();
         Map<String, List<String>> regionNames = eventRegionFullNameGenerator.findRegionNamesByEventIds(eventIds);
 

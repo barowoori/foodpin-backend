@@ -13,6 +13,7 @@ import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckDocumen
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckMenuRepository;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckRegionRepository;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckRepository;
+import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckDocumentInfoDto;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckList;
 import org.junit.Before;
 import org.springframework.data.domain.Page;
@@ -80,7 +81,7 @@ public class TruckListService {
         Page<Truck> trucks = truckRepository.findTruckListByFilter(searchTerm, categoryNames, regionIds, types, minAvgMenuPrice, maxAvgMenuPrice,
                 colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering, pageable);
         List<String> truckIds = trucks.map(Truck::getId).stream().toList();
-        Map<String, List<DocumentType>> documents = truckDocumentRepository.getDocumentTypeByTruckIds(truckIds);
+        Map<String, List<TruckDocumentInfoDto>> documents = truckDocumentRepository.getDocumentTypeByTruckIds(truckIds);
 
         return trucks.map(truck -> {
             List<String> regionNames = truck.getTruckRegionNames(regionSearchProcessor);
@@ -108,7 +109,7 @@ public class TruckListService {
         Page<Truck> trucks = truckRepository.findLikeTruckListByFilter(memberId, searchTerm, categoryNames, regionIds, types, minAvgMenuPrice, maxAvgMenuPrice,
                 colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering, pageable);
         List<String> truckIds = trucks.map(Truck::getId).stream().toList();
-        Map<String, List<DocumentType>> documents = truckDocumentRepository.getDocumentTypeByTruckIds(truckIds);
+        Map<String, List<TruckDocumentInfoDto>> documents = truckDocumentRepository.getDocumentTypeByTruckIds(truckIds);
         return trucks.map(truck -> {
             List<String> regionNames = truck.getTruckRegionNames(regionSearchProcessor);
             String regionList = truckRegionFullNameGenerator.makeRegionListByRegionNames(regionNames);

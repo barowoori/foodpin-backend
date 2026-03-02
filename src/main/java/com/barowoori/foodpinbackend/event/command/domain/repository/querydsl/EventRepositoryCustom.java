@@ -20,13 +20,13 @@ public interface EventRepositoryCustom {
     Page<Event> findEventListByFilter(String searchTerm, Map<RegionType, List<String>> regionIds,
                                       LocalDate startDate, LocalDate endDate,
                                       List<String> categoryCodes,
-                                      EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes,
+                                      EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering,
                                       Pageable pageable);
     Event findEventDetail(String eventId);
     Page<Event> findLikeEventListByFilter(String memberId, String searchTerm, Map<RegionType, List<String>> regionIds,
                                           LocalDate startDate, LocalDate endDate,
                                           List<String> categoryCodes,
-                                          EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Pageable pageable);
+                                          EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering, Pageable pageable);
 
     List<Event> findEndedEventsByIsSelecting(LocalDateTime now, Boolean isSelecting);
 

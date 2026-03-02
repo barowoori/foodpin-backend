@@ -77,4 +77,16 @@ public class TruckDocument {
     public void updateStatus(TruckDocumentStatus status){
         this.status = status;
     }
+
+    public void approve(String updatedBy) {
+        this.updatedBy = updatedBy;
+        this.status = TruckDocumentStatus.APPROVED;
+        this.rejectionReason = null;
+    }
+
+    public void reject(String updatedBy, String rejectionReason) {
+        this.updatedBy = updatedBy;
+        this.status = TruckDocumentStatus.REJECTED;
+        this.rejectionReason = rejectionReason;
+    }
 }

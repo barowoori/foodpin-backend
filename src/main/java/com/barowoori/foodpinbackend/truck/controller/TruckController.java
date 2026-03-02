@@ -2,6 +2,7 @@ package com.barowoori.foodpinbackend.truck.controller;
 
 import com.barowoori.foodpinbackend.common.dto.CommonResponse;
 import com.barowoori.foodpinbackend.common.exception.ErrorResponse;
+import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.truck.command.application.dto.RequestTruck;
 import com.barowoori.foodpinbackend.truck.command.application.dto.ResponseTruck;
 import com.barowoori.foodpinbackend.truck.command.application.service.TruckService;
@@ -162,6 +163,61 @@ public class TruckController {
         List<ResponseTruck.GetTruckDocumentFile> response = truckService.getTruckDocumentFiles(truckId);
         CommonResponse<List<ResponseTruck.GetTruckDocumentFile>> commonResponse = CommonResponse.<List<ResponseTruck.GetTruckDocumentFile>>builder()
                 .data(response)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "백오피스 임시 사업자등록증 문서 목록 조회", description = "임시 API이며 BUSINESS_REGISTRATION 문서만 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/backoffice/documents/temp")
+    public ResponseEntity<CommonResponse<Page<ResponseTruck.BackOfficeTruckDocumentSummary>>> getBackOfficeTruckDocumentTempList(
+            @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<ResponseTruck.BackOfficeTruckDocumentSummary> response = truckService.getBackOfficeTruckDocuments(pageable);
+        CommonResponse<Page<ResponseTruck.BackOfficeTruckDocumentSummary>> commonResponse = CommonResponse.<Page<ResponseTruck.BackOfficeTruckDocumentSummary>>builder()
+                .data(response)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "백오피스 트럭 문서 승인")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "트럭 문서를 못 찾을 경우[30014]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PatchMapping(value = "/v1/backoffice/{truckId}/documents/{documentType}/approve")
+    public ResponseEntity<CommonResponse<String>> approveTruckDocument(@Valid @PathVariable("truckId") String truckId,
+                                                                       @Valid @PathVariable("documentType") DocumentType documentType) {
+        truckService.approveTruckDocument(truckId, documentType);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Truck document approved successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "백오피스 트럭 문서 반려")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "반려 사유가 비어있는 경우",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "트럭 문서를 못 찾을 경우[30014]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PatchMapping(value = "/v1/backoffice/{truckId}/documents/{documentType}/reject")
+    public ResponseEntity<CommonResponse<String>> rejectTruckDocument(@Valid @PathVariable("truckId") String truckId,
+                                                                      @Valid @PathVariable("documentType") DocumentType documentType,
+                                                                      @Valid @RequestBody RequestTruck.RejectTruckDocumentDto rejectTruckDocumentDto) {
+        truckService.rejectTruckDocument(truckId, documentType, rejectTruckDocumentDto.getRejectionReason());
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Truck document rejected successfully.")
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }

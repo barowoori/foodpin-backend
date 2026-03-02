@@ -6,6 +6,7 @@ import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckDocument;
+import com.barowoori.foodpinbackend.truck.command.domain.model.TruckDocumentStatus;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckDocumentPhoto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -100,6 +101,24 @@ public class ResponseTruck {
         public static GetTruckManagerContactDto of(String phone) {
             return GetTruckManagerContactDto.builder()
                     .phone(phone)
+                    .build();
+        }
+    }
+
+    @Builder
+    @Data
+    public static class BackOfficeTruckDocumentSummary {
+        private String truckId;
+        private DocumentType documentType;
+        private TruckDocumentStatus status;
+        private String documentId;
+
+        public static BackOfficeTruckDocumentSummary of(TruckDocument truckDocument) {
+            return BackOfficeTruckDocumentSummary.builder()
+                    .truckId(truckDocument.getTruck().getId())
+                    .documentType(truckDocument.getType())
+                    .status(truckDocument.getStatus())
+                    .documentId(truckDocument.getDocumentId())
                     .build();
         }
     }

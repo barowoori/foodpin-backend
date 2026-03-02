@@ -101,6 +101,14 @@ public class TruckService {
         return truck;
     }
 
+    private TruckDocument getTruckDocument(String truckId, DocumentType documentType) {
+        TruckDocument truckDocument = truckDocumentRepository.findByTruckIdAndType(truckId, documentType);
+        if (truckDocument == null) {
+            throw new CustomException(TruckErrorCode.TRUCK_DOCUMENT_NOT_FOUND);
+        }
+        return truckDocument;
+    }
+
     private void validateTruckAccess(String truckId, String memberId) {
         TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(truckId, memberId);
         if (truckManager == null) {
@@ -520,6 +528,26 @@ public class TruckService {
         return truckDocuments.stream()
                 .map(truckDocument -> ResponseTruck.GetTruckDocumentFile.of(truckDocument, imageManager))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ResponseTruck.BackOfficeTruckDocumentSummary> getBackOfficeTruckDocuments(Pageable pageable) {
+        Page<TruckDocument> truckDocumentPage = truckDocumentRepository.findAllByType(DocumentType.BUSINESS_REGISTRATION, pageable);
+        return truckDocumentPage.map(ResponseTruck.BackOfficeTruckDocumentSummary::of);
+    }
+
+    @Transactional
+    public void approveTruckDocument(String truckId, DocumentType documentType) {
+        TruckDocument truckDocument = getTruckDocument(truckId, documentType);
+        truckDocument.approve(getMemberId());
+        truckDocumentRepository.save(truckDocument);
+    }
+
+    @Transactional
+    public void rejectTruckDocument(String truckId, DocumentType documentType, String rejectionReason) {
+        TruckDocument truckDocument = getTruckDocument(truckId, documentType);
+        truckDocument.reject(getMemberId(), rejectionReason);
+        truckDocumentRepository.save(truckDocument);
     }
 
     @Transactional

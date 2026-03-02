@@ -6,6 +6,7 @@ import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import com.barowoori.foodpinbackend.common.validation.UnicodeSize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
@@ -151,20 +152,24 @@ public class RequestTruck {
         @Schema(description = "트럭 서류 사진 파일 id 리스트")
         private List<String> fileIdList;
 
+        // 사업자등록증인 경우 대기중으로 생성
         public TruckDocument toEntity(String updatedBy, String documentId, Truck truck){
             return TruckDocument.builder()
                     .updatedBy(updatedBy)
                     .type(this.type)
                     .documentId(documentId)
                     .truck(truck)
+                    .status(TruckDocumentStatus.PENDING)
                     .build();
         }
 
+        // 사업자등록증이 아닌 경우 승인됨으로 생성
         public TruckDocument toEntity(String updatedBy, Truck truck) {
             return TruckDocument.builder()
                     .updatedBy(updatedBy)
                     .type(this.type)
                     .truck(truck)
+                    .status(TruckDocumentStatus.APPROVED)
                     .build();
         }
     }
@@ -261,5 +266,13 @@ public class RequestTruck {
         @Schema(description = "트럭 관리자 id")
         @NotEmpty
         private String truckManagerId;
+    }
+
+    @Getter
+    public static class RejectTruckDocumentDto {
+        @Schema(description = "반려 사유")
+        @NotBlank
+        @UnicodeSize(min = 1, max = 500, message = "1자 이상 500자 이하로 입력하세요.")
+        private String rejectionReason;
     }
 }

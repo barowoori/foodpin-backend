@@ -66,7 +66,9 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOriginPatterns(List.of(
-                "https://foodpin-web.pages.dev"
+                "https://foodpin-web.pages.dev",
+                "https://dev.barowoori.click",
+                "https://barowoori.click"
         ));
         config.setAllowCredentials(true);
 

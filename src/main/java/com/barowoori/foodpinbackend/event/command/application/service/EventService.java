@@ -3,6 +3,7 @@ package com.barowoori.foodpinbackend.event.command.application.service;
 import com.barowoori.foodpinbackend.category.command.domain.model.Category;
 import com.barowoori.foodpinbackend.category.command.domain.repository.CategoryRepository;
 import com.barowoori.foodpinbackend.common.exception.CustomException;
+import com.barowoori.foodpinbackend.common.exception.WithdrawalBlockHeaders;
 import com.barowoori.foodpinbackend.document.command.application.service.emailEvent.EventAppliedTruckDocumentSubmissionEvent;
 import com.barowoori.foodpinbackend.event.command.application.dto.RequestEvent;
 import com.barowoori.foodpinbackend.event.command.application.dto.ResponseEvent;
@@ -331,7 +332,11 @@ public class EventService {
         boolean hasConfirmedEventTruck = event.getEventTrucks().stream().anyMatch(eventTruck -> eventTruck.getStatus() == EventTruckStatus.CONFIRMED);
         boolean isWithinEventPeriod = maxDate.isAfter(now) || maxDate.isEqual(now);
         if (hasConfirmedEventTruck && isWithinEventPeriod) {
-            throw new CustomException(EventErrorCode.CONFIRMED_EVENT_TRUCK_EXISTS);
+            throw new CustomException(
+                    EventErrorCode.CONFIRMED_EVENT_TRUCK_EXISTS,
+                    null,
+                    WithdrawalBlockHeaders.byHostedEvent(event.getId(), event.getName(), maxDate)
+            );
         }
 
         if (eventRecruitDetail != null && eventRecruitDetail.getRecruitingStatus().equals(EventRecruitingStatus.RECRUITING)) {

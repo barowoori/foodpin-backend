@@ -242,7 +242,7 @@ public class MemberController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "400", description = "사용자 소유 트럭이 현재 진행중인 행사에 참여중인 경우, 사용자 주최 행사가 진행중인 경우[40023]",
+            @ApiResponse(responseCode = "400", description = "사용자 소유 트럭이 현재 진행중인 행사에 참여중인 경우[30012], 사용자 주최 행사가 진행중인 경우[40025]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @DeleteMapping("/v1/delete")
@@ -262,7 +262,7 @@ public class MemberController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "400", description = "사용자 소유 트럭이 현재 진행중인 행사에 참여중인 경우[30012], 사용자 주최 행사가 진행중인 경우[40023]",
+            @ApiResponse(responseCode = "400", description = "사용자 소유 트럭이 현재 진행중인 행사에 참여중인 경우[30012], 사용자 주최 행사가 진행중인 경우[40025]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @DeleteMapping("/v2/delete")

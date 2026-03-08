@@ -1,6 +1,7 @@
 package com.barowoori.foodpinbackend.common.exception;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
@@ -19,7 +20,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CustomException.class)
     protected ResponseEntity<ErrorResponse> handleCustomException(CustomException e) {
         System.out.println("Custom exception occurred. Code : " + e.getErrorCode() + ". Message : " + e.getExtraMessage());
-        return ErrorResponse.toResponseEntity(e.getErrorCode(), e.getExtraMessage());
+        ResponseEntity<ErrorResponse> responseEntity = ErrorResponse.toResponseEntity(e.getErrorCode(), e.getExtraMessage());
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.addAll(responseEntity.getHeaders());
+        responseHeaders.addAll(e.getHeaders());
+        return new ResponseEntity<>(responseEntity.getBody(), responseHeaders, responseEntity.getStatusCode());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

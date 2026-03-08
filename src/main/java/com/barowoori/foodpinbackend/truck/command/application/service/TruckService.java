@@ -3,6 +3,7 @@ package com.barowoori.foodpinbackend.truck.command.application.service;
 import com.barowoori.foodpinbackend.category.command.domain.model.Category;
 import com.barowoori.foodpinbackend.category.command.domain.repository.CategoryRepository;
 import com.barowoori.foodpinbackend.common.exception.CustomException;
+import com.barowoori.foodpinbackend.common.exception.WithdrawalBlockHeaders;
 import com.barowoori.foodpinbackend.document.command.domain.model.BusinessRegistration;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.document.command.domain.repository.BusinessRegistrationRepository;
@@ -172,10 +173,7 @@ public class TruckService {
             if (category == null) {
                 throw new CustomException(TruckErrorCode.CATEGORY_NOT_FOUND);
             }
-            TruckCategory truckCategory = TruckCategory.builder()
-                    .truck(truck)
-                    .category(category)
-                    .build();
+            TruckCategory truckCategory = new TruckCategory(truck, category);
             truckCategoryRepository.save(truckCategory);
         });
 
@@ -316,10 +314,7 @@ public class TruckService {
             if (category == null) {
                 throw new CustomException(TruckErrorCode.CATEGORY_NOT_FOUND);
             }
-            TruckCategory truckCategory = TruckCategory.builder()
-                    .truck(truck)
-                    .category(category)
-                    .build();
+            TruckCategory truckCategory = new TruckCategory(truck, category);
             truckCategoryRepository.save(truckCategory);
         });
 
@@ -470,7 +465,17 @@ public class TruckService {
                     LocalDate now = LocalDate.now();
                     // 진행중인 행사에 참여하고 있는 경우 탈퇴 불가 에러
                     if (eventTruck.getStatus().equals(EventTruckStatus.CONFIRMED) && (maxDate.isAfter(now) || maxDate.equals(now))) {
-                        throw new CustomException(TruckErrorCode.TRUCK_ALREADY_IN_PROGRESS_EVENT);
+                        throw new CustomException(
+                                TruckErrorCode.TRUCK_ALREADY_IN_PROGRESS_EVENT,
+                                null,
+                                WithdrawalBlockHeaders.byTruckAndEvent(
+                                        truck.getId(),
+                                        truck.getName(),
+                                        event.getId(),
+                                        event.getName(),
+                                        maxDate
+                                )
+                        );
                     }
                 });
                 eventTruckList.forEach(eventTruck -> {
@@ -536,6 +541,7 @@ public class TruckService {
         return truckDocumentPage.map(ResponseTruck.BackOfficeTruckDocumentSummary::of);
     }
 
+    //todo 관리자 계정 권한 검증 추가
     @Transactional
     public void approveTruckDocument(String truckId, DocumentType documentType) {
         TruckDocument truckDocument = getTruckDocument(truckId, documentType);

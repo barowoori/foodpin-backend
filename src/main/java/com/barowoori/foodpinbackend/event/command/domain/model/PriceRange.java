@@ -4,6 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum PriceRange {
+
     UNDER_7000("7천원 미만"),
     UNDER_8000("8천원 미만"),
     UNDER_9000("9천원 미만"),

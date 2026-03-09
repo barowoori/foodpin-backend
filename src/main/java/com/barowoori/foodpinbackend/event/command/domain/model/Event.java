@@ -3,6 +3,7 @@ package com.barowoori.foodpinbackend.event.command.domain.model;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
+import com.barowoori.foodpinbackend.member.command.domain.model.EventCreatorType;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckType;
 import com.barowoori.foodpinbackend.truck.command.domain.service.TruckTypeSetConverter;
 import jakarta.persistence.*;
@@ -37,6 +38,10 @@ public class Event {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "creator_type")
+    private EventCreatorType creatorType;
 
     @Column(name = "name")
     private String name;
@@ -73,6 +78,12 @@ public class Event {
     @Enumerated(value = EnumType.STRING)
     @Column(name = "type")
     private EventType type;
+
+    @Column(name = "recruitment_url", length = 500)
+    private String recruitmentUrl;
+
+    @Column(name = "recruitment_url_click_count", nullable = false)
+    private int recruitmentUrlClickCount = 0;
 
     @Column(name = "truck_types")
     @Convert(converter = TruckTypeSetConverter.class)
@@ -115,11 +126,13 @@ public class Event {
     }
 
     @Builder
-    public Event(String createdBy, String name, String description, String guidelines, Boolean isDeleted,
+    public Event(String createdBy, EventCreatorType creatorType, String name, String description, String guidelines, Boolean isDeleted,
                  EventDocumentSubmissionTarget documentSubmissionTarget, String submissionEmail, EventType type,
                  ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, SaleType saleType,
-                 PriceRange priceRange, String cateringDetail, String contact) {
+                 PriceRange priceRange, String cateringDetail, String contact,
+                 String recruitmentUrl, int recruitmentUrlClickCount) {
         this.createdBy = createdBy;
+        this.creatorType = creatorType;
         this.name = name;
         this.description = description;
         this.guidelines = guidelines;
@@ -133,6 +146,8 @@ public class Event {
         this.priceRange = priceRange;
         this.cateringDetail = cateringDetail;
         this.contact = contact;
+        this.recruitmentUrl = recruitmentUrl;
+        this.recruitmentUrlClickCount = recruitmentUrlClickCount;
     }
 
     public void updateBasicInfo(String name, EventType type, ExpectedParticipants expectedParticipants) {

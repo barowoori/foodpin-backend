@@ -22,6 +22,12 @@ public interface EventRepositoryCustom {
                                       List<String> categoryCodes,
                                       EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering,
                                       Pageable pageable);
+    Page<Event> findBackOfficeEventListByFilter(String searchTerm, Map<RegionType, List<String>> regionIds,
+                                      LocalDate startDate, LocalDate endDate,
+                                      List<String> categoryCodes,
+                                      EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering,
+                                      Pageable pageable);
+
     Event findEventDetail(String eventId);
     Page<Event> findLikeEventListByFilter(String memberId, String searchTerm, Map<RegionType, List<String>> regionIds,
                                           LocalDate startDate, LocalDate endDate,

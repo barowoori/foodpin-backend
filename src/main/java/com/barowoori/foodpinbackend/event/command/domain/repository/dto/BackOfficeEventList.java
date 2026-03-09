@@ -1,40 +1,29 @@
 package com.barowoori.foodpinbackend.event.command.domain.repository.dto;
 
 import com.barowoori.foodpinbackend.category.command.domain.model.Category;
-import com.barowoori.foodpinbackend.event.command.domain.model.*;
+import com.barowoori.foodpinbackend.event.command.domain.model.Event;
+import com.barowoori.foodpinbackend.event.command.domain.model.EventCategory;
 import com.barowoori.foodpinbackend.event.command.domain.service.EventDateCalculator;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
 
 @Getter
 @SuperBuilder
-public class EventList {
-    private String id;
-    private String photo;
-    private String name;
-    private LocalDateTime recruitEndDateTime;
-    private LocalDate startDate;
-    private LocalDate endDate;
-    private String region;
-    private List<String> categories;
-    private RecruitInfo recruitInfo;
-    private Integer views;
+public class BackOfficeEventList extends EventList{
+    private int recruitmentUrlClickCount;
 
-    public static EventList of(Event event, List<String> regions, ImageManager imageManager) {
-        return EventList.builder()
+    public static BackOfficeEventList of(Event event, List<String> regions, ImageManager imageManager) {
+        return BackOfficeEventList.builder()
                 .id(event.getId())
                 .photo(event.getEventMainPhotoUrl(imageManager))
                 .name(event.getName())
                 .recruitEndDateTime(event.getRecruitDetail().getRecruitEndDateTime())
                 .startDate(EventDateCalculator.getMinDate(event))
                 .endDate(EventDateCalculator.getMaxDate(event))
+                .recruitmentUrlClickCount(event.getRecruitmentUrlClickCount())
                 .region(regions.isEmpty() ? null : regions.getFirst())
                 .categories(event.getCategories().stream().map(EventCategory::getCategory).map(Category::getName).toList())
                 .recruitInfo(RecruitInfo.of(event.getRecruitDetail()))

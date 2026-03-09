@@ -155,6 +155,7 @@ public class RequestTruck {
         // 사업자등록증인 경우 대기중으로 생성
         public TruckDocument toEntity(String updatedBy, String documentId, Truck truck){
             return TruckDocument.builder()
+                    .createdBy(updatedBy)
                     .updatedBy(updatedBy)
                     .type(this.type)
                     .documentId(documentId)
@@ -166,6 +167,7 @@ public class RequestTruck {
         // 사업자등록증이 아닌 경우 승인됨으로 생성
         public TruckDocument toEntity(String updatedBy, Truck truck) {
             return TruckDocument.builder()
+                    .createdBy(updatedBy)
                     .updatedBy(updatedBy)
                     .type(this.type)
                     .truck(truck)

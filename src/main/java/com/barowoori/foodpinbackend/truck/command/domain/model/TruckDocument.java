@@ -23,6 +23,9 @@ public class TruckDocument {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "created_by")
+    private String createdBy;
+
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
@@ -44,6 +47,10 @@ public class TruckDocument {
     @Enumerated(value = EnumType.STRING)
     private TruckDocumentStatus status;
 
+
+    @Column(name = "processed_at")
+    private LocalDateTime processedAt;
+
     @Column(name = "rejection_reason")
     private String rejectionReason;
 
@@ -58,7 +65,8 @@ public class TruckDocument {
     }
 
     @Builder
-    public TruckDocument(LocalDateTime updatedAt, String updatedBy, DocumentType type, String documentId, Boolean approval, Truck truck, TruckDocumentStatus status, String rejectionReason) {
+    public TruckDocument(String createdBy, LocalDateTime updatedAt, String updatedBy, DocumentType type, String documentId, Boolean approval, Truck truck, TruckDocumentStatus status, String rejectionReason) {
+        this.createdBy = createdBy;
         this.updatedAt = updatedAt;
         this.updatedBy = updatedBy;
         this.type = type;
@@ -82,11 +90,13 @@ public class TruckDocument {
         this.updatedBy = updatedBy;
         this.status = TruckDocumentStatus.APPROVED;
         this.rejectionReason = null;
+        this.processedAt = LocalDateTime.now();
     }
 
     public void reject(String updatedBy, String rejectionReason) {
         this.updatedBy = updatedBy;
         this.status = TruckDocumentStatus.REJECTED;
         this.rejectionReason = rejectionReason;
+        this.processedAt = LocalDateTime.now();
     }
 }

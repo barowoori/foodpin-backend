@@ -125,7 +125,7 @@ public class EventController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping(value = "/v1/backoffice")
-    public ResponseEntity<CommonResponse<Page<EventList>>> getEventListForBackOffice(@RequestParam(value = "region", required = false) List<String> regionCodes,
+    public ResponseEntity<CommonResponse<Page<BackOfficeEventList>>> getEventListForBackOffice(@RequestParam(value = "region", required = false) List<String> regionCodes,
                                                                         @RequestParam(value = "category", required = false) List<String> categoryCodes,
                                                                         @RequestParam(value = "search", required = false) String searchTerm,
                                                                         @RequestParam(value = "startDate", required = false) LocalDate startDate,
@@ -136,8 +136,8 @@ public class EventController {
                                                                         @RequestParam(value = "isCatering", required = false) Boolean isCatering,
                                                                         @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        Page<EventList> eventLists = eventListService.findEventListForBackOffice(searchTerm, regionCodes, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, isCatering, pageable);
-        CommonResponse<Page<EventList>> commonResponse = CommonResponse.<Page<EventList>>builder()
+        Page<BackOfficeEventList> eventLists = eventListService.findEventListForBackOffice(searchTerm, regionCodes, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, isCatering, pageable);
+        CommonResponse<Page<BackOfficeEventList>> commonResponse = CommonResponse.<Page<BackOfficeEventList>>builder()
                 .data(eventLists)
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);

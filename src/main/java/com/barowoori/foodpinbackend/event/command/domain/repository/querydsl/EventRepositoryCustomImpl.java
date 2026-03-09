@@ -4,6 +4,7 @@ import com.barowoori.foodpinbackend.category.command.domain.model.QCategory;
 import com.barowoori.foodpinbackend.common.dto.MemberFcmInfoDto;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.MemberForEventFcmInfoDto;
+import com.barowoori.foodpinbackend.member.command.domain.model.EventCreatorType;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckType;
 import com.querydsl.core.BooleanBuilder;
@@ -99,6 +100,56 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .where(
                         event.isDeleted.isFalse()
+                                .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
+                                .and(
+                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering, event, eventDate, category)
+                                                .and(regionFilterCondition(regionIds))
+                                )
+                )
+                .fetchOne();
+
+        return new PageImpl<>(events, pageable, total);
+    }
+
+    @Override
+    public Page<Event> findBackOfficeEventListByFilter(String searchTerm, Map<RegionType, List<String>> regionIds,
+                                             LocalDate startDate, LocalDate endDate,
+                                             List<String> categoryCodes,
+                                             EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering,
+                                             Pageable pageable) {
+        List<Event> events = jpaQueryFactory.selectDistinct(event)
+                .from(event)
+                .leftJoin(event.eventRegion, eventRegion)
+                .leftJoin(event.eventDates, eventDate)
+                .leftJoin(event.categories, eventCategory)
+                .leftJoin(eventCategory.category, category)
+                .innerJoin(event.recruitDetail, eventRecruitDetail).fetchJoin()
+                .leftJoin(event.view, eventView)
+                .leftJoin(event.photos, eventPhoto)
+                .leftJoin(eventPhoto.file, file)
+                .where(
+                        event.isDeleted.isFalse()
+                                .and(event.creatorType.eq(EventCreatorType.ADMIN))
+                                .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
+                                .and(
+                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering, event, eventDate, category)
+                                                .and(regionFilterCondition(regionIds))
+                                )
+                )
+                .orderBy(getOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        Long total = jpaQueryFactory.select(event.countDistinct()).from(event)
+                .leftJoin(event.eventRegion, eventRegion)
+                .leftJoin(event.eventDates, eventDate)
+                .leftJoin(event.categories, eventCategory)
+                .leftJoin(eventCategory.category, category)
+                .innerJoin(event.recruitDetail, eventRecruitDetail)
+                .where(
+                        event.isDeleted.isFalse()
+                                .and(event.creatorType.eq(EventCreatorType.ADMIN))
                                 .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
                                 .and(
                                         createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering, event, eventDate, category)

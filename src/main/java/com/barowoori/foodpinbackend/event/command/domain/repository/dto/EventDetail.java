@@ -44,6 +44,7 @@ public class EventDetail {
     private String contact;
     private String description;
     private String guidelines;
+    private String recruitmentUrl;
     private Boolean isFullAttendanceRequired;
     private EventDocumentSubmissionTarget documentSubmissionTarget;
     private String submissionEmail;
@@ -76,6 +77,7 @@ public class EventDetail {
                 .contact(memberId != null && event.isCreator(memberId) ? event.getContact() : null)
                 .description(event.getDescription())
                 .guidelines(event.getGuidelines())
+                .recruitmentUrl(event.getRecruitmentUrl())
                 .isLike(isLike)
                 .isFullAttendanceRequired(event.getRecruitDetail().getIsFullAttendanceRequired())
                 .documentSubmissionTarget(event.getDocumentSubmissionTarget())

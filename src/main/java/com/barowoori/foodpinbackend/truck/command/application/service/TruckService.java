@@ -41,6 +41,7 @@ import com.barowoori.foodpinbackend.truck.command.application.dto.ResponseTruck;
 import com.barowoori.foodpinbackend.truck.command.domain.exception.TruckErrorCode;
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.*;
+import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.BackOfficeTruckDocument;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckManagerSummary;
 import com.barowoori.foodpinbackend.truck.command.domain.service.TruckContactAccessLogService;
 import com.barowoori.foodpinbackend.truck.command.domain.service.TruckManagerInvitationGenerator;
@@ -55,6 +56,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Service
@@ -536,9 +538,24 @@ public class TruckService {
     }
 
     @Transactional(readOnly = true)
-    public Page<ResponseTruck.BackOfficeTruckDocumentSummary> getBackOfficeTruckDocuments(Pageable pageable) {
-        Page<TruckDocument> truckDocumentPage = truckDocumentRepository.findAllByType(DocumentType.BUSINESS_REGISTRATION, pageable);
-        return truckDocumentPage.map(ResponseTruck.BackOfficeTruckDocumentSummary::of);
+    public Page<ResponseTruck.GetBackOfficeTruckDocumentDto> getBackOfficeTruckDocuments(String nickname, String phone, TruckDocumentStatus status,
+                                                                                         LocalDate requestedStartAt, LocalDate requestedEndAt, LocalDate processedStartAt, LocalDate processedEndAt, Pageable pageable) {
+        Page<BackOfficeTruckDocument> truckDocumentPage = truckDocumentRepository.getBackOfficeTruckDocuments(DocumentType.BUSINESS_REGISTRATION, nickname, phone, status,
+                requestedStartAt, requestedEndAt, processedStartAt, processedEndAt, pageable);
+        List<String> documentIds = truckDocumentPage.getContent()
+                .stream()
+                .map(it -> it.getTruckDocument().getId())
+                .toList();
+
+        Map<String, List<String>> photoMap =
+                truckDocumentRepository.findPhotosByTruckDocumentIds(documentIds);
+
+        return truckDocumentPage.map(it ->
+                ResponseTruck.GetBackOfficeTruckDocumentDto.of(
+                        it,
+                        photoMap.getOrDefault(it.getTruckDocument().getId(), List.of())
+                )
+        );
     }
 
     //todo 관리자 계정 권한 검증 추가

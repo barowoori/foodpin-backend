@@ -4,15 +4,19 @@ import com.barowoori.foodpinbackend.document.command.domain.model.BusinessRegist
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
+import com.barowoori.foodpinbackend.member.command.domain.model.Member;
 import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckDocument;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckDocumentStatus;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckDocumentPhoto;
+import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.BackOfficeTruckDocument;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 
 public class ResponseTruck {
     @Builder
@@ -78,7 +82,7 @@ public class ResponseTruck {
 
         public static GetTruckDocumentFile of(TruckDocument truckDocument, ImageManager imageManager) {
             TruckDocumentPhoto truckDocumentPhoto = truckDocument.getPhotos().stream().findFirst().orElse(null);
-            if (truckDocumentPhoto == null){
+            if (truckDocumentPhoto == null) {
                 return GetTruckDocumentFile.builder()
                         .type(truckDocument.getType())
                         .build();
@@ -107,19 +111,44 @@ public class ResponseTruck {
 
     @Builder
     @Data
-    public static class BackOfficeTruckDocumentSummary {
+    public static class GetBackOfficeTruckDocumentDto {
         private String truckId;
         private DocumentType documentType;
+        private String nickname;
+        private String phoneNumber;
+
+        private String businessRegistrationNumber;
+        private String representativeName;
+        private String businessName;
+        private LocalDate openingDate;
+        private List<String> imageUrls;
         private TruckDocumentStatus status;
+
+        private LocalDateTime requestedAt;
+        private LocalDateTime processedAt;
         private String documentId;
 
-        public static BackOfficeTruckDocumentSummary of(TruckDocument truckDocument) {
-            return BackOfficeTruckDocumentSummary.builder()
+        public static GetBackOfficeTruckDocumentDto of(BackOfficeTruckDocument dto, List<String> imageUrls) {
+            TruckDocument truckDocument = dto.getTruckDocument();
+            Member member = dto.getMember();
+            BusinessRegistration businessRegistration = dto.getBusinessRegistration();
+            return GetBackOfficeTruckDocumentDto.builder()
                     .truckId(truckDocument.getTruck().getId())
                     .documentType(truckDocument.getType())
+                    .nickname(member != null ? member.getNickname() : null)
+                    .phoneNumber(member != null ? member.getPhone() : null)
+                    .businessRegistrationNumber(businessRegistration.getBusinessNumber())
+                    .representativeName(businessRegistration.getRepresentativeName())
+                    .businessName(businessRegistration.getBusinessName())
+                    .openingDate(businessRegistration.getOpeningDate())
+                    .imageUrls(imageUrls)
+                    .status(truckDocument.getStatus())
+                    .requestedAt(truckDocument.getCreatedAt())
+                    .processedAt(truckDocument.getProcessedAt())
                     .status(truckDocument.getStatus())
                     .documentId(truckDocument.getDocumentId())
                     .build();
         }
     }
+
 }

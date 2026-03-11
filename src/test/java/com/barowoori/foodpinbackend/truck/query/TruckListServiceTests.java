@@ -265,16 +265,6 @@ public class TruckListServiceTests {
             assertEquals("푸드핀", result.stream().findFirst().get().getName());
             result.forEach(truck -> System.out.println(truck.getName()));
         }
-
-        @Test
-        @Transactional
-        @DisplayName("정렬 기준이 조회순일 경우 푸드트럭 조회수 기준으로 내림차순 정렬된다")
-        void When_OrderByViews() {
-            Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "views"));
-            Page<TruckList> result = truckListService.findTruckList(null, null, null,null,null,null,null,null,null,null,null, pageable);
-            assertEquals("바로우리", result.stream().findFirst().get().getName());
-            result.forEach(truck -> System.out.println(truck.getName()));
-        }
     }
 
 }

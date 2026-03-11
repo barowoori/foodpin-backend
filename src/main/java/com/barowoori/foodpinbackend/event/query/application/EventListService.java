@@ -5,6 +5,7 @@ import com.barowoori.foodpinbackend.event.command.domain.model.EventType;
 import com.barowoori.foodpinbackend.event.command.domain.model.ExpectedParticipants;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventRegionRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventRepository;
+import com.barowoori.foodpinbackend.event.command.domain.repository.dto.BackOfficeEventList;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventList;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
@@ -41,10 +42,10 @@ public class EventListService {
     public Page<EventList> findEventList(String searchTerm, List<String> regionCodes,
                                          LocalDate startDate, LocalDate endDate,
                                          List<String> categoryCodes,
-                                         EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes,
+                                         EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering,
                                          Pageable pageable) {
         Map<RegionType, List<String>> regionIds = regionDoRepository.findRegionIdsByFilter(regionCodes);
-        Page<Event> events = eventRepository.findEventListByFilter(searchTerm, regionIds, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, pageable);
+        Page<Event> events = eventRepository.findEventListByFilter(searchTerm, regionIds, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, isCatering, pageable);
         List<String> eventIds = events.map(Event::getId).stream().toList();
         Map<String, List<String>> regionNames = eventRegionFullNameGenerator.findRegionNamesByEventIds(eventIds);
 
@@ -52,13 +53,27 @@ public class EventListService {
     }
 
     @Transactional(readOnly = true)
+    public Page<BackOfficeEventList> findEventListForBackOffice(String searchTerm, List<String> regionCodes,
+                                                                LocalDate startDate, LocalDate endDate,
+                                                                List<String> categoryCodes,
+                                                                EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering,
+                                                                Pageable pageable) {
+        Map<RegionType, List<String>> regionIds = regionDoRepository.findRegionIdsByFilter(regionCodes);
+        Page<Event> events = eventRepository.findBackOfficeEventListByFilter(searchTerm, regionIds, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, isCatering, pageable);
+        List<String> eventIds = events.map(Event::getId).stream().toList();
+        Map<String, List<String>> regionNames = eventRegionFullNameGenerator.findRegionNamesByEventIds(eventIds);
+
+        return events.map(event -> BackOfficeEventList.of(event, regionNames.get(event.getId()), imageManager));
+    }
+
+    @Transactional(readOnly = true)
     public Page<EventList> findLikeEventList(String memberId, String searchTerm, List<String> regionCodes,
                                              LocalDate startDate, LocalDate endDate,
                                              List<String> categoryCodes,
-                                             EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes,
+                                             EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering,
                                              Pageable pageable) {
         Map<RegionType, List<String>> regionIds = regionDoRepository.findRegionIdsByFilter(regionCodes);
-        Page<Event> events = eventRepository.findLikeEventListByFilter(memberId, searchTerm, regionIds, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, pageable);
+        Page<Event> events = eventRepository.findLikeEventListByFilter(memberId, searchTerm, regionIds, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, isCatering, pageable);
         List<String> eventIds = events.map(Event::getId).stream().toList();
         Map<String, List<String>> regionNames = eventRegionFullNameGenerator.findRegionNamesByEventIds(eventIds);
 

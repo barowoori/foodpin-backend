@@ -33,6 +33,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -167,17 +168,25 @@ public class TruckController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
-    @Operation(summary = "백오피스 임시 사업자등록증 문서 목록 조회", description = "임시 API이며 BUSINESS_REGISTRATION 문서만 조회")
+    @Operation(summary = "백오피스 사업자등록증 문서 목록 조회")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @GetMapping(value = "/v1/backoffice/documents/temp")
-    public ResponseEntity<CommonResponse<Page<ResponseTruck.BackOfficeTruckDocumentSummary>>> getBackOfficeTruckDocumentTempList(
+    @GetMapping(value = "/v1/backoffice/documents")
+    public ResponseEntity<CommonResponse<Page<ResponseTruck.GetBackOfficeTruckDocumentDto>>> getBackOfficeTruckDocumentTempList(
+            @RequestParam(name = "nickname", required = false) String nickname,
+            @RequestParam(name = "phone", required = false) String phone,
+            @RequestParam(name = "status", required = false) TruckDocumentStatus status,
+            @RequestParam(name = "requestedStartAt", required = false) LocalDate requestedStartAt,
+            @RequestParam(name = "requestedEndAt", required = false) LocalDate requestedEndAt,
+            @RequestParam(name = "processedStartAt", required = false) LocalDate processedStartAt,
+            @RequestParam(name = "processedEndAt", required = false) LocalDate processedEndAt,
             @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<ResponseTruck.BackOfficeTruckDocumentSummary> response = truckService.getBackOfficeTruckDocuments(pageable);
-        CommonResponse<Page<ResponseTruck.BackOfficeTruckDocumentSummary>> commonResponse = CommonResponse.<Page<ResponseTruck.BackOfficeTruckDocumentSummary>>builder()
+        Page<ResponseTruck.GetBackOfficeTruckDocumentDto> response = truckService.getBackOfficeTruckDocuments(nickname, phone, status,
+                requestedStartAt, requestedEndAt, processedStartAt, processedEndAt, pageable);
+        CommonResponse<Page<ResponseTruck.GetBackOfficeTruckDocumentDto>> commonResponse = CommonResponse.<Page<ResponseTruck.GetBackOfficeTruckDocumentDto>>builder()
                 .data(response)
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);

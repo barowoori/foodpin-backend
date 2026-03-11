@@ -5,6 +5,7 @@ import lombok.Getter;
 @Getter
 public enum ExpectedParticipants {
 
+    UNDECIDED("미정"),
     UNDER_50("50명 미만"),
     UNDER_100("100명 미만"),
     UNDER_150("150명 미만"),

@@ -1,6 +1,7 @@
 package com.barowoori.foodpinbackend.event.command.application.dto;
 
 import com.barowoori.foodpinbackend.common.validation.UnicodeSize;
+import com.barowoori.foodpinbackend.member.command.domain.model.EventCreatorType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
@@ -44,6 +45,27 @@ public class RequestEvent {
         private EventDetailDto eventDetailDto;
     }
 
+    @Builder
+    @Data
+    @Getter
+    public static class CreateBackOfficeEventDto {
+        @NotNull
+        @Valid
+        private BackOfficeEventInfoDto eventInfoDto;
+
+        @Valid
+        @NotNull
+        private EventRecruitDto eventRecruitDto;
+
+        @Valid
+        @NotNull
+        private EventTargetDto eventTargetDto;
+
+        @Valid
+        @NotNull
+        private EventDetailDto eventDetailDto;
+    }
+
     @Getter
     public static class EventInfoDto {
         @UnicodeSize(min = 1, max = 30, message = "1자 이상 30자 이하로 입력하세요.")
@@ -73,6 +95,7 @@ public class RequestEvent {
         public Event toEntity(String creator) {
             return Event.builder()
                     .createdBy(creator)
+                    .creatorType(EventCreatorType.USER)
                     .name(this.name)
                     .type(this.type)
                     .expectedParticipants(this.expectedParticipants)
@@ -83,6 +106,57 @@ public class RequestEvent {
                     .saleType(null)
                     .priceRange(null)
                     .cateringDetail(null)
+                    .isDeleted(Boolean.FALSE)
+                    .build();
+        }
+    }
+
+    @Getter
+    public static class BackOfficeEventInfoDto {
+        @UnicodeSize(min = 1, max = 30, message = "1자 이상 30자 이하로 입력하세요.")
+        @Schema(description = "행사 이름")
+        @NotEmpty
+        private String name;
+
+        @Schema(description = "행사 종류")
+        @NotNull
+        private EventType type;
+
+        @Schema(description = "예상 참여 인원")
+        @NotNull
+        private ExpectedParticipants expectedParticipants;
+
+        @Schema(description = "행사 사진 파일 id 리스트")
+        private List<String> fileIdList;
+
+        @Schema(description = "행사 지역 코드", example = "GU85")
+        @NotEmpty
+        private String regionCode;
+
+        @NotEmpty
+        @Valid
+        private List<EventDateDto> eventDateDtoList;
+
+        @UnicodeSize(min = 1, max = 500, message = "1자 이상 500자 이하로 입력하세요.")
+        @Schema(description = "모집 URL")
+        @NotEmpty
+        private String recruitmentUrl;
+
+        public Event toEntity(String creator) {
+            return Event.builder()
+                    .createdBy(creator)
+                    .creatorType(EventCreatorType.ADMIN)
+                    .name(this.name)
+                    .type(this.type)
+                    .expectedParticipants(this.expectedParticipants)
+                    .description(null)
+                    .guidelines(null)
+                    .contact(null)
+                    .truckTypes(null)
+                    .saleType(null)
+                    .priceRange(null)
+                    .cateringDetail(null)
+                    .recruitmentUrl(this.recruitmentUrl)
                     .isDeleted(Boolean.FALSE)
                     .build();
         }
@@ -141,7 +215,7 @@ public class RequestEvent {
         @Schema(description = "일반 판매 시 희망 가격대")
         private PriceRange priceRange;
 
-        @UnicodeSize(max = 10000, message = "10,000자 이하로 입력하세요.")
+        @UnicodeSize(min = 10, max = 10000, message = "10자 이상 10,000자 이하로 입력하세요.")
         @Schema(description = "케이터링 세부 정보")
         private String cateringDetail;
 
@@ -175,8 +249,7 @@ public class RequestEvent {
         @NotEmpty
         private String contact;
 
-        @Schema(description = "전기 지원 여부")
-        @NotNull
+        @Schema(description = "전기 지원 여부, null이면 미정")
         private Boolean electricitySupportAvailability;
 
         @Schema(description = "발전기 필요 여부")
@@ -271,7 +344,7 @@ public class RequestEvent {
         @Schema(description = "일반 판매 시 희망 가격대")
         private PriceRange priceRange;
 
-        @UnicodeSize(max = 10000, message = "10,000자 이하로 입력하세요.")
+        @UnicodeSize(min = 10, max = 10000, message = "10자 이상 10,000자 이하로 입력하세요.")
         @Schema(description = "케이터링 세부 정보")
         private String cateringDetail;
 
@@ -305,8 +378,7 @@ public class RequestEvent {
         @NotEmpty
         private String contact;
 
-        @Schema(description = "전기 지원 여부")
-        @NotNull
+        @Schema(description = "전기 지원 여부, null이면 미정")
         private Boolean electricitySupportAvailability;
 
         @Schema(description = "발전기 필요 여부")
@@ -327,6 +399,14 @@ public class RequestEvent {
         @Schema(description = "서류 제출 대상(지원자 전체 / 선정자만)")
         @NotNull
         private EventDocumentSubmissionTarget documentSubmissionTarget;
+    }
+
+    @Getter
+    public static class UpdateBackOfficeRecruitmentUrlDto {
+        @UnicodeSize(min = 1, max = 500, message = "1자 이상 500자 이하로 입력하세요.")
+        @Schema(description = "모집 URL")
+        @NotEmpty
+        private String recruitmentUrl;
     }
 
     @Builder

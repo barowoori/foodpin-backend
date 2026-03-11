@@ -100,23 +100,58 @@ public class EventService {
     @Transactional
     public void createEvent(RequestEvent.CreateEventDto createEventDto) {
         String memberId = getMemberId();
-
         Event event = createEventDto.getEventInfoDto().toEntity(memberId);
+        createEvent(
+                event,
+                createEventDto.getEventInfoDto().getFileIdList(),
+                createEventDto.getEventInfoDto().getRegionCode(),
+                createEventDto.getEventInfoDto().getEventDateDtoList(),
+                createEventDto.getEventRecruitDto(),
+                createEventDto.getEventTargetDto(),
+                createEventDto.getEventDetailDto(),
+                memberId
+        );
+    }
+
+    @Transactional
+    public void createBackOfficeEvent(RequestEvent.CreateBackOfficeEventDto createBackOfficeEventDto) {
+        String memberId = getMemberId();
+        Event event = createBackOfficeEventDto.getEventInfoDto().toEntity(memberId);
+        createEvent(
+                event,
+                createBackOfficeEventDto.getEventInfoDto().getFileIdList(),
+                createBackOfficeEventDto.getEventInfoDto().getRegionCode(),
+                createBackOfficeEventDto.getEventInfoDto().getEventDateDtoList(),
+                createBackOfficeEventDto.getEventRecruitDto(),
+                createBackOfficeEventDto.getEventTargetDto(),
+                createBackOfficeEventDto.getEventDetailDto(),
+                memberId
+        );
+    }
+
+    private void createEvent(Event event,
+                             List<String> fileIdList,
+                             String regionCode,
+                             List<RequestEvent.EventDateDto> eventDateDtoList,
+                             RequestEvent.EventRecruitDto eventRecruitDto,
+                             RequestEvent.EventTargetDto eventTargetDto,
+                             RequestEvent.EventDetailDto eventDetailDto,
+                             String memberId) {
         event.updateDetailInfo(
-                createEventDto.getEventDetailDto().getDescription(),
-                createEventDto.getEventDetailDto().getGuidelines(),
-                createEventDto.getEventDetailDto().getContact()
+                eventDetailDto.getDescription(),
+                eventDetailDto.getGuidelines(),
+                eventDetailDto.getContact()
         );
         event.updateTargetInfo(
-                createEventDto.getEventTargetDto().getTruckTypes(),
-                createEventDto.getEventTargetDto().getSaleType(),
-                createEventDto.getEventTargetDto().getPriceRange(),
-                createEventDto.getEventTargetDto().getCateringDetail()
+                eventTargetDto.getTruckTypes(),
+                eventTargetDto.getSaleType(),
+                eventTargetDto.getPriceRange(),
+                eventTargetDto.getCateringDetail()
         );
         eventRepository.save(event);
 
-        if (!Objects.equals(createEventDto.getEventInfoDto().getFileIdList(), null) && !createEventDto.getEventInfoDto().getFileIdList().isEmpty()) {
-            for (String fileId : createEventDto.getEventInfoDto().getFileIdList()) {
+        if (!Objects.equals(fileIdList, null) && !fileIdList.isEmpty()) {
+            for (String fileId : fileIdList) {
                 File file = fileRepository.findById(fileId)
                         .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_PHOTO_NOT_FOUND));
                 EventPhoto eventPhoto = EventPhoto.builder().file(file).updatedBy(memberId).event(event).build();
@@ -128,51 +163,52 @@ public class EventService {
         eventViewRepository.save(eventView);
         event.initEventView(eventView);
 
-        RegionInfo regionInfo = regionDoRepository.findByCode(createEventDto.getEventInfoDto().getRegionCode());
-        if (regionInfo == null)
+        RegionInfo regionInfo = regionDoRepository.findByCode(regionCode);
+        if (regionInfo == null) {
             throw new CustomException(EventErrorCode.EVENT_REGION_NOT_FOUND);
+        }
         EventRegion eventRegion = EventRegion.builder().regionType(regionInfo.getRegionType()).regionId(regionInfo.getRegionId()).event(event).build();
         eventRegion = eventRegionRepository.save(eventRegion);
         event.initEventRegion(eventRegion);
 
-        if (Objects.equals(createEventDto.getEventRecruitDto().getRecruitEndDateTime(), null)) {
-            LocalDateTime lastEndDateTime = createEventDto.getEventInfoDto().getEventDateDtoList().stream()
+        if (Objects.equals(eventRecruitDto.getRecruitEndDateTime(), null)) {
+            LocalDateTime lastEndDateTime = eventDateDtoList.stream()
                     .map(dto -> LocalDateTime.of(dto.getDate(), dto.getEndTime()))
                     .max(LocalDateTime::compareTo)
                     .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_DATE_NOT_FOUND));
 
-            createEventDto.getEventRecruitDto().setRecruitEndDateTime(lastEndDateTime.toLocalDate().atTime(23, 59, 59));
+            eventRecruitDto.setRecruitEndDateTime(lastEndDateTime.toLocalDate().atTime(23, 59, 59));
         }
-        EventRecruitDetail eventRecruitDetail = createEventDto.getEventRecruitDto().toEntity(
+        EventRecruitDetail eventRecruitDetail = eventRecruitDto.toEntity(
                 event,
-                createEventDto.getEventDetailDto().getGeneratorRequirement(),
-                createEventDto.getEventDetailDto().getElectricitySupportAvailability()
+                eventDetailDto.getGeneratorRequirement(),
+                eventDetailDto.getElectricitySupportAvailability()
         );
         eventRecruitDetailRepository.save(eventRecruitDetail);
         event.initEventRecruitDetail(eventRecruitDetail);
 
-        createEventDto.getEventInfoDto().getEventDateDtoList().forEach(eventDateDto -> {
+        eventDateDtoList.forEach(eventDateDto -> {
             EventDate eventDate = eventDateDto.toEntity(event);
             eventDateRepository.save(eventDate);
         });
         List<Category> categories = new ArrayList<>();
-        createEventDto.getEventTargetDto().getEventCategoryCodeList().forEach(eventCategoryCode -> {
+        eventTargetDto.getEventCategoryCodeList().forEach(eventCategoryCode -> {
             Category category = categoryRepository.findByCode(eventCategoryCode);
-            if (category == null)
+            if (category == null) {
                 throw new CustomException(EventErrorCode.EVENT_CATEGORY_NOT_FOUND);
+            }
             EventCategory eventCategory = EventCategory.builder().event(event).category(category).build();
             eventCategoryRepository.save(eventCategory);
             categories.add(category);
         });
 
-        Event registeredevent = eventRepository.save(event);
-        List<RegionCode> regionNames = eventRegionFullNameGenerator.findRegionCodesByEventId(registeredevent.getId());
+        Event registeredEvent = eventRepository.save(event);
+        List<RegionCode> regionNames = eventRegionFullNameGenerator.findRegionCodesByEventId(registeredEvent.getId());
         String regionList = eventRegionFullNameGenerator.makeRegionList(regionNames);
 
-        Region region = regionDoRepository.findRegionByCode(createEventDto.getEventInfoDto().getRegionCode());
+        Region region = regionDoRepository.findRegionByCode(regionCode);
         Map<RegionType, String> regionIds = regionDoRepository.extractParentRegions(region);
-        NotificationEvent.raise(new InterestRegisteredNotificationEvent(registeredevent.getId(), registeredevent.getName(), regionList, memberId, regionIds, categories));
-
+        NotificationEvent.raise(new InterestRegisteredNotificationEvent(registeredEvent.getId(), registeredEvent.getName(), regionList, memberId, regionIds, categories));
     }
 
     @Transactional
@@ -317,6 +353,20 @@ public class EventService {
                 updateEventDocumentDto.getSubmissionEmail(),
                 updateEventDocumentDto.getDocumentSubmissionTarget()
         );
+        eventRepository.save(event);
+    }
+
+    @Transactional
+    public void updateBackOfficeRecruitmentUrl(String eventId, RequestEvent.UpdateBackOfficeRecruitmentUrlDto updateBackOfficeRecruitmentUrlDto) {
+        Event event = getEvent(eventId);
+        event.updateRecruitmentUrl(updateBackOfficeRecruitmentUrlDto.getRecruitmentUrl());
+        eventRepository.save(event);
+    }
+
+    @Transactional
+    public void addRecruitmentUrlClickCount(String eventId) {
+        Event event = getEvent(eventId);
+        event.addRecruitmentUrlClickCount();
         eventRepository.save(event);
     }
 

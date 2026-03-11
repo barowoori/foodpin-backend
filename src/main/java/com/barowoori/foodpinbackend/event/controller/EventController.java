@@ -69,6 +69,57 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "백오피스 행사 생성", description = "일반 행사 생성과 동일하나 creatorType은 ADMIN으로 저장되며, 모집 URL은 필수입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "행사 사진 파일을 못 찾을 경우[40001], " +
+                    "지역을 못 찾을 경우[40002], 카테고리를 못 찾을 경우[40003]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping(value = "/v1/backoffice")
+    public ResponseEntity<CommonResponse<String>> createBackOfficeEvent(@Valid @RequestBody RequestEvent.CreateBackOfficeEventDto createBackOfficeEventDto) {
+        eventService.createBackOfficeEvent(createBackOfficeEventDto);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Back-office event created successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "백오피스 행사 모집 URL 수정")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "행사를 못 찾을 경우[40000]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PatchMapping(value = "/v1/backoffice/{eventId}/recruitment-url")
+    public ResponseEntity<CommonResponse<String>> updateBackOfficeRecruitmentUrl(@PathVariable("eventId") String eventId,
+                                                                                 @Valid @RequestBody RequestEvent.UpdateBackOfficeRecruitmentUrlDto updateBackOfficeRecruitmentUrlDto) {
+        eventService.updateBackOfficeRecruitmentUrl(eventId, updateBackOfficeRecruitmentUrlDto);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Back-office event recruitment URL updated successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "행사 모집공고 URL 클릭수 증가")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "404", description = "행사를 못 찾을 경우[40000]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping(value = "/v1/{eventId}/recruitment-url/click")
+    public ResponseEntity<CommonResponse<String>> addRecruitmentUrlClickCount(@PathVariable("eventId") String eventId) {
+        eventService.addRecruitmentUrlClickCount(eventId);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Recruitment URL click count increased successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
     @Operation(summary = "행사 상세 정보 조회")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),

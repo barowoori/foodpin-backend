@@ -179,6 +179,14 @@ public class Event {
         this.documentSubmissionTarget = documentSubmissionTarget;
     }
 
+    public void updateRecruitmentUrl(String recruitmentUrl) {
+        this.recruitmentUrl = recruitmentUrl;
+    }
+
+    public void addRecruitmentUrlClickCount() {
+        this.recruitmentUrlClickCount += 1;
+    }
+
     public void initEventRecruitDetail(EventRecruitDetail eventRecruitDetail) {
         this.recruitDetail = eventRecruitDetail;
     }

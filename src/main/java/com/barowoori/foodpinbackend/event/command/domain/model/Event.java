@@ -101,7 +101,7 @@ public class Event {
     @Column(name = "price_range")
     private PriceRange priceRange;
 
-    @Column(name = "catering_detail")
+    @Column(name = "catering_detail", columnDefinition = "TEXT")
     private String cateringDetail;
 
     @Column(name = "contact")

@@ -68,7 +68,9 @@ public class SecurityConfig {
         config.setAllowedOriginPatterns(List.of(
                 "https://foodpin-web.pages.dev",
                 "https://dev.barowoori.click",
-                "https://barowoori.click"
+                "https://barowoori.click",
+                "http://localhost:5173",
+                "https://foodpin-admin-fe.vercel.app"
         ));
         config.setAllowCredentials(true);
 

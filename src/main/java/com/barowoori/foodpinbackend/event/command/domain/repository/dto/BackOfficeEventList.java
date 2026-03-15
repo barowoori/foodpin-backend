@@ -14,6 +14,7 @@ import java.util.List;
 @SuperBuilder
 public class BackOfficeEventList extends EventList{
     private int recruitmentUrlClickCount;
+    private Boolean isHidden;
 
     public static BackOfficeEventList of(Event event, List<String> regions, ImageManager imageManager) {
         return BackOfficeEventList.builder()
@@ -28,6 +29,7 @@ public class BackOfficeEventList extends EventList{
                 .categories(event.getCategories().stream().map(EventCategory::getCategory).map(Category::getName).toList())
                 .recruitInfo(RecruitInfo.of(event.getRecruitDetail()))
                 .views(event.getView().getViews())
+                .isHidden(event.isHidden())
                 .build();
     }
 }

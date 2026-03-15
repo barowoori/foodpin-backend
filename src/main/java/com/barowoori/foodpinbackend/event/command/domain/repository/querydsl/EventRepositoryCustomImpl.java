@@ -81,6 +81,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .leftJoin(eventPhoto.file, file)
                 .where(
                         event.isDeleted.isFalse()
+                                .and(event.isHidden.isFalse())
                                 .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
                                 .and(
                                         createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering, event, eventDate, category)
@@ -100,6 +101,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .where(
                         event.isDeleted.isFalse()
+                                .and(event.isHidden.isFalse())
                                 .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
                                 .and(
                                         createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering, event, eventDate, category)

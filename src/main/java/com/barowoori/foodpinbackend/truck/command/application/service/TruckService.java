@@ -201,6 +201,9 @@ public class TruckService {
                     businessRegistration = businessRegistrationRepository.save(businessRegistration);
                     TruckDocument truckDocument = truckDocumentDto.toEntity(memberId, businessRegistration.getId(), truck);
                     truckDocumentRepository.save(truckDocument);
+                    if (truckDocumentDto.getFileIdList() != null && !truckDocumentDto.getFileIdList().isEmpty()) {
+                        saveTruckDocumentPhotos(truckDocumentDto.getFileIdList(), truckDocument, memberId);
+                    }
                 } else throw new CustomException(TruckErrorCode.BUSINESS_INFO_MISSED);
             }
         }
@@ -378,6 +381,9 @@ public class TruckService {
                     br = businessRegistrationRepository.save(br);
                     TruckDocument newDoc = dto.toEntity(memberId, br.getId(), truck);
                     truckDocumentRepository.save(newDoc);
+                    if (dto.getFileIdList() != null && !dto.getFileIdList().isEmpty()) {
+                        saveTruckDocumentPhotos(dto.getFileIdList(), newDoc, memberId);
+                    }
                 } else {
                     BusinessRegistration br = truckDocumentRepository.getBusinessRegistrationDocumentByTruckId(truck.getId());
                     br.update(memberId,
@@ -386,6 +392,11 @@ public class TruckService {
                             dto.getCreateBusinessRegistrationDto().getRepresentativeName(),
                             dto.getCreateBusinessRegistrationDto().getOpeningDate());
                     businessRegistrationRepository.save(br);
+                    List<TruckDocumentPhoto> existingPhotos = truckDocumentPhotoRepository.findByTruckDocumentId(existingDoc.getId());
+                    existingPhotos.forEach(truckDocumentPhotoRepository::delete);
+                    if (dto.getFileIdList() != null && !dto.getFileIdList().isEmpty()) {
+                        saveTruckDocumentPhotos(dto.getFileIdList(), existingDoc, memberId);
+                    }
                     existingDoc.update(LocalDateTime.now(), memberId);
                     truckDocumentRepository.save(existingDoc);
                 }
@@ -410,7 +421,6 @@ public class TruckService {
     }
 
     private void saveTruckDocumentPhotos(List<String> fileIds, TruckDocument doc, String memberId) {
-        validateTruckAccess(doc.getTruck().getId(), memberId);
         for (String fileId : fileIds) {
             File file = fileRepository.findById(fileId)
                     .orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_DOCUMENT_PHOTO_NOT_FOUND));

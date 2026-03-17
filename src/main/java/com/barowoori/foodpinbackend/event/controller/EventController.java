@@ -177,17 +177,19 @@ public class EventController {
     })
     @GetMapping(value = "/v1/backoffice")
     public ResponseEntity<CommonResponse<Page<BackOfficeEventList>>> getEventListForBackOffice(@RequestParam(value = "region", required = false) List<String> regionCodes,
-                                                                        @RequestParam(value = "category", required = false) List<String> categoryCodes,
-                                                                        @RequestParam(value = "search", required = false) String searchTerm,
-                                                                        @RequestParam(value = "startDate", required = false) LocalDate startDate,
-                                                                        @RequestParam(value = "endDate", required = false) LocalDate endDate,
-                                                                        @RequestParam(value = "type", required = false) EventType type,
-                                                                        @RequestParam(value = "expectedParticipants", required = false) ExpectedParticipants expectedParticipants,
-                                                                        @RequestParam(value = "truckTypes", required = false) Set<TruckType> truckTypes,
-                                                                        @RequestParam(value = "isCatering", required = false) Boolean isCatering,
-                                                                        @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+                                                                                               @RequestParam(value = "category", required = false) List<String> categoryCodes,
+                                                                                               @RequestParam(value = "search", required = false) String searchTerm,
+                                                                                               @RequestParam(value = "startDate", required = false) LocalDate startDate,
+                                                                                               @RequestParam(value = "endDate", required = false) LocalDate endDate,
+                                                                                               @RequestParam(value = "type", required = false) EventType type,
+                                                                                               @RequestParam(value = "expectedParticipants", required = false) ExpectedParticipants expectedParticipants,
+                                                                                               @RequestParam(value = "truckTypes", required = false) Set<TruckType> truckTypes,
+                                                                                               @RequestParam(value = "isCatering", required = false) Boolean isCatering,
+                                                                                               @RequestParam(value = "recruitEndDateFrom", required = false) LocalDate recruitEndDateFrom,
+                                                                                               @RequestParam(value = "recruitEndDateTo", required = false) LocalDate recruitEndDateTo,
+                                                                                               @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        Page<BackOfficeEventList> eventLists = eventListService.findEventListForBackOffice(searchTerm, regionCodes, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, isCatering, pageable);
+        Page<BackOfficeEventList> eventLists = eventListService.findEventListForBackOffice(searchTerm, regionCodes, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, isCatering, recruitEndDateFrom, recruitEndDateTo, pageable);
         CommonResponse<Page<BackOfficeEventList>> commonResponse = CommonResponse.<Page<BackOfficeEventList>>builder()
                 .data(eventLists)
                 .build();

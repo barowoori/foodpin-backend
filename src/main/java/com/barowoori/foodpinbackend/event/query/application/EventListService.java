@@ -57,9 +57,10 @@ public class EventListService {
                                                                 LocalDate startDate, LocalDate endDate,
                                                                 List<String> categoryCodes,
                                                                 EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering,
+                                                                LocalDate recruitEndDateFrom, LocalDate recruitEndDateTo,
                                                                 Pageable pageable) {
         Map<RegionType, List<String>> regionIds = regionDoRepository.findRegionIdsByFilter(regionCodes);
-        Page<Event> events = eventRepository.findBackOfficeEventListByFilter(searchTerm, regionIds, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, isCatering, pageable);
+        Page<Event> events = eventRepository.findBackOfficeEventListByFilter(searchTerm, regionIds, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, isCatering, recruitEndDateFrom, recruitEndDateTo, pageable);
         List<String> eventIds = events.map(Event::getId).stream().toList();
         Map<String, List<String>> regionNames = eventRegionFullNameGenerator.findRegionNamesByEventIds(eventIds);
 

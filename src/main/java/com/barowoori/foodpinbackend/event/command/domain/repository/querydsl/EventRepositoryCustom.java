@@ -22,13 +22,16 @@ public interface EventRepositoryCustom {
                                       List<String> categoryCodes,
                                       EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering,
                                       Pageable pageable);
+
     Page<Event> findBackOfficeEventListByFilter(String searchTerm, Map<RegionType, List<String>> regionIds,
-                                      LocalDate startDate, LocalDate endDate,
-                                      List<String> categoryCodes,
-                                      EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering,
-                                      Pageable pageable);
+                                                LocalDate startDate, LocalDate endDate,
+                                                List<String> categoryCodes,
+                                                EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering,
+                                                LocalDate recruitEndDateFrom, LocalDate recruitEndDateTo,
+                                                Pageable pageable);
 
     Event findEventDetail(String eventId);
+
     Page<Event> findLikeEventListByFilter(String memberId, String searchTerm, Map<RegionType, List<String>> regionIds,
                                           LocalDate startDate, LocalDate endDate,
                                           List<String> categoryCodes,
@@ -37,14 +40,24 @@ public interface EventRepositoryCustom {
     List<Event> findEndedEventsByIsSelecting(LocalDateTime now, Boolean isSelecting);
 
     Page<Event> findProgressEventManageList(String memberId, String status, Pageable pageable);
+
     Page<Event> findCompletedEventManageList(String memberId, String status, Pageable pageable);
+
     MemberFcmInfoDto findEventCreatorFcmInfo(String eventId);
+
     List<Event> findAvailableEventListForProposal(String memberId);
+
     List<MemberForEventFcmInfoDto> findSelectionNotEndedEventCreatorsFcmInfo();
+
     List<MemberForEventFcmInfoDto> findRecruitmentDeadlineSoonEventCreatorsFcmInfo();
+
     List<Event> findRecruitmentDeadlineSoonEvents();
+
     Long findCountRecruitingStatus(String memberId);
+
     Long findCountProgressStatus(String memberId);
+
     Long findCountEndStatus(String memberId);
+
     String getEventPhone(String eventId);
 }

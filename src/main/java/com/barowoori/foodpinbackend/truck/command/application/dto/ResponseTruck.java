@@ -123,6 +123,7 @@ public class ResponseTruck {
         private LocalDate openingDate;
         private List<String> imageUrls;
         private TruckDocumentStatus status;
+        private String rejectionReason;
 
         private LocalDateTime requestedAt;
         private LocalDateTime processedAt;
@@ -145,6 +146,7 @@ public class ResponseTruck {
                     .status(truckDocument.getStatus())
                     .requestedAt(truckDocument.getCreatedAt())
                     .processedAt(truckDocument.getProcessedAt())
+                    .rejectionReason(truckDocument.getRejectionReason())
                     .status(truckDocument.getStatus())
                     .documentId(truckDocument.getDocumentId())
                     .build();

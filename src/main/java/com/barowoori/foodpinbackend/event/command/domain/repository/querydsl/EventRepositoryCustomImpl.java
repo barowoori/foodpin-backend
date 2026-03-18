@@ -22,6 +22,7 @@ import org.springframework.data.domain.Sort;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -81,9 +82,10 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .leftJoin(eventPhoto.file, file)
                 .where(
                         event.isDeleted.isFalse()
+                                .and(event.isHidden.isFalse())
                                 .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
                                 .and(
-                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering, event, eventDate, category)
+                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering,null, null,  event, eventDate, category)
                                                 .and(regionFilterCondition(regionIds))
                                 )
                 )
@@ -100,9 +102,10 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .where(
                         event.isDeleted.isFalse()
+                                .and(event.isHidden.isFalse())
                                 .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
                                 .and(
-                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering, event, eventDate, category)
+                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering,null, null,  event, eventDate, category)
                                                 .and(regionFilterCondition(regionIds))
                                 )
                 )
@@ -113,10 +116,11 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
 
     @Override
     public Page<Event> findBackOfficeEventListByFilter(String searchTerm, Map<RegionType, List<String>> regionIds,
-                                             LocalDate startDate, LocalDate endDate,
-                                             List<String> categoryCodes,
-                                             EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering,
-                                             Pageable pageable) {
+                                                       LocalDate startDate, LocalDate endDate,
+                                                       List<String> categoryCodes,
+                                                       EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering,
+                                                       LocalDate recruitEndDateFrom, LocalDate recruitEndDateTo,
+                                                       Pageable pageable) {
         List<Event> events = jpaQueryFactory.selectDistinct(event)
                 .from(event)
                 .leftJoin(event.eventRegion, eventRegion)
@@ -132,7 +136,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                                 .and(event.creatorType.eq(EventCreatorType.ADMIN))
                                 .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
                                 .and(
-                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering, event, eventDate, category)
+                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering,recruitEndDateFrom, recruitEndDateTo,  event, eventDate, category)
                                                 .and(regionFilterCondition(regionIds))
                                 )
                 )
@@ -152,7 +156,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                                 .and(event.creatorType.eq(EventCreatorType.ADMIN))
                                 .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
                                 .and(
-                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering, event, eventDate, category)
+                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering,recruitEndDateFrom, recruitEndDateTo,  event, eventDate, category)
                                                 .and(regionFilterCondition(regionIds))
                                 )
                 )
@@ -181,7 +185,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .where(
                         event.isDeleted.isFalse()
                                 .and(
-                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering, event, eventDate, category)
+                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering, null, null, event, eventDate, category)
                                                 .and(regionFilterCondition(regionIds))
                                 )
                 )
@@ -200,7 +204,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .where(
                         event.isDeleted.isFalse()
                                 .and(
-                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering, event, eventDate, category)
+                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering, null, null, event, eventDate, category)
                                                 .and(regionFilterCondition(regionIds))
                                 )
                 )
@@ -229,6 +233,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
 
     public BooleanBuilder createFilterBuilder(String searchTerm, List<String> categoryCodes, LocalDate startDate, LocalDate endDate,
                                               EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering,
+                                              LocalDate from, LocalDate to,
                                               QEvent event, QEventDate eventDate, QCategory category) {
         BooleanBuilder filterBuilder = new BooleanBuilder();
         addSearchTermFilter(event, searchTerm, filterBuilder);
@@ -238,7 +243,21 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
         addEventTypeFilter(type, filterBuilder);
         addExpectedParticipantsFilter(expectedParticipants, filterBuilder);
         addCateringFilter(isCatering, filterBuilder);
+        addRecruitEndDateFilter(from, to, filterBuilder);
         return filterBuilder;
+    }
+
+    private void addRecruitEndDateFilter(LocalDate from, LocalDate to, BooleanBuilder builder) {
+        if (from != null && to != null) {
+            builder.and(eventRecruitDetail.recruitEndDateTime.between(
+                    from.atStartOfDay(),
+                    to.atTime(LocalTime.MAX)
+            ));
+        } else if (from != null) {
+            builder.and(eventRecruitDetail.recruitEndDateTime.goe(from.atStartOfDay()));
+        } else if (to != null) {
+            builder.and(eventRecruitDetail.recruitEndDateTime.loe(to.atTime(LocalTime.MAX)));
+        }
     }
 
     private void addEventTypeFilter(EventType type, BooleanBuilder builder) {

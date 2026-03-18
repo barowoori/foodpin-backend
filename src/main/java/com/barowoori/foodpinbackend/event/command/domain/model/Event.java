@@ -66,6 +66,9 @@ public class Event {
     @Column(name = "is_deleted")
     private Boolean isDeleted;
 
+    @Column(name = "is_hidden", nullable = false)
+    private boolean isHidden = false;
+
     @OneToOne(mappedBy = "event")
     private EventView view;
 
@@ -148,6 +151,7 @@ public class Event {
         this.contact = contact;
         this.recruitmentUrl = recruitmentUrl;
         this.recruitmentUrlClickCount = recruitmentUrlClickCount;
+        this.isHidden = false;
     }
 
     public void updateBasicInfo(String name, EventType type, ExpectedParticipants expectedParticipants) {

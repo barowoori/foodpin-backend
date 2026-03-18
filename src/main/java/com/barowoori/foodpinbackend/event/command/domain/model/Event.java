@@ -187,6 +187,10 @@ public class Event {
         this.recruitmentUrl = recruitmentUrl;
     }
 
+    public void updateHidden(boolean isHidden) {
+        this.isHidden = isHidden;
+    }
+
     public void addRecruitmentUrlClickCount() {
         this.recruitmentUrlClickCount += 1;
     }

@@ -364,6 +364,13 @@ public class EventService {
     }
 
     @Transactional
+    public void updateBackOfficeEventHidden(String eventId, RequestEvent.UpdateBackOfficeEventHiddenDto updateBackOfficeEventHiddenDto) {
+        Event event = getEvent(eventId);
+        event.updateHidden(updateBackOfficeEventHiddenDto.getIsHidden());
+        eventRepository.save(event);
+    }
+
+    @Transactional
     public void addRecruitmentUrlClickCount(String eventId) {
         Event event = getEvent(eventId);
         event.addRecruitmentUrlClickCount();

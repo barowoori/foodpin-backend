@@ -105,6 +105,24 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "백오피스 행사 숨김 여부 수정")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "행사를 못 찾을 경우[40000]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PatchMapping(value = "/v1/backoffice/{eventId}/hidden")
+    public ResponseEntity<CommonResponse<String>> updateBackOfficeEventHidden(@PathVariable("eventId") String eventId,
+                                                                              @Valid @RequestBody RequestEvent.UpdateBackOfficeEventHiddenDto updateBackOfficeEventHiddenDto) {
+        eventService.updateBackOfficeEventHidden(eventId, updateBackOfficeEventHiddenDto);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Back-office event hidden status updated successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
     @Operation(summary = "행사 모집공고 URL 클릭수 증가")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),

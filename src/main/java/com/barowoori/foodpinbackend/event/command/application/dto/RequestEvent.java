@@ -409,6 +409,13 @@ public class RequestEvent {
         private String recruitmentUrl;
     }
 
+    @Getter
+    public static class UpdateBackOfficeEventHiddenDto {
+        @Schema(description = "숨김 여부")
+        @NotNull
+        private Boolean isHidden;
+    }
+
     @Builder
     @Data
     public static class ProposeEventDto {

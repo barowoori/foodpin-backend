@@ -134,7 +134,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .where(
                         event.isDeleted.isFalse()
                                 .and(event.creatorType.eq(EventCreatorType.ADMIN))
-                                .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
+//                                .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
                                 .and(
                                         createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering,recruitEndDateFrom, recruitEndDateTo,  event, eventDate, category)
                                                 .and(regionFilterCondition(regionIds))
@@ -154,7 +154,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .where(
                         event.isDeleted.isFalse()
                                 .and(event.creatorType.eq(EventCreatorType.ADMIN))
-                                .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
+//                                .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
                                 .and(
                                         createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering,recruitEndDateFrom, recruitEndDateTo,  event, eventDate, category)
                                                 .and(regionFilterCondition(regionIds))

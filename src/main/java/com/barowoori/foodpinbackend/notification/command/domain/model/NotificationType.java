@@ -38,7 +38,14 @@ public enum NotificationType {
     // 운영자 관련
     MANAGER_ADDED("운영자 추가 알림", "{푸드트럭명} 운영자로 {닉네임}님이 추가되었습니다."),
     MANAGER_REMOVED("운영자 삭제 알림","{푸드트럭명} 운영자 권한이 삭제되었습니다."),
-    OWNER_UPDATED("소유자 변경 알림","{푸드트럭명} 소유자가 {닉네임}님으로 변경되었습니다.");
+    OWNER_UPDATED("소유자 변경 알림","{푸드트럭명} 소유자가 {닉네임}님으로 변경되었습니다."),
+
+    //사업자등록증 관련
+    BUSINESS_REGISTRATION_APPROVED("사업자등록증 승인 알림","{푸드트럭명} 사업자등록증이 승인되었어요.\n" +
+            "지금 바로 마음에 드는 행사에 지원해 보세요!"),
+    BUSINESS_REGISTRATION_REJECTED("사업자등록증 반려 알림","{푸드트럭명} 사업자등록증이 반려되었어요.\n" +
+            "반려 사유를 확인하고 다시 등록해 주세요.");
+
 
     private final String name;
     private final String template;

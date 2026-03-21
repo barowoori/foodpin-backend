@@ -9,7 +9,9 @@ public enum NotificationTargetType {
     NONE("없음"),
     EVENT_NOTICE_DETAIL("행사 공지사항 상세"),
     TRUCK_MANAGER_LIST("트럭 운영자 목록"),
-    EVENT_MANAGEMENT_LIST("행사 관리 목록");
+    EVENT_MANAGEMENT_LIST("행사 관리 목록"),
+    TRUCK_MANAGE_DETAIL("트럭 관리 상세"),
+    EVENT_LIST("행사 목록");
 
     private final String name;
 

@@ -234,4 +234,44 @@ public class TruckNotificationEventHandler {
             savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, event.getTruckId(), params, content);
         });
     }
+
+    //사업자등록증 승인 알림 Handler
+    @EventListener(BusinessRegistrationApprovedNotificationEvent.class)
+    public void handle(BusinessRegistrationApprovedNotificationEvent event) {
+        NotificationType type = NotificationType.BUSINESS_REGISTRATION_APPROVED;
+        NotificationTargetType targetType = NotificationTargetType.TRUCK_MANAGE_DETAIL;
+
+        String content = type.format(Map.of(
+                "푸드트럭명", event.getTruckName()
+        ));
+
+        List<MemberFcmInfoDto> memberFcmInfoDtos = truckManagerRepository.findTruckManagersFcmInfo(event.getTruckId());
+        System.out.println("notificationMessage : " + content);
+        memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
+            Map<String, Object> params = null;
+            notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, event.getTruckId(), params);
+
+            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, event.getTruckId(), params, content);
+        });
+    }
+
+    //사업자등록증 반려 알림 Handler
+    @EventListener(BusinessRegistrationRejectedNotificationEvent.class)
+    public void handle(BusinessRegistrationRejectedNotificationEvent event) {
+        NotificationType type = NotificationType.BUSINESS_REGISTRATION_REJECTED;
+        NotificationTargetType targetType = NotificationTargetType.EVENT_LIST;
+
+        String content = type.format(Map.of(
+                "푸드트럭명", event.getTruckName()
+        ));
+
+        List<MemberFcmInfoDto> memberFcmInfoDtos = truckManagerRepository.findTruckManagersFcmInfo(event.getTruckId());
+        System.out.println("notificationMessage : " + content);
+        memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
+            Map<String, Object> params = Map.of("truckId", event.getTruckId());
+            notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, event.getTruckId(), params);
+
+            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, event.getTruckId(), params, content);
+        });
+    }
 }

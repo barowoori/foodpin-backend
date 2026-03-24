@@ -68,7 +68,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
     public Page<Event> findEventListByFilter(String searchTerm, Map<RegionType, List<String>> regionIds,
                                              LocalDate startDate, LocalDate endDate,
                                              List<String> categoryCodes,
-                                             EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering,
+                                             EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering, List<EventRecruitingStatus> recruitingStatuses,
                                              Pageable pageable) {
         List<Event> events = jpaQueryFactory.selectDistinct(event)
                 .from(event)
@@ -83,9 +83,9 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .where(
                         event.isDeleted.isFalse()
                                 .and(event.isHidden.isFalse())
-                                .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
+                                .and(eventRecruitDetail.recruitingStatus.in(recruitingStatuses))
                                 .and(
-                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering,null, null,  event, eventDate, category)
+                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering, null, null, event, eventDate, category)
                                                 .and(regionFilterCondition(regionIds))
                                 )
                 )
@@ -103,9 +103,9 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .where(
                         event.isDeleted.isFalse()
                                 .and(event.isHidden.isFalse())
-                                .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
+                                .and(eventRecruitDetail.recruitingStatus.in(recruitingStatuses))
                                 .and(
-                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering,null, null,  event, eventDate, category)
+                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering, null, null, event, eventDate, category)
                                                 .and(regionFilterCondition(regionIds))
                                 )
                 )
@@ -136,7 +136,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                                 .and(event.creatorType.eq(EventCreatorType.ADMIN))
 //                                .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
                                 .and(
-                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering,recruitEndDateFrom, recruitEndDateTo,  event, eventDate, category)
+                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering, recruitEndDateFrom, recruitEndDateTo, event, eventDate, category)
                                                 .and(regionFilterCondition(regionIds))
                                 )
                 )
@@ -156,7 +156,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                                 .and(event.creatorType.eq(EventCreatorType.ADMIN))
 //                                .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
                                 .and(
-                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering,recruitEndDateFrom, recruitEndDateTo,  event, eventDate, category)
+                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, expectedParticipants, truckTypes, isCatering, recruitEndDateFrom, recruitEndDateTo, event, eventDate, category)
                                                 .and(regionFilterCondition(regionIds))
                                 )
                 )
@@ -521,7 +521,9 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .innerJoin(member).on(event.createdBy.eq(member.id))
                 .leftJoin(event.eventDates, eventDate)
-                .where(event.isDeleted.isFalse().and(eventRecruitDetail.isSelecting.isTrue()).and(event.createdAt.lt(LocalDate.now().atStartOfDay())))
+                .where(event.isDeleted.isFalse()
+                        .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
+                        .and(eventRecruitDetail.isSelecting.isTrue()).and(event.createdAt.lt(LocalDate.now().atStartOfDay())))
                 .groupBy(event.id, event.name, member.id, member.fcmToken)
                 .having(eventDate.date.min().eq(tomorrow))
                 .fetch();

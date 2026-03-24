@@ -239,7 +239,7 @@ public class TruckNotificationEventHandler {
     @EventListener(BusinessRegistrationApprovedNotificationEvent.class)
     public void handle(BusinessRegistrationApprovedNotificationEvent event) {
         NotificationType type = NotificationType.BUSINESS_REGISTRATION_APPROVED;
-        NotificationTargetType targetType = NotificationTargetType.TRUCK_MANAGE_DETAIL;
+        NotificationTargetType targetType = NotificationTargetType.EVENT_LIST;
 
         String content = type.format(Map.of(
                 "푸드트럭명", event.getTruckName()
@@ -259,7 +259,7 @@ public class TruckNotificationEventHandler {
     @EventListener(BusinessRegistrationRejectedNotificationEvent.class)
     public void handle(BusinessRegistrationRejectedNotificationEvent event) {
         NotificationType type = NotificationType.BUSINESS_REGISTRATION_REJECTED;
-        NotificationTargetType targetType = NotificationTargetType.EVENT_LIST;
+        NotificationTargetType targetType = NotificationTargetType.TRUCK_MANAGE_DETAIL;
 
         String content = type.format(Map.of(
                 "푸드트럭명", event.getTruckName()

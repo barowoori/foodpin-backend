@@ -167,12 +167,14 @@ public class TruckDetail {
         private DocumentType type;
         private LocalDate date;
         private TruckDocumentStatus status;
+        private String rejectionReason;
 
         public static TruckDocumentInfo of(TruckDocument truckDocument) {
             return TruckDocumentInfo.builder()
                     .type(truckDocument.getType())
                     .date(truckDocument.getUpdatedAt().toLocalDate())
                     .status(truckDocument.getStatus())
+                    .rejectionReason(truckDocument.getRejectionReason())
                     .build();
         }
     }

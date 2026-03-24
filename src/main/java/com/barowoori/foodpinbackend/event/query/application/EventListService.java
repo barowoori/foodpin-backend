@@ -1,6 +1,7 @@
 package com.barowoori.foodpinbackend.event.query.application;
 
 import com.barowoori.foodpinbackend.event.command.domain.model.Event;
+import com.barowoori.foodpinbackend.event.command.domain.model.EventRecruitingStatus;
 import com.barowoori.foodpinbackend.event.command.domain.model.EventType;
 import com.barowoori.foodpinbackend.event.command.domain.model.ExpectedParticipants;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventRegionRepository;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,10 +44,21 @@ public class EventListService {
     public Page<EventList> findEventList(String searchTerm, List<String> regionCodes,
                                          LocalDate startDate, LocalDate endDate,
                                          List<String> categoryCodes,
-                                         EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering,
+                                         EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering,Boolean isOnlyRecruiting,
                                          Pageable pageable) {
         Map<RegionType, List<String>> regionIds = regionDoRepository.findRegionIdsByFilter(regionCodes);
-        Page<Event> events = eventRepository.findEventListByFilter(searchTerm, regionIds, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, isCatering, pageable);
+        List<EventRecruitingStatus> recruitingStatuses;
+
+        if (isOnlyRecruiting) {
+            recruitingStatuses = List.of(EventRecruitingStatus.RECRUITING);
+        } else {
+            recruitingStatuses = List.of(
+                    EventRecruitingStatus.RECRUITING,
+                    EventRecruitingStatus.RECRUITMENT_CLOSED
+            );
+        }
+
+        Page<Event> events = eventRepository.findEventListByFilter(searchTerm, regionIds, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, isCatering, recruitingStatuses, pageable);
         List<String> eventIds = events.map(Event::getId).stream().toList();
         Map<String, List<String>> regionNames = eventRegionFullNameGenerator.findRegionNamesByEventIds(eventIds);
 

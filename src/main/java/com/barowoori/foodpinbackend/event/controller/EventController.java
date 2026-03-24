@@ -177,9 +177,10 @@ public class EventController {
                                                                         @RequestParam(value = "expectedParticipants", required = false) ExpectedParticipants expectedParticipants,
                                                                         @RequestParam(value = "truckTypes", required = false) Set<TruckType> truckTypes,
                                                                         @RequestParam(value = "isCatering", required = false) Boolean isCatering,
+                                                                        @RequestParam(value = "isOnlyRecruiting", defaultValue = "false") Boolean isOnlyRecruiting,
                                                                         @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        Page<EventList> eventLists = eventListService.findEventList(searchTerm, regionCodes, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, isCatering, pageable);
+        Page<EventList> eventLists = eventListService.findEventList(searchTerm, regionCodes, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, isCatering,isOnlyRecruiting, pageable);
         CommonResponse<Page<EventList>> commonResponse = CommonResponse.<Page<EventList>>builder()
                 .data(eventLists)
                 .build();

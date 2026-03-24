@@ -2,6 +2,7 @@ package com.barowoori.foodpinbackend.event.command.domain.repository.querydsl;
 
 import com.barowoori.foodpinbackend.common.dto.MemberFcmInfoDto;
 import com.barowoori.foodpinbackend.event.command.domain.model.Event;
+import com.barowoori.foodpinbackend.event.command.domain.model.EventRecruitingStatus;
 import com.barowoori.foodpinbackend.event.command.domain.model.EventType;
 import com.barowoori.foodpinbackend.event.command.domain.model.ExpectedParticipants;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.MemberForEventFcmInfoDto;
@@ -20,7 +21,7 @@ public interface EventRepositoryCustom {
     Page<Event> findEventListByFilter(String searchTerm, Map<RegionType, List<String>> regionIds,
                                       LocalDate startDate, LocalDate endDate,
                                       List<String> categoryCodes,
-                                      EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering,
+                                      EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering, List<EventRecruitingStatus> recruitingStatuses,
                                       Pageable pageable);
 
     Page<Event> findBackOfficeEventListByFilter(String searchTerm, Map<RegionType, List<String>> regionIds,

@@ -23,9 +23,7 @@ import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepos
 import com.barowoori.foodpinbackend.member.command.domain.repository.TruckLikeRepository;
 import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.event.SelectionCanceledNotificationEvent;
-import com.barowoori.foodpinbackend.notification.command.domain.model.truck.ManagerAddedNotificationEvent;
-import com.barowoori.foodpinbackend.notification.command.domain.model.truck.ManagerRemovedNotificationEvent;
-import com.barowoori.foodpinbackend.notification.command.domain.model.truck.OwnerUpdatedNotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.truck.*;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionDo;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionGu;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionGun;
@@ -575,6 +573,9 @@ public class TruckService {
         TruckDocument truckDocument = getTruckDocument(truckId, documentType);
         truckDocument.approve(getMemberId());
         truckDocumentRepository.save(truckDocument);
+        if (documentType.equals(DocumentType.BUSINESS_REGISTRATION)) {
+            NotificationEvent.raise(new BusinessRegistrationApprovedNotificationEvent(truckDocument.getTruck().getId(), truckDocument.getTruck().getName()));
+        }
     }
 
     @Transactional
@@ -582,6 +583,9 @@ public class TruckService {
         TruckDocument truckDocument = getTruckDocument(truckId, documentType);
         truckDocument.reject(getMemberId(), rejectionReason);
         truckDocumentRepository.save(truckDocument);
+        if (documentType.equals(DocumentType.BUSINESS_REGISTRATION)) {
+            NotificationEvent.raise(new BusinessRegistrationRejectedNotificationEvent(truckDocument.getTruck().getId(), truckDocument.getTruck().getName()));
+        }
     }
 
     @Transactional

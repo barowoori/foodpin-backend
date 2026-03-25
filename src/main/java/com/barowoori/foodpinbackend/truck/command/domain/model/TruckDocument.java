@@ -99,4 +99,11 @@ public class TruckDocument {
         this.rejectionReason = rejectionReason;
         this.processedAt = LocalDateTime.now();
     }
+
+    public void resubmit(String updatedBy) {
+        this.updatedBy = updatedBy;
+        this.status = TruckDocumentStatus.PENDING;
+        this.rejectionReason = null;
+        this.processedAt = null;
+    }
 }

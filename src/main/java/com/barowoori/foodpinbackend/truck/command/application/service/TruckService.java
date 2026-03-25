@@ -397,6 +397,7 @@ public class TruckService {
                     if (dto.getFileIdList() != null && !dto.getFileIdList().isEmpty()) {
                         saveTruckDocumentPhotos(dto.getFileIdList(), existingDoc, memberId);
                     }
+                    existingDoc.resubmit(memberId);
                     existingDoc.update(LocalDateTime.now(), memberId);
                     truckDocumentRepository.save(existingDoc);
                 }

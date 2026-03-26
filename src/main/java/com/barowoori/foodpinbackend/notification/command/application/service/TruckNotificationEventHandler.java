@@ -18,6 +18,7 @@ import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckManager
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -108,7 +109,7 @@ public class TruckNotificationEventHandler {
         List<MemberFcmInfoDto> memberFcmInfoDtos = eventApplicationRepository.findFcmInfoOfTruckManagers(event.getEventApplicationId());
         System.out.println("notificationMessage : " + content);
         memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
-            Map<String, Object> params = null;
+            Map<String, Object> params = new HashMap<>();
             notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, null, params);
 
             savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, null, params, content);
@@ -207,7 +208,7 @@ public class TruckNotificationEventHandler {
 
         List<MemberFcmInfoDto> memberFcmInfoDtos = truckManagerRepository.findTruckManagersFcmInfo(event.getTruckId());
         memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
-            Map<String, Object> params = null;
+            Map<String, Object> params = new HashMap<>();
             notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, null, params);
 
             savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, null, params, content);
@@ -248,7 +249,7 @@ public class TruckNotificationEventHandler {
         List<MemberFcmInfoDto> memberFcmInfoDtos = truckManagerRepository.findTruckManagersFcmInfo(event.getTruckId());
         System.out.println("notificationMessage : " + content);
         memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
-            Map<String, Object> params = null;
+            Map<String, Object> params = new HashMap<>();
             notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, event.getTruckId(), params);
 
             savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, event.getTruckId(), params, content);

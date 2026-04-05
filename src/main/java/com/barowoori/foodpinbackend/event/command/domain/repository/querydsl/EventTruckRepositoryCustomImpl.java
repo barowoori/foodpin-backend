@@ -44,7 +44,6 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
         List<EventTruck> eventTrucks = jpaQueryFactory.selectFrom(eventTruck)
                 .innerJoin(eventTruck.truck, truck)
                 .leftJoin(truck.menus, truckMenu)
-                .leftJoin(eventTruck.dates, eventTruckDate)
                 .leftJoin(truck.documents, truckDocument)
                 .leftJoin(truck.photos, truckPhoto)
                 .leftJoin(truckPhoto.file, file)
@@ -77,6 +76,47 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
         }
         filterBuilder.and(eventTruck.status.eq(EventTruckStatus.valueOf(status)));
         return filterBuilder;
+    }
+
+    @Override
+    public Boolean existsConfirmedEventTruck(String eventId) {
+        return jpaQueryFactory.selectOne()
+                .from(eventTruck)
+                .where(eventTruck.event.id.eq(eventId)
+                        .and(eventTruck.status.eq(CONFIRMED)))
+                .fetchFirst() != null;
+    }
+
+    @Override
+    public Boolean existsPendingEventTruckByTruckId(String truckId) {
+        return jpaQueryFactory.selectOne()
+                .from(eventTruck)
+                .where(
+                        eventTruck.truck.id.eq(truckId)
+                                .and(eventTruck.status.eq(EventTruckStatus.PENDING))
+                )
+                .fetchFirst() != null;
+    }
+
+    @Override
+    public Boolean existsConfirmedProgressEventTruckByTruckId(String truckId) {
+        return jpaQueryFactory.selectOne()
+                .from(eventTruck)
+                .where(
+                        eventTruck.truck.id.eq(truckId)
+                                .and(eventTruck.status.eq(EventTruckStatus.CONFIRMED))
+                                .and(
+                                        eventTruck.event.id.in(
+                                                jpaQueryFactory
+                                                        .select(event.id)
+                                                        .from(event)
+                                                        .leftJoin(event.eventDates, eventDate)
+                                                        .groupBy(event.id)
+                                                        .having(eventDate.date.max().goe(LocalDate.now()))
+                                        )
+                                )
+                )
+                .fetchFirst() != null;
     }
 
     @Override
@@ -130,13 +170,13 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
             // 이벤트 날짜 기준 (서브쿼리 사용)
             BooleanBuilder eventDateBuilder = new BooleanBuilder();
             eventDateBuilder.and(event.id.in(
-                jpaQueryFactory.select(event.id)
-                    .from(event)
-                    .leftJoin(event.eventDates, eventDate)
-                    .groupBy(event.id)
-                    .having(eventDate.date.max().before(LocalDate.now()))
+                    jpaQueryFactory.select(event.id)
+                            .from(event)
+                            .leftJoin(event.eventDates, eventDate)
+                            .groupBy(event.id)
+                            .having(eventDate.date.max().before(LocalDate.now()))
             ));
-            
+
             completedBuilder.and(eventDateBuilder);
             return filterBuilder.and(completedBuilder);
         }
@@ -173,9 +213,9 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
     }
 
     @Override
-    public List<MemberFcmInfoDto> findConfirmedEventTruckManagersFcmInfo(String eventId) {
+    public List<MemberForEventTruckFcmInfoDto> findConfirmedEventTruckManagersFcmInfo(String eventId) {
         return jpaQueryFactory
-                .selectDistinct(Projections.constructor(MemberFcmInfoDto.class, member.id, member.fcmToken))
+                .selectDistinct(Projections.constructor(MemberForEventTruckFcmInfoDto.class, event.id, event.name, member.id, member.fcmToken, truck.id))
                 .from(event)
                 .innerJoin(eventTruck).on(eventTruck.event.eq(event))
                 .innerJoin(eventTruck.truck, truck)
@@ -190,13 +230,15 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
         LocalDateTime now = LocalDateTime.now();
 
         return jpaQueryFactory
-                .selectDistinct(Projections.constructor(MemberForEventTruckFcmInfoDto.class,event.id, event.name, member.id, member.fcmToken, truck.id))
+                .selectDistinct(Projections.constructor(MemberForEventTruckFcmInfoDto.class, event.id, event.name, member.id, member.fcmToken, truck.id))
                 .from(eventTruck)
                 .innerJoin(eventTruck.event, event)
                 .innerJoin(eventTruck.truck, truck)
                 .innerJoin(truckManager).on(truck.eq(truckManager.truck))
                 .innerJoin(truckManager.member, member)
                 .where(
+                        truck.isDeleted.isFalse(),
+                        event.isDeleted.isFalse(),
                         eventTruck.status.eq(EventTruckStatus.PENDING),
                         eventTruck.createdAt.isNotNull(),
                         eventTruck.createdAt.loe(now.minusHours(24)),
@@ -207,5 +249,76 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
                         ).eq(0L)
                 )
                 .fetch();
+    }
+
+    @Override
+    public Long findPendingEventsByTruckId(String truckId) {
+        return jpaQueryFactory
+                .select(eventTruck.count())
+                .from(eventTruck)
+                .where(
+                        eventTruck.truck.id.eq(truckId)
+                                .and(eventTruck.status.eq(EventTruckStatus.PENDING))
+                )
+                .fetchOne();
+    }
+
+    @Override
+    public Long findProgressEventsByTruckId(String truckId) {
+        // 진행중 조건
+        BooleanBuilder progressBuilder = new BooleanBuilder();
+
+        // 1. EventTruck 상태가 CONFIRMED
+        progressBuilder.and(eventTruck.status.eq(EventTruckStatus.CONFIRMED));
+
+        // 2. 이벤트가 아직 종료되지 않음
+        progressBuilder.and(
+                eventTruck.event.id.in(
+                        jpaQueryFactory
+                                .select(event.id)
+                                .from(event)
+                                .leftJoin(event.eventDates, eventDate)
+                                .groupBy(event.id)
+                                .having(eventDate.date.max().goe(LocalDate.now()))
+                )
+        );
+
+        return jpaQueryFactory
+                .select(eventTruck.count())
+                .from(eventTruck)
+                .where(
+                        eventTruck.truck.id.eq(truckId)
+                                .and(progressBuilder)
+                )
+                .fetchOne();
+    }
+
+    @Override
+    public Long findCompletedEventsByTruckId(String truckId) {
+        BooleanBuilder completedBuilder = new BooleanBuilder();
+
+        // 1. EventTruck 상태 CONFIRMED
+        completedBuilder.and(eventTruck.status.eq(EventTruckStatus.CONFIRMED));
+
+        // 2. 이벤트가 종료됨 (가장 마지막 이벤트 날짜 < 오늘)
+        completedBuilder.and(
+                eventTruck.event.id.in(
+                        jpaQueryFactory
+                                .select(event.id)
+                                .from(event)
+                                .leftJoin(event.eventDates, eventDate)
+                                .groupBy(event.id)
+                                .having(eventDate.date.max().before(LocalDate.now()))
+                )
+        );
+
+        return jpaQueryFactory
+                .select(eventTruck.count())
+                .from(eventTruck)
+                .where(
+                        eventTruck.truck.id.eq(truckId)
+                                .and(completedBuilder)
+                )
+                .fetchOne();
     }
 }

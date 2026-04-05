@@ -42,14 +42,18 @@ public class EventManagementService {
                 .orElseThrow(() -> new CustomException(EventErrorCode.NOT_FOUND_EVENT));
     }
 
+    private void validateEventAccess(Event event, String memberId) {
+        if (!event.getCreatedBy().equals(memberId)) {
+            throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
+        }
+    }
+
     @Transactional
     public void handleEventApplication(String eventApplicationId, RequestEvent.HandleEventApplicationDto handleEventApplicationDto) {
         EventApplication eventApplication = eventApplicationRepository.findById(eventApplicationId)
                 .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_APPLICATION_NOT_FOUND));
         Event event = eventApplication.getEvent();
-        if (!eventApplication.getEvent().isCreator(getMemberId())) {
-            throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
-        }
+        validateEventAccess(event, getMemberId());
 
         if (!eventApplication.getStatus().equals(EventApplicationStatus.PENDING)){
             throw new CustomException(EventErrorCode.ALREADY_HANDLED_EVENT_APPLICATION);
@@ -93,13 +97,21 @@ public class EventManagementService {
     @Transactional
     public void handleEventRecruitment(RequestEvent.HandleEventRecruitmentDto handleEventRecruitmentDto) {
         Event event = getEvent(handleEventRecruitmentDto.getEventId());
-        if (!event.isCreator(getMemberId())) {
-            throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
-        }
+        validateEventAccess(event, getMemberId());
+
         if (handleEventRecruitmentDto.getRecruitmentStatus().equals(EventRecruitingStatus.RECRUITMENT_CLOSED)) {
             event.updateStatus(EventRecruitingStatus.RECRUITMENT_CLOSED);
         } else if (handleEventRecruitmentDto.getRecruitmentStatus().equals(EventRecruitingStatus.RECRUITMENT_CANCELLED)) {
+            if (!event.getRecruitDetail().getRecruitingStatus().equals(EventRecruitingStatus.RECRUITING)) {
+                throw new CustomException(EventErrorCode.NOT_IN_PROGRESS_EVENT);
+            }
+            boolean hasConfirmedEventTruck = event.getEventTrucks().stream().anyMatch(eventTruck -> eventTruck.getStatus() == EventTruckStatus.CONFIRMED);
+            if (hasConfirmedEventTruck) {
+                throw new CustomException(EventErrorCode.CONFIRMED_EVENT_TRUCK_EXISTS);
+            }
+
             event.updateStatus(EventRecruitingStatus.RECRUITMENT_CANCELLED);
+            event.getRecruitDetail().closeSelection();
             NotificationEvent.raise(new EventRecruitmentCanceledNotificationEvent(event.getId(), event.getName()));
         } else throw new CustomException(EventErrorCode.WRONG_EVENT_RECRUITMENT_STATUS);
 
@@ -120,9 +132,8 @@ public class EventManagementService {
     @Transactional
     public void closeEventSelection(String eventId){
         Event event = getEvent(eventId);
-        if (!event.isCreator(getMemberId())) {
-            throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
-        }
+        validateEventAccess(event, getMemberId());
+
         EventRecruitDetail eventRecruitDetail = event.getRecruitDetail();
         if (!eventRecruitDetail.getIsSelecting()) {
             throw new CustomException(EventErrorCode.ALREADY_SELECTION_CLOSED);
@@ -155,9 +166,8 @@ public class EventManagementService {
         }
 
         Event event = application.getEvent();
-        if (!event.isCreator(getMemberId())) {
-            throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
-        }
+        validateEventAccess(event, getMemberId());
+
         if (application.getStatus() != EventApplicationStatus.SELECTED) {
             throw new CustomException(EventErrorCode.EVENT_APPLICATION_NOT_SELECTED);
         }
@@ -197,11 +207,7 @@ public class EventManagementService {
     @Transactional
     public void createEventNotice(RequestEvent.CreateEventNoticeDto createEventNoticeDto) {
         Event event = getEvent(createEventNoticeDto.getEventId());
-        String memberId = getMemberId();
-
-        if (!event.isCreator(memberId)) {
-            throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
-        }
+        validateEventAccess(event, getMemberId());
 
         EventNotice eventNotice = createEventNoticeDto.toEntity(event);
         eventNotice = eventNoticeRepository.save(eventNotice);
@@ -218,11 +224,7 @@ public class EventManagementService {
         }
       
         Event event = getEvent(eventNotice.getEvent().getId());
-        String memberId = getMemberId();
-
-        if (!event.isCreator(memberId)) {
-            throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
-        }
+        validateEventAccess(event, getMemberId());
 
         eventNotice.update(updateEventNoticeDto.getTitle(), updateEventNoticeDto.getContent());
         eventNoticeRepository.save(eventNotice);
@@ -237,12 +239,7 @@ public class EventManagementService {
         if (!eventNotice.getViews().isEmpty()){
             throw new CustomException(EventErrorCode.ALREADY_VIEWED_EVENT_NOTICE);
         }
-
-        String memberId = getMemberId();
-
-        if (!event.isCreator(memberId)) {
-            throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
-        }
+        validateEventAccess(event, getMemberId());
 
         eventNoticeRepository.delete(eventNotice);
     }

@@ -3,20 +3,23 @@ package com.barowoori.foodpinbackend.event.command.domain.model;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
-import com.barowoori.foodpinbackend.truck.command.domain.model.TruckPhoto;
+import com.barowoori.foodpinbackend.member.command.domain.model.EventCreatorType;
+import com.barowoori.foodpinbackend.truck.command.domain.model.TruckType;
+import com.barowoori.foodpinbackend.truck.command.domain.service.TruckTypeSetConverter;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "events")
@@ -36,6 +39,10 @@ public class Event {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "creator_type")
+    private EventCreatorType creatorType;
 
     @Column(name = "name")
     private String name;
@@ -60,6 +67,9 @@ public class Event {
     @Column(name = "is_deleted")
     private Boolean isDeleted;
 
+    @Column(name = "is_hidden", nullable = false)
+    private boolean isHidden = false;
+
     @OneToOne(mappedBy = "event")
     private EventView view;
 
@@ -69,17 +79,51 @@ public class Event {
     @OneToOne(mappedBy = "event")
     private EventRegion eventRegion;
 
+    @Enumerated(value = EnumType.STRING)
+    @Column(name = "type")
+    private EventType type;
+
+    @Column(name = "recruitment_url", length = 500)
+    private String recruitmentUrl;
+
+    @Column(name = "recruitment_url_click_count", nullable = false)
+    private int recruitmentUrlClickCount = 0;
+
+    @Column(name = "truck_types")
+    @Convert(converter = TruckTypeSetConverter.class)
+    private Set<TruckType> truckTypes = new HashSet<>();
+
+    @Column(name = "expected_participants")
+    private String expectedParticipants;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sale_type")
+    private SaleType saleType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "price_range")
+    private PriceRange priceRange;
+
+    @Column(name = "catering_detail", columnDefinition = "TEXT")
+    private String cateringDetail;
+
+    @Column(name = "contact")
+    private String contact;
+
     @OneToMany(mappedBy = "event")
+    @BatchSize(size = 50)
     private List<EventPhoto> photos = new ArrayList<>();
 
-
     @OneToMany(mappedBy = "event")
+    @BatchSize(size = 50)
     private List<EventDate> eventDates = new ArrayList<>();
 
     @OneToMany(mappedBy = "event")
+    @BatchSize(size = 50)
     private List<EventCategory> categories = new ArrayList<>();
 
     @OneToMany(mappedBy = "event")
+    @BatchSize(size = 50)
     private List<EventDocument> documents = new ArrayList<>();
 
     @OneToMany(mappedBy = "event")
@@ -89,36 +133,70 @@ public class Event {
     }
 
     @Builder
-
-    public Event(String createdBy, String name, String description, String guidelines, Boolean isDeleted,
-                 EventDocumentSubmissionTarget documentSubmissionTarget, String submissionEmail) {
+    public Event(String createdBy, EventCreatorType creatorType, String name, String description, String guidelines, Boolean isDeleted,
+                 EventDocumentSubmissionTarget documentSubmissionTarget, String submissionEmail, EventType type,
+                 String expectedParticipants, Set<TruckType> truckTypes, SaleType saleType,
+                 PriceRange priceRange, String cateringDetail, String contact,
+                 String recruitmentUrl, int recruitmentUrlClickCount) {
         this.createdBy = createdBy;
+        this.creatorType = creatorType;
         this.name = name;
         this.description = description;
         this.guidelines = guidelines;
         this.isDeleted = isDeleted;
         this.documentSubmissionTarget = documentSubmissionTarget;
         this.submissionEmail = submissionEmail;
+        this.type = type;
+        this.expectedParticipants = expectedParticipants;
+        this.truckTypes = truckTypes != null ? new HashSet<>(truckTypes) : new HashSet<>();
+        this.saleType = saleType;
+        this.priceRange = priceRange;
+        this.cateringDetail = cateringDetail;
+        this.contact = contact;
+        this.recruitmentUrl = recruitmentUrl;
+        this.recruitmentUrlClickCount = recruitmentUrlClickCount;
+        this.isHidden = false;
     }
 
-    public void updateName(String name) {
+    public void updateBasicInfo(String name, EventType type, String expectedParticipants) {
         this.name = name;
+        this.type = type;
+        this.expectedParticipants = expectedParticipants;
     }
 
-    public void updateDescription(String description) {
+    public void updateDetailInfo(String description, String guidelines, String contact) {
         this.description = description;
-    }
-
-    public void updateGuidelines(String guidelines) {
         this.guidelines = guidelines;
+        this.contact = contact;
     }
 
-    public void updateSubmissionEmail(String submissionEmail) {
+    public void updateTargetInfo(Set<TruckType> truckTypes, SaleType saleType, PriceRange priceRange, String cateringDetail) {
+        this.truckTypes = truckTypes != null ? new HashSet<>(truckTypes) : new HashSet<>();
+        this.saleType = saleType;
+        if (saleType == SaleType.NORMAL) {
+            this.priceRange = priceRange;
+            this.cateringDetail = null;
+            return;
+        }
+        this.priceRange = null;
+        this.cateringDetail = cateringDetail;
+    }
+
+    public void updateDocumentInfo(String submissionEmail, EventDocumentSubmissionTarget documentSubmissionTarget) {
         this.submissionEmail = submissionEmail;
+        this.documentSubmissionTarget = documentSubmissionTarget;
     }
 
-    public void updateDocumentSubmissionTarget(EventDocumentSubmissionTarget documentSubmissionTarget) {
-        this.documentSubmissionTarget = documentSubmissionTarget;
+    public void updateRecruitmentUrl(String recruitmentUrl) {
+        this.recruitmentUrl = recruitmentUrl;
+    }
+
+    public void updateHidden(boolean isHidden) {
+        this.isHidden = isHidden;
+    }
+
+    public void addRecruitmentUrlClickCount() {
+        this.recruitmentUrlClickCount += 1;
     }
 
     public void initEventRecruitDetail(EventRecruitDetail eventRecruitDetail) {
@@ -138,6 +216,7 @@ public class Event {
     }
 
     public void delete() {
+        this.name = "(삭제됨) " + this.name;
         this.isDeleted = true;
     }
 
@@ -152,7 +231,7 @@ public class Event {
     }
 
     public List<File> getEventPhotoFiles() {
-        if(this.photos == null){
+        if (this.photos == null) {
             return new ArrayList<>();
         }
         return photos.stream()
@@ -162,7 +241,7 @@ public class Event {
     }
 
     public List<EventDate> getSortedEventDates() {
-        if(this.eventDates == null){
+        if (this.eventDates == null) {
             return new ArrayList<>();
         }
         return eventDates.stream()
@@ -171,7 +250,7 @@ public class Event {
     }
 
     public List<EventTruck> getConfirmedEventTrucks() {
-        if(this.eventTrucks == null){
+        if (this.eventTrucks == null) {
             return new ArrayList<>();
         }
         return this.eventTrucks.stream()
@@ -179,7 +258,7 @@ public class Event {
                 .toList();
     }
 
-    public List<DocumentType> getEventDocumentTypes(){
+    public List<DocumentType> getEventDocumentTypes() {
         return this.documents.stream().map(EventDocument::getType).toList();
     }
 }

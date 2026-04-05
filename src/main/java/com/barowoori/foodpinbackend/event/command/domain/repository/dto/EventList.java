@@ -6,14 +6,14 @@ import com.barowoori.foodpinbackend.event.command.domain.service.EventDateCalcul
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
 
 @Getter
-@Builder
+@SuperBuilder
 public class EventList {
     private String id;
     private String photo;
@@ -27,20 +27,20 @@ public class EventList {
     private Integer views;
 
     public static EventList of(Event event, List<String> regions, ImageManager imageManager) {
+        LocalDate startDate = EventDateCalculator.getMinDate(event);
+        LocalDate endDate = EventDateCalculator.getMaxDate(event);
+
         return EventList.builder()
                 .id(event.getId())
-                .photo(event.getPhotos().stream()
-                        .map(eventPhoto -> imageManager.getPreSignUrl(eventPhoto.getFile().getPath()))
-                        .findFirst().orElse(null))
+                .photo(event.getEventMainPhotoUrl(imageManager))
                 .name(event.getName())
                 .recruitEndDateTime(event.getRecruitDetail().getRecruitEndDateTime())
-                .startDate(EventDateCalculator.getMinDate(event))
-                .endDate(EventDateCalculator.getMaxDate(event))
+                .startDate(startDate)
+                .endDate(endDate)
                 .region(regions.isEmpty() ? null : regions.getFirst())
                 .categories(event.getCategories().stream().map(EventCategory::getCategory).map(Category::getName).toList())
-                .recruitInfo(RecruitInfo.of(event.getRecruitDetail()))
+                .recruitInfo(RecruitInfo.of(event.getRecruitDetail(), endDate))
                 .views(event.getView().getViews())
-
                 .build();
     }
 }

@@ -82,7 +82,8 @@ public class MemberController {
             "\n\n모든 요청의 Authorization 헤더에 accessToken을 담아서 사용(/reissued-token, /logout API는 refreshToken)" +
             "\n\naccessToken(유효기간 1시간) 만료(401 에러) 시 /reissued-token API로 액세스 토큰 재발급" +
             "\n\nrefreshToken(유효기간 30일)은 만료(401 에러) 시 /login API로 액세스, 리프레쉬 전부 재발급" +
-            "\n\nidentityToken(인증 토큰) : 애플-identityToken, 카카오-accessToken 전송 / authorizationCode(인증 코드)는 애플만 전송")
+            "\n\nidentityToken(인증 토큰) : 애플-identityToken, 카카오-accessToken 전송 / authorizationCode(인증 코드)는 애플만 전송" +
+            "\n\nplatform: ANDROID/IOS (안드로이드에서 애플 로그인하는 경우 반드시 ANDROID 입력)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "400", description = "인증 토큰이 유효하지 않은 경우[20010], " +
@@ -94,6 +95,25 @@ public class MemberController {
     @PostMapping("/v2/login")
     public ResponseEntity<CommonResponse<ResponseMember.LoginMemberRsDto>> v2loginMember(@Valid @RequestBody RequestMember.V2LoginMemberRqDto loginMemberRqDto) {
         ResponseMember.LoginMemberRsDto loginMemberRsDto = memberService.v2loginMember(loginMemberRqDto);
+        CommonResponse<ResponseMember.LoginMemberRsDto> commonResponse = CommonResponse.<ResponseMember.LoginMemberRsDto>builder()
+                .data(loginMemberRsDto)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "백오피스 로그인")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "인증 토큰이 유효하지 않은 경우[20010], 소셜 타입이 누락된 경우[20009]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "관리자가 아닌 경우[20015]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping("/v2/login/backoffice")
+    public ResponseEntity<CommonResponse<ResponseMember.LoginMemberRsDto>> backOfficeLoginMember(@Valid @RequestBody RequestMember.BackOfficeLoginMemberRqDto loginMemberRqDto) {
+        ResponseMember.LoginMemberRsDto loginMemberRsDto = memberService.backOfficeLoginMember(loginMemberRqDto);
         CommonResponse<ResponseMember.LoginMemberRsDto> commonResponse = CommonResponse.<ResponseMember.LoginMemberRsDto>builder()
                 .data(loginMemberRsDto)
                 .build();
@@ -241,7 +261,7 @@ public class MemberController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "400", description = "사용자 소유 트럭이 현재 진행중인 행사에 참여중인 경우, 사용자 주최 행사가 진행중인 경우[40023]",
+            @ApiResponse(responseCode = "400", description = "사용자 소유 트럭이 현재 진행중인 행사에 참여중인 경우[30012], 사용자 주최 행사가 진행중인 경우[40025]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @DeleteMapping("/v1/delete")
@@ -261,7 +281,7 @@ public class MemberController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "400", description = "사용자 소유 트럭이 현재 진행중인 행사에 참여중인 경우, 사용자 주최 행사가 진행중인 경우[40023]",
+            @ApiResponse(responseCode = "400", description = "사용자 소유 트럭이 현재 진행중인 행사에 참여중인 경우[30012], 사용자 주최 행사가 진행중인 경우[40025]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @DeleteMapping("/v2/delete")
@@ -293,6 +313,38 @@ public class MemberController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "관심 행사 조건 설정", description = "관심 행사 지역/카테고리 조건 등록 및 초기화")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "지역 코드 패턴이 잘못된 경우[70000], 카테고리를 못 찾을 경우[40003]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PutMapping("/v1/interest-events")
+    public ResponseEntity<CommonResponse<String>> setInterestEvent(@RequestBody RequestMember.SetInterestEventDto setInterestEventDto) {
+        memberService.setInterestEvent(setInterestEventDto);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Interest event set successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "관심 행사 조건 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping("/v1/interest-events")
+    public ResponseEntity<CommonResponse<ResponseMember.InterestEventDto>> getInterestEvent() {
+        ResponseMember.InterestEventDto interestEventDto = memberService.getInterestEvent();
+        CommonResponse<ResponseMember.InterestEventDto> commonResponse = CommonResponse.<ResponseMember.InterestEventDto>builder()
+                .data(interestEventDto)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
     @Operation(summary = "푸드트럭 좋아요/취소", description = "좋아요가 이미 있을 경우 좋아요 취소, 없을 경우 좋아요 등록")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
@@ -319,6 +371,38 @@ public class MemberController {
         memberService.likeEvent(eventId);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Event liked successfully")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "서비스 유형 설정", description = "서비스 유형은 ALL(모두), TRUCK(트럭), EVENT(행사)로 구성.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping("/v1/service-type")
+    public ResponseEntity<CommonResponse<String>> setServiceType(
+            @Valid @RequestBody RequestMember.SetServiceTypeDto setServiceTypeDto
+    ) {
+        memberService.setServiceType(setServiceTypeDto);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Service type set successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "서비스 유형 조회", description = "서비스 유형은 ALL(모두), TRUCK(트럭), EVENT(행사)로 구성되어 있으며, 서비스 유형이 설정되어 있지 않으면 serviceType은 null로 반환된다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping("/v1/service-type")
+    public ResponseEntity<CommonResponse<ResponseMember.ServiceTypeDto>> getServiceType() {
+        ResponseMember.ServiceTypeDto serviceTypeDto = memberService.getServiceType();
+        CommonResponse<ResponseMember.ServiceTypeDto> commonResponse = CommonResponse.<ResponseMember.ServiceTypeDto>builder()
+                .data(serviceTypeDto)
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }

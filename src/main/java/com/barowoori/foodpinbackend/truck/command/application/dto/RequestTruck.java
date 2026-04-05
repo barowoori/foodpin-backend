@@ -3,11 +3,12 @@ package com.barowoori.foodpinbackend.truck.command.application.dto;
 import com.barowoori.foodpinbackend.document.command.application.dto.RequestDocument;
 import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
+import com.barowoori.foodpinbackend.common.validation.UnicodeSize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
@@ -42,12 +43,12 @@ public class RequestTruck {
 
     @Getter
     public static class TruckInfoDto{
-        @Size(min = 1, max = 30, message = "1자 이상 30자 이하로 입력하세요.")
+        @UnicodeSize(min = 1, max = 30, message = "1자 이상 30자 이하로 입력하세요.")
         @Schema(description = "트럭 이름")
         @NotEmpty
         private String name;
 
-        @Size(min = 10, max = 10000, message = "10자 이상 10,000자 이하로 입력하세요.")
+        @UnicodeSize(min = 10, max = 10000, message = "10자 이상 10,000자 이하로 입력하세요.")
         @Schema(description = "트럭 설명")
         @NotEmpty
         private String description;
@@ -68,6 +69,30 @@ public class RequestTruck {
         @NotEmpty
         private List<String> fileIdList;
 
+        @Schema(description = "트럭 색상")
+        @NotEmpty
+        private Set<TruckColor> truckColors;
+
+        @Schema(description = "차량 형태")
+        @NotNull
+        private TruckBodyType bodyType;
+
+        @Schema(description = "케이터링 가능 여부")
+        @NotNull
+        private Boolean isCatering;
+
+        @Schema(description = "트럭 유형")
+        @NotEmpty
+        private Set<TruckType> types;
+
+        @Schema(description = "결제 방식")
+        @NotEmpty
+        private Set<PaymentMethod> paymentMethods;
+
+        @Schema(description = "증빙 발급 유형")
+        @NotEmpty
+        private Set<ProofIssuanceType> proofIssuanceTypes;
+
         public Truck toEntity(String creator){
             return Truck.builder()
                     .name(this.name)
@@ -76,6 +101,12 @@ public class RequestTruck {
                     .electricityUsage(this.electricityUsage)
                     .gasUsage(this.gasUsage)
                     .selfGenerationAvailability(this.selfGenerationAvailability)
+                    .colors(this.truckColors)
+                    .bodyType(this.bodyType)
+                    .isCatering(this.isCatering)
+                    .types(this.types)
+                    .paymentMethods(this.paymentMethods)
+                    .proofIssuanceTypes(this.proofIssuanceTypes)
                     .views(0)
                     .isDeleted(Boolean.FALSE)
                     .build();
@@ -118,29 +149,29 @@ public class RequestTruck {
         @Valid
         private RequestDocument.CreateBusinessRegistrationDto createBusinessRegistrationDto;
 
-        @Schema(description = "트럭 서류 검증 여부")
-        @NotNull
-        private Boolean approval;
-
         @Schema(description = "트럭 서류 사진 파일 id 리스트")
         private List<String> fileIdList;
 
+        // 사업자등록증인 경우 대기중으로 생성
         public TruckDocument toEntity(String updatedBy, String documentId, Truck truck){
             return TruckDocument.builder()
+                    .createdBy(updatedBy)
                     .updatedBy(updatedBy)
                     .type(this.type)
                     .documentId(documentId)
-                    .approval(this.approval)
                     .truck(truck)
+                    .status(TruckDocumentStatus.PENDING)
                     .build();
         }
 
+        // 사업자등록증이 아닌 경우 승인됨으로 생성
         public TruckDocument toEntity(String updatedBy, Truck truck) {
             return TruckDocument.builder()
+                    .createdBy(updatedBy)
                     .updatedBy(updatedBy)
                     .type(this.type)
-                    .approval(this.approval)
                     .truck(truck)
+                    .status(TruckDocumentStatus.APPROVED)
                     .build();
         }
     }
@@ -148,12 +179,12 @@ public class RequestTruck {
     @Getter
     @Data
     public static class UpdateTruckInfoDto{
-        @Size(min = 1, max = 30, message = "1자 이상 30자 이하로 입력하세요.")
+        @UnicodeSize(min = 1, max = 30, message = "1자 이상 30자 이하로 입력하세요.")
         @Schema(description = "트럭 이름")
         @NotEmpty
         private String name;
 
-        @Size(min = 10, max = 10000, message = "10자 이상 10,000자 이하로 입력하세요.")
+        @UnicodeSize(min = 10, max = 10000, message = "10자 이상 10,000자 이하로 입력하세요.")
         @Schema(description = "트럭 설명")
         @NotEmpty
         private String description;
@@ -161,6 +192,14 @@ public class RequestTruck {
         @Schema(description = "트럭 사진 파일 id 리스트")
         @NotEmpty
         private List<String> fileIdList;
+
+        @Schema(description = "트럭 색상")
+        @NotEmpty
+        private Set<TruckColor> truckColors;
+
+        @Schema(description = "차량 형태")
+        @NotNull
+        private TruckBodyType bodyType;
     }
 
     @Getter
@@ -180,6 +219,10 @@ public class RequestTruck {
         @Schema(description = "트럭 지역 코드 Set")
         @NotEmpty
         private Set<String> truckRegionCodeSet;
+
+        @Schema(description = "케이터링 가능 여부")
+        @NotNull
+        private Boolean isCatering;
     }
 
     @Getter
@@ -188,9 +231,24 @@ public class RequestTruck {
         @NotEmpty
         private Set<String> truckCategoryCodeSet;
 
+        @Schema(description = "트럭 유형")
+        @NotEmpty
+        private Set<TruckType> types;
+
         @Valid
         @NotEmpty
         private List<TruckMenuDto> truckMenuDtoList;
+    }
+
+    @Getter
+    public static class UpdateTruckPaymentDto{
+        @Schema(description = "결제 방식")
+        @NotEmpty
+        private Set<PaymentMethod> paymentMethods;
+
+        @Schema(description = "증빙 발급 유형")
+        @NotEmpty
+        private Set<ProofIssuanceType> proofIssuanceTypes;
     }
 
     @Getter
@@ -210,5 +268,13 @@ public class RequestTruck {
         @Schema(description = "트럭 관리자 id")
         @NotEmpty
         private String truckManagerId;
+    }
+
+    @Getter
+    public static class RejectTruckDocumentDto {
+        @Schema(description = "반려 사유")
+        @NotBlank
+        @UnicodeSize(min = 1, max = 500, message = "1자 이상 500자 이하로 입력하세요.")
+        private String rejectionReason;
     }
 }

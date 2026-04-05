@@ -69,6 +69,10 @@ public class Member implements UserDetails {
     @Column(name = "is_deleted")
     private Boolean isDeleted = false;
 
+    @Column(name = "service_type")
+    @Enumerated(value = EnumType.STRING)
+    private ServiceType serviceType;
+
     protected Member() {
     }
 
@@ -85,6 +89,7 @@ public class Member implements UserDetails {
 
     public void delete() {
         this.phone = "";
+        this.email = "";
         this.nickname = "";
         this.refreshToken = null;
         this.socialLoginInfo = null;
@@ -130,7 +135,7 @@ public class Member implements UserDetails {
         this.image = image;
     }
 
-    public void updateFcmToken(String fcmToken){
+    public void updateFcmToken(String fcmToken) {
         this.fcmToken = fcmToken;
     }
 
@@ -156,5 +161,9 @@ public class Member implements UserDetails {
     @Override
     public String getUsername() {
         return String.valueOf(this.id);
+    }
+
+    public void updateServiceType(ServiceType serviceType) {
+        this.serviceType = serviceType;
     }
 }

@@ -6,7 +6,6 @@ import com.barowoori.foodpinbackend.event.command.domain.model.Event;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventDetail;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
-import com.barowoori.foodpinbackend.member.command.domain.model.EventLike;
 import com.barowoori.foodpinbackend.member.command.domain.repository.EventLikeRepository;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionCode;
 import org.springframework.stereotype.Component;
@@ -37,8 +36,11 @@ public class EventDetailService {
         }
         List<RegionCode> regionNames = eventRegionFullNameGenerator.findRegionCodesByEventId(eventId);
         String regionList = eventRegionFullNameGenerator.makeRegionList(regionNames);
-        EventLike eventLike = eventLikeRepository.findByMemberIdAndEventId(memberId, eventId);
         event.getView().addViews();
-        return EventDetail.of(event, memberId, eventLike != null, imageManager, regionNames, regionList);
+        if (memberId == null){
+            return EventDetail.of(event, null, false, imageManager, regionNames, regionList);
+        }
+        boolean isLike = eventLikeRepository.existsByMemberIdAndEventId(memberId, eventId);
+        return EventDetail.of(event, memberId, isLike, imageManager, regionNames, regionList);
     }
 }

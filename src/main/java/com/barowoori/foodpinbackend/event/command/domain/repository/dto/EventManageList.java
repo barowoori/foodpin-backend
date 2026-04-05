@@ -25,9 +25,7 @@ public class EventManageList {
     public static EventManageList of(Event event, List<String> regions, ImageManager imageManager) {
         return EventManageList.builder()
                 .id(event.getId())
-                .photo(event.getPhotos().stream()
-                        .map(truckPhoto -> imageManager.getPreSignUrl(truckPhoto.getFile().getPath()))
-                        .findFirst().orElse(null))
+                .photo(event.getEventMainPhotoUrl(imageManager))
                 .name(event.getName())
                 .recruitEndDate(event.getRecruitDetail().getRecruitEndDateTime().toLocalDate())
                 .startDate(EventDateCalculator.getMinDate(event))

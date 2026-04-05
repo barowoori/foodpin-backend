@@ -5,8 +5,12 @@ import com.barowoori.foodpinbackend.common.exception.ErrorResponse;
 import com.barowoori.foodpinbackend.event.command.application.dto.RequestEvent;
 import com.barowoori.foodpinbackend.event.command.application.dto.ResponseEvent;
 import com.barowoori.foodpinbackend.event.command.application.service.EventService;
+import com.barowoori.foodpinbackend.event.command.domain.model.EventType;
+import com.barowoori.foodpinbackend.event.command.domain.model.ExpectedParticipants;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.*;
 import com.barowoori.foodpinbackend.event.query.application.*;
+import com.barowoori.foodpinbackend.truck.command.application.dto.ResponseTruck;
+import com.barowoori.foodpinbackend.truck.command.domain.model.TruckType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -22,11 +26,15 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @Tag(name = "행사 API")
 @RequiredArgsConstructor
@@ -44,8 +52,7 @@ public class EventController {
     private final EventAppliedTruckDetailService eventAppliedTruckDetailService;
     private final EventTruckDetailService eventTruckDetailService;
 
-    @Operation(summary = "행사 생성", description = "사진의 경우 파일 저장 api로 업로드 후 반환된 파일 id 리스트로 전달"
-            + "\n\n서류 타입 : BUSINESS_REGISTRATION(사업자등록증), BUSINESS_LICENSE(영업신고증), VEHICLE_REGISTRATION(자동차등록증), SANITATION_EDUCATION(위생교육필증), HEALTH_CERTIFICATE(보건증), GAS_SAFETY_INSPECTION_CERTIFICATE(가스안전점검필증)")
+    @Operation(summary = "행사 생성", description = "사진의 경우 파일 저장 api로 업로드 후 반환된 파일 id 리스트로 전달")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
@@ -63,6 +70,78 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "백오피스 행사 생성", description = "일반 행사 생성과 동일하나 creatorType은 ADMIN으로 저장되며, 모집 URL은 필수입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "행사 사진 파일을 못 찾을 경우[40001], " +
+                    "지역을 못 찾을 경우[40002], 카테고리를 못 찾을 경우[40003]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping(value = "/v1/backoffice")
+    public ResponseEntity<CommonResponse<String>> createBackOfficeEvent(@Valid @RequestBody RequestEvent.CreateBackOfficeEventDto createBackOfficeEventDto) {
+        eventService.createBackOfficeEvent(createBackOfficeEventDto);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Back-office event created successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "백오피스 행사 모집 URL 수정")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "행사를 못 찾을 경우[40000]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping(value = "/v1/backoffice/{eventId}/recruitment-url")
+    public ResponseEntity<CommonResponse<String>> updateBackOfficeRecruitmentUrl(@PathVariable("eventId") String eventId,
+                                                                                 @Valid @RequestBody RequestEvent.UpdateBackOfficeRecruitmentUrlDto updateBackOfficeRecruitmentUrlDto) {
+        eventService.updateBackOfficeRecruitmentUrl(eventId, updateBackOfficeRecruitmentUrlDto);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Back-office event recruitment URL updated successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "백오피스 행사 숨김 여부 수정")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "행사를 못 찾을 경우[40000]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping(value = "/v1/backoffice/{eventId}/hidden")
+    public ResponseEntity<CommonResponse<String>> updateBackOfficeEventHidden(@PathVariable("eventId") String eventId,
+                                                                              @Valid @RequestBody RequestEvent.UpdateBackOfficeEventHiddenDto updateBackOfficeEventHiddenDto) {
+        eventService.updateBackOfficeEventHidden(eventId, updateBackOfficeEventHiddenDto);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Back-office event hidden status updated successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "행사 모집공고 URL 클릭수 증가")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "404", description = "행사를 못 찾을 경우[40000]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping(value = "/v1/{eventId}/recruitment-url/click")
+    public ResponseEntity<CommonResponse<String>> addRecruitmentUrlClickCount(@PathVariable("eventId") String eventId) {
+        eventService.addRecruitmentUrlClickCount(eventId);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Recruitment URL click count increased successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
     @Operation(summary = "행사 상세 정보 조회")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
@@ -73,10 +152,29 @@ public class EventController {
     })
     @GetMapping(value = "/v1/{eventId}/detail")
     public ResponseEntity<CommonResponse<EventDetail>> getEventDetail(@Valid @PathVariable("eventId") String eventId) {
-        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String memberId = null;
+        if (authentication != null && authentication.isAuthenticated() && !(authentication instanceof AnonymousAuthenticationToken)) {
+            memberId = authentication.getName();
+        }
         EventDetail eventDetail = eventDetailService.getEventDetail(memberId, eventId);
         CommonResponse<EventDetail> commonResponse = CommonResponse.<EventDetail>builder()
                 .data(eventDetail)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "행사 수정 가능 여부 조회", description = "선정이 1건이라도 있으면 수정 불가")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "404", description = "행사를 못 찾을 경우[40000]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/{eventId}/available/update")
+    public ResponseEntity<CommonResponse<ResponseEvent.GetEventUpdateAvailabilityDto>> getEventUpdateAvailability(@Valid @PathVariable("eventId") String eventId) {
+        ResponseEvent.GetEventUpdateAvailabilityDto response = eventService.getEventUpdateAvailability(eventId);
+        CommonResponse<ResponseEvent.GetEventUpdateAvailabilityDto> commonResponse = CommonResponse.<ResponseEvent.GetEventUpdateAvailabilityDto>builder()
+                .data(response)
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
@@ -94,10 +192,43 @@ public class EventController {
                                                                         @RequestParam(value = "search", required = false) String searchTerm,
                                                                         @RequestParam(value = "startDate", required = false) LocalDate startDate,
                                                                         @RequestParam(value = "endDate", required = false) LocalDate endDate,
+                                                                        @RequestParam(value = "type", required = false) EventType type,
+                                                                        @RequestParam(value = "expectedParticipants", required = false) ExpectedParticipants expectedParticipants,
+                                                                        @RequestParam(value = "truckTypes", required = false) Set<TruckType> truckTypes,
+                                                                        @RequestParam(value = "isCatering", required = false) Boolean isCatering,
+                                                                        @RequestParam(value = "isOnlyRecruiting", defaultValue = "false") Boolean isOnlyRecruiting,
                                                                         @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        Page<EventList> eventLists = eventListService.findEventList(searchTerm, regionCodes, startDate, endDate, categoryCodes, pageable);
+        Page<EventList> eventLists = eventListService.findEventList(searchTerm, regionCodes, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, isCatering,isOnlyRecruiting, pageable);
         CommonResponse<Page<EventList>> commonResponse = CommonResponse.<Page<EventList>>builder()
+                .data(eventLists)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "백오피스 행사 목록 조회", description = "정렬 : 최신순(createdAt, DESC), 지원순(applicant, DESC), 마감순(deadline, ASC)"
+            + "\n\n 행사 상태 : RECRUITING(모집중), RECRUITMENT_CANCELLED(모집취소), RECRUITMENT_CLOSED(모집마감)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping(value = "/v1/backoffice")
+    public ResponseEntity<CommonResponse<Page<BackOfficeEventList>>> getEventListForBackOffice(@RequestParam(value = "region", required = false) List<String> regionCodes,
+                                                                                               @RequestParam(value = "category", required = false) List<String> categoryCodes,
+                                                                                               @RequestParam(value = "search", required = false) String searchTerm,
+                                                                                               @RequestParam(value = "startDate", required = false) LocalDate startDate,
+                                                                                               @RequestParam(value = "endDate", required = false) LocalDate endDate,
+                                                                                               @RequestParam(value = "type", required = false) EventType type,
+                                                                                               @RequestParam(value = "truckTypes", required = false) Set<TruckType> truckTypes,
+                                                                                               @RequestParam(value = "isCatering", required = false) Boolean isCatering,
+                                                                                               @RequestParam(value = "recruitEndDateFrom", required = false) LocalDate recruitEndDateFrom,
+                                                                                               @RequestParam(value = "recruitEndDateTo", required = false) LocalDate recruitEndDateTo,
+                                                                                               @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        Page<BackOfficeEventList> eventLists = eventListService.findEventListForBackOffice(searchTerm, regionCodes, startDate, endDate, categoryCodes, type, truckTypes, isCatering, recruitEndDateFrom, recruitEndDateTo, pageable);
+        CommonResponse<Page<BackOfficeEventList>> commonResponse = CommonResponse.<Page<BackOfficeEventList>>builder()
                 .data(eventLists)
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
@@ -115,10 +246,13 @@ public class EventController {
                                                                             @RequestParam(value = "search", required = false) String searchTerm,
                                                                             @RequestParam(value = "startDate", required = false) LocalDate startDate,
                                                                             @RequestParam(value = "endDate", required = false) LocalDate endDate,
+                                                                            @RequestParam(value = "type", required = false) EventType type,
+                                                                            @RequestParam(value = "truckTypes", required = false) Set<TruckType> truckTypes,
+                                                                            @RequestParam(value = "isCatering", required = false) Boolean isCatering,
                                                                             @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
-        Page<EventList> eventLists = eventListService.findLikeEventList(memberId, searchTerm, regionCodes, startDate, endDate, categoryCodes, pageable);
+        Page<EventList> eventLists = eventListService.findLikeEventList(memberId, searchTerm, regionCodes, startDate, endDate, categoryCodes, type, truckTypes, isCatering, pageable);
         CommonResponse<Page<EventList>> commonResponse = CommonResponse.<Page<EventList>>builder()
                 .data(eventLists)
                 .build();
@@ -154,10 +288,28 @@ public class EventController {
     })
     @PutMapping(value = "/v1/{eventId}/recruit")
     public ResponseEntity<CommonResponse<String>> updateEventRecruit(@Valid @PathVariable("eventId") String eventId,
-                                                                     @Valid @RequestBody RequestEvent.EventRecruitDto eventRecruitDto) {
+                                                                     @Valid @RequestBody RequestEvent.UpdateEventRecruitDto eventRecruitDto) {
         eventService.updateEventRecruit(eventId, eventRecruitDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Event recruit info updated successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "행사 모집 대상 수정")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "카테고리를 못 찾을 경우[40003]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PutMapping(value = "/v1/{eventId}/target")
+    public ResponseEntity<CommonResponse<String>> updateEventTarget(@Valid @PathVariable("eventId") String eventId,
+                                                                    @Valid @RequestBody RequestEvent.UpdateEventTargetDto updateEventTargetDto) {
+        eventService.updateEventTarget(eventId, updateEventTargetDto);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Event target info updated successfully.")
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
@@ -167,7 +319,7 @@ public class EventController {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "지역을 못 찾을 경우[40002]",
+            @ApiResponse(responseCode = "404", description = "행사 모집 정보를 못 찾을 경우[40004]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PutMapping(value = "/v1/{eventId}/detail")
@@ -200,7 +352,7 @@ public class EventController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "400", description = "행사 작성자가 아닐 경우[40005], " +
-                    "행사가 현재 진행중인 경우[40023]",
+                    "행사가 현재 진행중인 경우[40025]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
@@ -365,7 +517,7 @@ public class EventController {
     public ResponseEntity<CommonResponse<EventAppliedTruckDetail>> getEventAppliedTruckInfo(@PathVariable(value = "eventApplicationId") String eventApplicationId) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
-       EventAppliedTruckDetail response = eventAppliedTruckDetailService.getEventAppliedTruckDetail(eventApplicationId);
+        EventAppliedTruckDetail response = eventAppliedTruckDetailService.getEventAppliedTruckDetail(eventApplicationId);
         CommonResponse<EventAppliedTruckDetail> commonResponse = CommonResponse.<EventAppliedTruckDetail>builder()
                 .data(response)
                 .build();
@@ -541,6 +693,62 @@ public class EventController {
         ResponseEvent.GetEventNoticeDetailForTruckDto eventNotice = eventService.getEventNoticeDetailForTruck(truckId, noticeId);
         CommonResponse<ResponseEvent.GetEventNoticeDetailForTruckDto> commonResponse = CommonResponse.<ResponseEvent.GetEventNoticeDetailForTruckDto>builder()
                 .data(eventNotice)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "트럭 행사 참가 현황 조회", description = "트럭의 지원 / 진행중 / 종료 행사 현황을 조회함")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/trucks/{truckId}/event-dashboard")
+    public ResponseEntity<CommonResponse<ResponseEvent.GetTruckAppliedEventDashboard>> getTruckEventDashboard(@PathVariable(value = "truckId") String truckId) {
+        ResponseEvent.GetTruckAppliedEventDashboard dashboard = eventService.getTruckAppliedEventDashboard(truckId);
+
+        CommonResponse<ResponseEvent.GetTruckAppliedEventDashboard> commonResponse =
+                CommonResponse.<ResponseEvent.GetTruckAppliedEventDashboard>builder()
+                        .data(dashboard)
+                        .build();
+
+        return ResponseEntity.ok(commonResponse);
+    }
+
+
+    @Operation(summary = "행사 모집 현황 조회", description = "행사의 모집중/ 진행중 / 종료 행사 현황을 조회함")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/events/dashboard")
+    public ResponseEntity<CommonResponse<ResponseEvent.GetEventDashboard>> getEventDashboard() {
+        ResponseEvent.GetEventDashboard dashboard = eventService.getEventDashboard();
+
+        CommonResponse<ResponseEvent.GetEventDashboard> commonResponse =
+                CommonResponse.<ResponseEvent.GetEventDashboard>builder()
+                        .data(dashboard)
+                        .build();
+
+        return ResponseEntity.ok(commonResponse);
+    }
+
+    @Operation(summary = "행사 연락처 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "행사를 못 찾을 경우[40000], " +
+                    "멤버를 못 찾을 경우[20004]" + "비회원일 경우[40027]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/{eventId}/contact")
+    public ResponseEntity<CommonResponse<ResponseEvent.GetEventContactDto>> getEventContact(@Valid @PathVariable("eventId") String eventId) {
+
+        ResponseEvent.GetEventContactDto response = eventService.getEventContact(eventId);
+        CommonResponse<ResponseEvent.GetEventContactDto> commonResponse = CommonResponse.<ResponseEvent.GetEventContactDto>builder()
+                .data(response)
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }

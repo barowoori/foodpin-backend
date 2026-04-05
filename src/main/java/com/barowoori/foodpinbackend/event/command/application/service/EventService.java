@@ -3,28 +3,41 @@ package com.barowoori.foodpinbackend.event.command.application.service;
 import com.barowoori.foodpinbackend.category.command.domain.model.Category;
 import com.barowoori.foodpinbackend.category.command.domain.repository.CategoryRepository;
 import com.barowoori.foodpinbackend.common.exception.CustomException;
+import com.barowoori.foodpinbackend.common.exception.WithdrawalBlockHeaders;
 import com.barowoori.foodpinbackend.document.command.application.service.emailEvent.EventAppliedTruckDocumentSubmissionEvent;
 import com.barowoori.foodpinbackend.event.command.application.dto.RequestEvent;
 import com.barowoori.foodpinbackend.event.command.application.dto.ResponseEvent;
 import com.barowoori.foodpinbackend.event.command.domain.exception.EventErrorCode;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.event.command.domain.repository.*;
+import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventDashboardCount;
+import com.barowoori.foodpinbackend.event.command.domain.service.EventContactAccessLogService;
 import com.barowoori.foodpinbackend.event.command.domain.service.EventDateCalculator;
+import com.barowoori.foodpinbackend.event.query.application.EventRegionFullNameGenerator;
 import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepository;
+import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
 import com.barowoori.foodpinbackend.member.command.domain.model.EventLike;
+import com.barowoori.foodpinbackend.member.command.domain.model.Member;
+import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginType;
 import com.barowoori.foodpinbackend.member.command.domain.repository.EventLikeRepository;
+import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
 import com.barowoori.foodpinbackend.notification.command.domain.model.event.ApplicationReceivedNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.event.InterestRegisteredNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.event.SelectionCanceledNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.event.SelectionConfirmedNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.EventCastedNotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.truck.EventRecruitmentCanceledNotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.truck.EventUpdatedNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.TruckSelectionConfirmedNotificationEvent;
+import com.barowoori.foodpinbackend.region.command.domain.model.Region;
+import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionDoRepository;
+import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionCode;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionInfo;
 import com.barowoori.foodpinbackend.truck.command.domain.exception.TruckErrorCode;
-import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
-import com.barowoori.foodpinbackend.truck.command.domain.model.TruckManager;
+import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckManagerRepository;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,11 +49,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -65,6 +74,9 @@ public class EventService {
     private final EventProposalRepository eventProposalRepository;
     private final EventTruckRepository eventTruckRepository;
     private final EventNoticeViewRepository eventNoticeViewRepository;
+    private final EventRegionFullNameGenerator eventRegionFullNameGenerator;
+    private final EventContactAccessLogService eventContactAccessLogService;
+    private final MemberRepository memberRepository;
 
     private String getMemberId() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
@@ -80,15 +92,86 @@ public class EventService {
                 .orElseThrow(() -> new CustomException(TruckErrorCode.NOT_FOUND_TRUCK));
     }
 
+    private void validateEventAccess(Event event, String memberId) {
+        if (!event.getCreatedBy().equals(memberId)) {
+            throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
+        }
+    }
+
+    private void validateEventUpdatable(String eventId) {
+        if (Boolean.TRUE.equals(eventApplicationRepository.existsSelectedApplicationByEventId(eventId))) {
+            throw new CustomException(EventErrorCode.SELECTED_EVENT_APPLICATION_EXISTS);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseEvent.GetEventUpdateAvailabilityDto getEventUpdateAvailability(String eventId) {
+        String memberId = getMemberId();
+        Event event = getEvent(eventId);
+
+        if (!event.getCreatedBy().equals(memberId)) {
+            return ResponseEvent.GetEventUpdateAvailabilityDto.of(Boolean.FALSE);
+        }
+
+        boolean hasSelectedEventApplication = Boolean.TRUE.equals(eventApplicationRepository.existsSelectedApplicationByEventId(eventId));
+        return ResponseEvent.GetEventUpdateAvailabilityDto.of(!hasSelectedEventApplication);
+    }
+
     @Transactional
     public void createEvent(RequestEvent.CreateEventDto createEventDto) {
         String memberId = getMemberId();
-
         Event event = createEventDto.getEventInfoDto().toEntity(memberId);
+        createEvent(
+                event,
+                createEventDto.getEventInfoDto().getFileIdList(),
+                createEventDto.getEventInfoDto().getRegionCode(),
+                createEventDto.getEventInfoDto().getEventDateDtoList(),
+                createEventDto.getEventRecruitDto(),
+                createEventDto.getEventTargetDto(),
+                createEventDto.getEventDetailDto(),
+                memberId
+        );
+    }
+
+    @Transactional
+    public void createBackOfficeEvent(RequestEvent.CreateBackOfficeEventDto createBackOfficeEventDto) {
+        String memberId = getMemberId();
+        Event event = createBackOfficeEventDto.getEventInfoDto().toEntity(memberId);
+        createEvent(
+                event,
+                createBackOfficeEventDto.getEventInfoDto().getFileIdList(),
+                createBackOfficeEventDto.getEventInfoDto().getRegionCode(),
+                createBackOfficeEventDto.getEventInfoDto().getEventDateDtoList(),
+                createBackOfficeEventDto.getEventRecruitDto(),
+                createBackOfficeEventDto.getEventTargetDto(),
+                createBackOfficeEventDto.getEventDetailDto(),
+                memberId
+        );
+    }
+
+    private void createEvent(Event event,
+                             List<String> fileIdList,
+                             String regionCode,
+                             List<RequestEvent.EventDateDto> eventDateDtoList,
+                             RequestEvent.EventRecruitDto eventRecruitDto,
+                             RequestEvent.EventTargetDto eventTargetDto,
+                             RequestEvent.EventDetailDto eventDetailDto,
+                             String memberId) {
+        event.updateDetailInfo(
+                eventDetailDto.getDescription(),
+                eventDetailDto.getGuidelines(),
+                eventDetailDto.getContact()
+        );
+        event.updateTargetInfo(
+                eventTargetDto.getTruckTypes(),
+                eventTargetDto.getSaleType(),
+                eventTargetDto.getPriceRange(),
+                eventTargetDto.getCateringDetail()
+        );
         eventRepository.save(event);
 
-        if (!Objects.equals(createEventDto.getEventInfoDto().getFileIdList(), null) && !createEventDto.getEventInfoDto().getFileIdList().isEmpty()) {
-            for (String fileId : createEventDto.getEventInfoDto().getFileIdList()) {
+        if (!Objects.equals(fileIdList, null) && !fileIdList.isEmpty()) {
+            for (String fileId : fileIdList) {
                 File file = fileRepository.findById(fileId)
                         .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_PHOTO_NOT_FOUND));
                 EventPhoto eventPhoto = EventPhoto.builder().file(file).updatedBy(memberId).event(event).build();
@@ -100,59 +183,71 @@ public class EventService {
         eventViewRepository.save(eventView);
         event.initEventView(eventView);
 
-        RegionInfo regionInfo = regionDoRepository.findByCode(createEventDto.getRegionCode());
-        if (regionInfo == null)
+        RegionInfo regionInfo = regionDoRepository.findByCode(regionCode);
+        if (regionInfo == null) {
             throw new CustomException(EventErrorCode.EVENT_REGION_NOT_FOUND);
+        }
         EventRegion eventRegion = EventRegion.builder().regionType(regionInfo.getRegionType()).regionId(regionInfo.getRegionId()).event(event).build();
-        eventRegionRepository.save(eventRegion);
+        eventRegion = eventRegionRepository.save(eventRegion);
         event.initEventRegion(eventRegion);
 
-        if (Objects.equals(createEventDto.getEventRecruitDto().getRecruitEndDateTime(), null)) {
-            LocalDateTime lastEndDateTime = createEventDto.getEventDateDtoList().stream()
+        if (Objects.equals(eventRecruitDto.getRecruitEndDateTime(), null)) {
+            LocalDateTime lastEndDateTime = eventDateDtoList.stream()
                     .map(dto -> LocalDateTime.of(dto.getDate(), dto.getEndTime()))
                     .max(LocalDateTime::compareTo)
                     .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_DATE_NOT_FOUND));
 
-            createEventDto.getEventRecruitDto().setRecruitEndDateTime(lastEndDateTime);
+            eventRecruitDto.setRecruitEndDateTime(lastEndDateTime.toLocalDate().atTime(23, 59, 59));
         }
-        EventRecruitDetail eventRecruitDetail = createEventDto.getEventRecruitDto().toEntity(event);
+        EventRecruitDetail eventRecruitDetail = eventRecruitDto.toEntity(
+                event,
+                eventDetailDto.getGeneratorRequirement(),
+                eventDetailDto.getElectricitySupportAvailability()
+        );
         eventRecruitDetailRepository.save(eventRecruitDetail);
         event.initEventRecruitDetail(eventRecruitDetail);
 
-        createEventDto.getEventDateDtoList().forEach(eventDateDto -> {
+        eventDateDtoList.forEach(eventDateDto -> {
             EventDate eventDate = eventDateDto.toEntity(event);
             eventDateRepository.save(eventDate);
         });
-
-        createEventDto.getEventCategoryCodeList().forEach(eventCategoryCode -> {
+        List<Category> categories = new ArrayList<>();
+        eventTargetDto.getEventCategoryCodeList().forEach(eventCategoryCode -> {
             Category category = categoryRepository.findByCode(eventCategoryCode);
-            if (category == null)
+            if (category == null) {
                 throw new CustomException(EventErrorCode.EVENT_CATEGORY_NOT_FOUND);
+            }
             EventCategory eventCategory = EventCategory.builder().event(event).category(category).build();
             eventCategoryRepository.save(eventCategory);
+            categories.add(category);
         });
 
-        if (!Objects.equals(createEventDto.getEventDocumentTypeList(), null) && !createEventDto.getEventDocumentTypeList().isEmpty()) {
-            createEventDto.getEventDocumentTypeList().forEach(documentType -> {
-                EventDocument eventDocument = EventDocument.builder().event(event).type(documentType).build();
-                eventDocumentRepository.save(eventDocument);
-            });
-        }
+        Event registeredEvent = eventRepository.save(event);
+        List<RegionCode> regionNames = eventRegionFullNameGenerator.findRegionCodesByEventId(registeredEvent.getId());
+        String regionList = eventRegionFullNameGenerator.makeRegionList(regionNames);
 
-        eventRepository.save(event);
+        Region region = regionDoRepository.findRegionByCode(regionCode);
+        Map<RegionType, String> regionIds = regionDoRepository.extractParentRegions(region);
+        NotificationEvent.raise(new InterestRegisteredNotificationEvent(registeredEvent.getId(), registeredEvent.getName(), regionList, memberId, regionIds, categories));
     }
 
     @Transactional
     public void updateEventInfo(String eventId, RequestEvent.UpdateEventInfoDto updateEventInfoDto) {
         String memberId = getMemberId();
         Event event = getEvent(eventId);
+        validateEventAccess(event, memberId);
+        validateEventUpdatable(eventId);
+        event.updateBasicInfo(
+                updateEventInfoDto.getName(),
+                updateEventInfoDto.getType(),
+                updateEventInfoDto.getExpectedParticipants()
+        );
 
-        event.updateName(updateEventInfoDto.getName());
+        List<EventPhoto> photoList = eventPhotoRepository.findAllByEvent(event);
+        photoList.forEach(eventPhotoRepository::delete);
+        eventPhotoRepository.flush();
 
         if (!Objects.equals(updateEventInfoDto.getFileIdList(), null) && !updateEventInfoDto.getFileIdList().isEmpty()) {
-            List<EventPhoto> photoList = eventPhotoRepository.findAllByEvent(event);
-            photoList.forEach(eventPhotoRepository::delete);
-            eventPhotoRepository.flush();
             for (String fileId : updateEventInfoDto.getFileIdList()) {
                 File file = fileRepository.findById(fileId)
                         .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_PHOTO_NOT_FOUND));
@@ -178,98 +273,184 @@ public class EventService {
         event.initEventRegion(eventRegion);
 
         eventRepository.save(event);
+        NotificationEvent.raise(new EventUpdatedNotificationEvent(event.getId(), event.getName()));
     }
 
     @Transactional
-    public void updateEventRecruit(String eventId, RequestEvent.EventRecruitDto eventRecruitDto) {
+    public void updateEventRecruit(String eventId, RequestEvent.UpdateEventRecruitDto eventRecruitDto) {
         Event event = getEvent(eventId);
-
+        validateEventAccess(event, getMemberId());
+        validateEventUpdatable(eventId);
         EventRecruitDetail eventRecruitDetail = eventRecruitDetailRepository.findByEvent(event);
         if (eventRecruitDetail == null)
             throw new CustomException(EventErrorCode.EVENT_RECRUIT_DETAIL_NOT_FOUND);
+        if (Objects.equals(eventRecruitDto.getRecruitEndDateTime(), null)) {
+            LocalDateTime lastEndDateTime = event.getEventDates().stream()
+                    .map(eventDate -> LocalDateTime.of(eventDate.getDate(), eventDate.getEndTime()))
+                    .max(LocalDateTime::compareTo)
+                    .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_DATE_NOT_FOUND));
+
+            eventRecruitDto.setRecruitEndDateTime(lastEndDateTime.toLocalDate().atTime(23, 59, 59));
+        }
         eventRecruitDetail.update(
                 eventRecruitDto.getRecruitEndDateTime(),
                 eventRecruitDto.getRecruitCount(),
                 eventRecruitDto.getIsFullAttendanceRequired(),
-                eventRecruitDto.getGeneratorRequirement(),
-                eventRecruitDto.getElectricitySupportAvailability(),
-                eventRecruitDto.getEntryFee(),
+                eventRecruitDetail.getGeneratorRequirement(),
+                eventRecruitDetail.getElectricitySupportAvailability(),
+                eventRecruitDetail.getEntryFee(),
                 eventRecruitDto.getIsRecruitEndOnSelection()
         );
         eventRecruitDetailRepository.save(eventRecruitDetail);
         eventRepository.save(event);
+        NotificationEvent.raise(new EventUpdatedNotificationEvent(event.getId(), event.getName()));
     }
 
     @Transactional
     public void updateEventDetail(String eventId, RequestEvent.UpdateEventDetailDto updateEventDetailDto) {
         Event event = getEvent(eventId);
+        validateEventAccess(event, getMemberId());
+        validateEventUpdatable(eventId);
+        EventRecruitDetail eventRecruitDetail = eventRecruitDetailRepository.findByEvent(event);
+        if (eventRecruitDetail == null) {
+            throw new CustomException(EventErrorCode.EVENT_RECRUIT_DETAIL_NOT_FOUND);
+        }
+
+        eventRecruitDetail.update(
+                eventRecruitDetail.getRecruitEndDateTime(),
+                eventRecruitDetail.getRecruitCount(),
+                eventRecruitDetail.getIsFullAttendanceRequired(),
+                updateEventDetailDto.getGeneratorRequirement(),
+                updateEventDetailDto.getElectricitySupportAvailability(),
+                eventRecruitDetail.getEntryFee(),
+                eventRecruitDetail.getIsRecruitEndOnSelection()
+        );
+
+        event.updateDetailInfo(
+                updateEventDetailDto.getDescription(),
+                updateEventDetailDto.getGuidelines(),
+                updateEventDetailDto.getContact()
+        );
+        eventRecruitDetailRepository.save(eventRecruitDetail);
+        eventRepository.save(event);
+        NotificationEvent.raise(new EventUpdatedNotificationEvent(event.getId(), event.getName()));
+    }
+
+    @Transactional
+    public void updateEventTarget(String eventId, RequestEvent.UpdateEventTargetDto updateEventTargetDto) {
+        Event event = getEvent(eventId);
+        validateEventAccess(event, getMemberId());
+        validateEventUpdatable(eventId);
 
         List<EventCategory> eventCategoryList = eventCategoryRepository.findAllByEvent(event);
         eventCategoryList.forEach(eventCategoryRepository::delete);
-        updateEventDetailDto.getEventCategoryCodeList().forEach(eventCategoryCode -> {
+        updateEventTargetDto.getEventCategoryCodeList().forEach(eventCategoryCode -> {
             Category category = categoryRepository.findByCode(eventCategoryCode);
             if (category == null)
                 throw new CustomException(EventErrorCode.EVENT_CATEGORY_NOT_FOUND);
             EventCategory eventCategory = EventCategory.builder().event(event).category(category).build();
             eventCategoryRepository.save(eventCategory);
         });
-        event.updateDescription(updateEventDetailDto.getDescription());
-        event.updateGuidelines(updateEventDetailDto.getGuidelines());
+
+        event.updateTargetInfo(
+                updateEventTargetDto.getTruckTypes(),
+                updateEventTargetDto.getSaleType(),
+                updateEventTargetDto.getPriceRange(),
+                updateEventTargetDto.getCateringDetail()
+        );
+
         eventRepository.save(event);
+        NotificationEvent.raise(new EventUpdatedNotificationEvent(event.getId(), event.getName()));
     }
 
     @Transactional
     public void updateEventDocument(String eventId, RequestEvent.UpdateEventDocumentDto updateEventDocumentDto) {
         Event event = getEvent(eventId);
-
+        validateEventAccess(event, getMemberId());
+        validateEventUpdatable(eventId);
         List<EventDocument> eventDocumentList = eventDocumentRepository.findByEventId(eventId);
-        if (eventDocumentList != null)
+        if (eventDocumentList != null) {
             eventDocumentList.forEach(eventDocumentRepository::delete);
-        updateEventDocumentDto.getEventDocumentTypeList().forEach(documentType -> {
-            EventDocument eventDocument = EventDocument.builder().event(event).type(documentType).build();
-            eventDocumentRepository.save(eventDocument);
-        });
-        event.updateSubmissionEmail(updateEventDocumentDto.getSubmissionEmail());
-        event.updateDocumentSubmissionTarget(updateEventDocumentDto.getDocumentSubmissionTarget());
+        }
+        if (updateEventDocumentDto.getEventDocumentTypeList() != null) {
+            updateEventDocumentDto.getEventDocumentTypeList().forEach(documentType -> {
+                EventDocument eventDocument = EventDocument.builder().event(event).type(documentType).build();
+                eventDocumentRepository.save(eventDocument);
+            });
+        }
+        event.updateDocumentInfo(
+                updateEventDocumentDto.getSubmissionEmail(),
+                updateEventDocumentDto.getDocumentSubmissionTarget()
+        );
+        eventRepository.save(event);
+        NotificationEvent.raise(new EventUpdatedNotificationEvent(event.getId(), event.getName()));
+    }
+
+    @Transactional
+    public void updateBackOfficeRecruitmentUrl(String eventId, RequestEvent.UpdateBackOfficeRecruitmentUrlDto updateBackOfficeRecruitmentUrlDto) {
+        Event event = getEvent(eventId);
+        event.updateRecruitmentUrl(updateBackOfficeRecruitmentUrlDto.getRecruitmentUrl());
+        eventRepository.save(event);
+    }
+
+    @Transactional
+    public void updateBackOfficeEventHidden(String eventId, RequestEvent.UpdateBackOfficeEventHiddenDto updateBackOfficeEventHiddenDto) {
+        Event event = getEvent(eventId);
+        event.updateHidden(updateBackOfficeEventHiddenDto.getIsHidden());
+        eventRepository.save(event);
+    }
+
+    @Transactional
+    public void addRecruitmentUrlClickCount(String eventId) {
+        Event event = getEvent(eventId);
+        event.addRecruitmentUrlClickCount();
         eventRepository.save(event);
     }
 
     @Transactional
     public void deleteEvent(String eventId) {
-        String memberId = getMemberId();
         Event event = getEvent(eventId);
-        if (!event.isCreator(memberId)) {
-            throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
+        validateEventAccess(event, getMemberId());
+
+        EventRecruitDetail eventRecruitDetail = eventRecruitDetailRepository.findByEvent(event);
+        LocalDate maxDate = EventDateCalculator.getMaxDate(event);
+        LocalDate now = LocalDate.now();
+
+        boolean hasConfirmedEventTruck = event.getEventTrucks().stream().anyMatch(eventTruck -> eventTruck.getStatus() == EventTruckStatus.CONFIRMED);
+        boolean isWithinEventPeriod = maxDate.isAfter(now) || maxDate.isEqual(now);
+        if (hasConfirmedEventTruck && isWithinEventPeriod) {
+            throw new CustomException(
+                    EventErrorCode.CONFIRMED_EVENT_TRUCK_EXISTS,
+                    null,
+                    WithdrawalBlockHeaders.byHostedEvent(event.getId(), event.getName(), maxDate)
+            );
         }
-        if (EventDateCalculator.getMinDate(event).isBefore(LocalDate.now()) && EventDateCalculator.getMaxDate(event).isAfter(LocalDate.now())) {
-            throw new CustomException(EventErrorCode.ALREADY_IN_PROGRESS_EVENT);
+
+        if (eventRecruitDetail != null && eventRecruitDetail.getRecruitingStatus().equals(EventRecruitingStatus.RECRUITING)) {
+            eventRecruitDetail.updateStatus(EventRecruitingStatus.RECRUITMENT_CANCELLED);
+            eventRecruitDetail.closeSelection();
+            NotificationEvent.raise(new EventRecruitmentCanceledNotificationEvent(event.getId(), event.getName()));
         }
 
         List<EventLike> eventLikeList = eventLikeRepository.findAllByEventId(eventId);
         if (eventLikeList != null) {
             eventLikeList.forEach(eventLikeRepository::delete);
         }
-        EventRecruitDetail eventRecruitDetail = eventRecruitDetailRepository.findByEvent(event);
-        if (eventRecruitDetail != null && eventRecruitDetail.getRecruitingStatus().equals(EventRecruitingStatus.RECRUITING)) {
-            eventRecruitDetail.closeSelection();
-        }
         event.delete();
     }
 
     @Transactional
     public void proposeEvent(RequestEvent.ProposeEventDto proposeEventDto) {
-        String memberId = getMemberId();
         Event event = getEvent(proposeEventDto.getEventId());
-        if (!event.isCreator(memberId)) {
-            throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
-        }
+        validateEventAccess(event, getMemberId());
+
         EventProposal eventProposal = eventProposalRepository.findByEventIdAndTruckId(proposeEventDto.getEventId(), proposeEventDto.getTruckId());
         if (eventProposal != null) {
             throw new CustomException(EventErrorCode.ALREADY_PROPOSED_TRUCK);
         }
         EventProposal newEventProposal = proposeEventDto.toEntity(event, getTruck(proposeEventDto.getTruckId()));
         eventProposalRepository.save(newEventProposal);
-        NotificationEvent.raise(new EventCastedNotificationEvent(event.getId(), event.getName()));
+        NotificationEvent.raise(new EventCastedNotificationEvent(event.getId(), proposeEventDto.getTruckId(), event.getName()));
     }
 
     @Transactional
@@ -302,7 +483,9 @@ public class EventService {
             EventApplicationDate eventApplicationDate = EventApplicationDate.builder().eventDate(eventDate).eventApplication(eventApplication).build();
             eventApplicationDateRepository.save(eventApplicationDate);
         }
-        event.getRecruitDetail().addApplicantCount();
+        //지원자수 증가
+        eventRecruitDetailRepository.incrementApplicantCount(event.getRecruitDetail().getId());
+
         NotificationEvent.raise(new ApplicationReceivedNotificationEvent(event.getId(), event.getName(), eventApplication.getId()));
         NotificationEvent.raise(new EventAppliedTruckDocumentSubmissionEvent(event, truck));
     }
@@ -348,6 +531,7 @@ public class EventService {
         if (handleEventTruckDto.getEventTruckStatus().equals(EventTruckStatus.CONFIRMED)) {
             eventTruck.confirm();
             NotificationEvent.raise(new SelectionConfirmedNotificationEvent(event.getId(), event.getName(), eventTruck.getTruck().getName(), eventTruck.getId()));
+            NotificationEvent.raise(new TruckSelectionConfirmedNotificationEvent(event.getId(), event.getName(), eventTruck.getId(), eventTruck.getTruck().getId()));
         } else if (handleEventTruckDto.getEventTruckStatus().equals(EventTruckStatus.REJECTED)) {
             EventRecruitDetail eventRecruitDetail = eventTruck.getEvent().getRecruitDetail();
             eventRecruitDetail.decreaseSelectedCount();
@@ -356,8 +540,6 @@ public class EventService {
         } else throw new CustomException(EventErrorCode.WRONG_EVENT_TRUCK_STATUS);
 
         eventTruckRepository.save(eventTruck);
-
-        NotificationEvent.raise(new TruckSelectionConfirmedNotificationEvent(event.getId(), eventTruck.getId(), eventTruck.getTruck().getId()));
     }
 
     @Transactional(readOnly = true)
@@ -368,14 +550,12 @@ public class EventService {
 
     @Transactional
     public ResponseEvent.GetEventNoticeDetailForCreatorDto getEventNoticeDetailForCreator(String noticeId) {
-        String memberId = getMemberId();
         EventNotice eventNotice = eventNoticeRepository.findEventNoticeForCreator(noticeId);
         if (eventNotice == null) {
             throw new CustomException(EventErrorCode.EVENT_NOTICE_NOT_FOUND);
         }
-        if (!eventNotice.getEvent().isCreator(memberId)) {
-            throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
-        }
+        validateEventAccess(eventNotice.getEvent(), getMemberId());
+
         return ResponseEvent.GetEventNoticeDetailForCreatorDto.of(eventNotice);
     }
 
@@ -399,5 +579,75 @@ public class EventService {
         }
         return ResponseEvent.GetEventNoticeDetailForTruckDto.of(eventNotice);
 
+    }
+
+    @Transactional
+    public Event getEventById(String id) {
+        return this.getEvent(id);
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseEvent.GetTruckAppliedEventDashboard getTruckAppliedEventDashboard(String truckId) {
+
+        Integer appliedCount = eventApplicationRepository.findTruckAppliedRecruitingApplications(truckId).intValue()
+                + eventTruckRepository.findPendingEventsByTruckId(truckId).intValue();
+
+        Integer progressCount = eventTruckRepository.findProgressEventsByTruckId(truckId).intValue();
+
+        Integer endCount = eventTruckRepository.findCompletedEventsByTruckId(truckId).intValue();
+
+        return ResponseEvent.GetTruckAppliedEventDashboard.of(
+                appliedCount,
+                progressCount,
+                endCount
+        );
+    }
+
+
+    @Transactional(readOnly = true)
+    public ResponseEvent.GetEventDashboard getEventDashboard() {
+        String memberId = getMemberId();
+        EventDashboardCount dashboardCount = eventRepository.findEventDashboardCount(memberId);
+
+        return ResponseEvent.GetEventDashboard.of(
+                dashboardCount.getRecruitingCount().intValue(),
+                dashboardCount.getProgressCount().intValue(),
+                dashboardCount.getEndCount().intValue()
+        );
+    }
+
+    @Transactional
+    public ResponseEvent.GetEventContactDto getEventContact(String eventId){
+        String memberId = null;
+        try {
+            memberId = getMemberId();
+            Member member = memberRepository.findById(memberId)
+                    .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+
+            if (member.getSocialLoginInfo().getType().equals(SocialLoginType.UNREGISTERED)) {
+                throw new CustomException(EventErrorCode.EVENT_CONTACT_ACCESS_DENIED);
+            }
+
+            String phone = eventRepository.getEventPhone(eventId);
+            eventContactAccessLogService.saveEventContactAccessLog(
+                    EventContactAccessLog.builder()
+                            .eventId(eventId)
+                            .memberId(memberId)
+                            .accessStatus(AccessStatus.SUCCESS)
+                            .build()
+            );
+
+            return ResponseEvent.GetEventContactDto.of(phone);
+        } catch (Exception e) {
+            eventContactAccessLogService.saveEventContactAccessLog(
+                    EventContactAccessLog.builder()
+                            .eventId(eventId)
+                            .memberId(memberId)
+                            .accessStatus(AccessStatus.FAIL)
+                            .failureReason(e.getMessage())
+                            .build()
+            );
+            throw e;
+        }
     }
 }

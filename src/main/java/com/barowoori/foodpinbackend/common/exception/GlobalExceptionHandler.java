@@ -1,6 +1,7 @@
 package com.barowoori.foodpinbackend.common.exception;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
@@ -8,6 +9,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
@@ -19,7 +21,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CustomException.class)
     protected ResponseEntity<ErrorResponse> handleCustomException(CustomException e) {
         System.out.println("Custom exception occurred. Code : " + e.getErrorCode() + ". Message : " + e.getExtraMessage());
-        return ErrorResponse.toResponseEntity(e.getErrorCode(), e.getExtraMessage());
+        ResponseEntity<ErrorResponse> responseEntity = ErrorResponse.toResponseEntity(e.getErrorCode(), e.getExtraMessage());
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.addAll(responseEntity.getHeaders());
+        responseHeaders.addAll(e.getHeaders());
+        return new ResponseEntity<>(responseEntity.getBody(), responseHeaders, responseEntity.getStatusCode());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -72,6 +78,11 @@ public class GlobalExceptionHandler {
         // 클라이언트에 반환할 오류 메시지를 작성합니다.
         String errorMessage = "지원하지 않는 HTTP 메서드입니다. 지원되는 메서드: " + String.join(", ", ex.getSupportedMethods());
         return ErrorResponse.toResponseEntity(HttpStatus.METHOD_NOT_ALLOWED, 10004, errorMessage);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex) {
+        return ErrorResponse.toResponseEntity(HttpStatus.FORBIDDEN, 10003, "Access Denied");
     }
 
     @ExceptionHandler(Exception.class)

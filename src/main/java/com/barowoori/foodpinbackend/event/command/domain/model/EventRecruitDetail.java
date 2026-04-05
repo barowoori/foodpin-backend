@@ -1,5 +1,6 @@
 package com.barowoori.foodpinbackend.event.command.domain.model;
 
+import com.barowoori.foodpinbackend.event.command.domain.service.EventDateCalculator;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -66,7 +67,7 @@ public class EventRecruitDetail {
 
     @Builder
     public EventRecruitDetail(LocalDateTime recruitEndDateTime, Integer recruitCount, Integer applicantCount, Integer selectedCount,
-                              Boolean generatorRequirement, Boolean electricitySupportAvailability, Integer entryFee,
+                              Boolean generatorRequirement, Boolean electricitySupportAvailability,
                               EventRecruitingStatus recruitingStatus, Boolean isSelecting,
                               Event event, Boolean isFullAttendanceRequired,Boolean isRecruitEndOnSelection) {
         this.recruitEndDateTime = recruitEndDateTime;
@@ -76,7 +77,6 @@ public class EventRecruitDetail {
         this.event = event;
         this.generatorRequirement = generatorRequirement;
         this.electricitySupportAvailability = electricitySupportAvailability;
-        this.entryFee = entryFee;
         this.recruitingStatus = recruitingStatus;
         this.isSelecting = isSelecting;
         this.isFullAttendanceRequired = isFullAttendanceRequired;
@@ -116,5 +116,12 @@ public class EventRecruitDetail {
 
     public void decreaseSelectedCount() {
         this.selectedCount -= 1;
+    }
+
+    public boolean isEventProgress(){
+        LocalDate minDate = EventDateCalculator.getMinDate(event);
+        LocalDate maxDate = EventDateCalculator.getMaxDate(event);
+        LocalDate now = LocalDate.now();
+        return (maxDate.isAfter(now) || maxDate.isEqual(now));
     }
 }

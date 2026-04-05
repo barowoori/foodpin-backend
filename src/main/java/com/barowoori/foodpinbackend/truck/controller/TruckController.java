@@ -2,9 +2,11 @@ package com.barowoori.foodpinbackend.truck.controller;
 
 import com.barowoori.foodpinbackend.common.dto.CommonResponse;
 import com.barowoori.foodpinbackend.common.exception.ErrorResponse;
+import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.truck.command.application.dto.RequestTruck;
 import com.barowoori.foodpinbackend.truck.command.application.dto.ResponseTruck;
 import com.barowoori.foodpinbackend.truck.command.application.service.TruckService;
+import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckDetail;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckList;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckManagerSummary;
@@ -26,10 +28,15 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @Tag(name = "트럭 API")
 @RequiredArgsConstructor
@@ -113,7 +120,11 @@ public class TruckController {
     })
     @GetMapping(value = "/v1/{truckId}/detail")
     public ResponseEntity<CommonResponse<TruckDetail>> getTruckDetail(@Valid @PathVariable("truckId") String truckId) {
-        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String memberId = null;
+        if (authentication != null && authentication.isAuthenticated() && !(authentication instanceof AnonymousAuthenticationToken)) {
+            memberId = authentication.getName();
+        }
         TruckDetail truckDetail = truckDetailService.getTruckDetail(memberId, truckId);
         CommonResponse<TruckDetail> commonResponse = CommonResponse.<TruckDetail>builder()
                 .data(truckDetail)
@@ -158,6 +169,72 @@ public class TruckController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "백오피스 사업자등록증 문서 목록 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping(value = "/v1/backoffice/documents")
+    public ResponseEntity<CommonResponse<Page<ResponseTruck.GetBackOfficeTruckDocumentDto>>> getBackOfficeTruckDocumentTempList(
+            @RequestParam(name = "nickname", required = false) String nickname,
+            @RequestParam(name = "phone", required = false) String phone,
+            @RequestParam(name = "status", required = false) TruckDocumentStatus status,
+            @RequestParam(name = "requestedStartAt", required = false) LocalDate requestedStartAt,
+            @RequestParam(name = "requestedEndAt", required = false) LocalDate requestedEndAt,
+            @RequestParam(name = "processedStartAt", required = false) LocalDate processedStartAt,
+            @RequestParam(name = "processedEndAt", required = false) LocalDate processedEndAt,
+            @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<ResponseTruck.GetBackOfficeTruckDocumentDto> response = truckService.getBackOfficeTruckDocuments(nickname, phone, status,
+                requestedStartAt, requestedEndAt, processedStartAt, processedEndAt, pageable);
+        CommonResponse<Page<ResponseTruck.GetBackOfficeTruckDocumentDto>> commonResponse = CommonResponse.<Page<ResponseTruck.GetBackOfficeTruckDocumentDto>>builder()
+                .data(response)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "백오피스 트럭 문서 승인")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "트럭 문서를 못 찾을 경우[30014]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping(value = "/v1/backoffice/{truckId}/documents/{documentType}/approve")
+    public ResponseEntity<CommonResponse<String>> approveTruckDocument(@Valid @PathVariable("truckId") String truckId,
+                                                                       @Valid @PathVariable("documentType") DocumentType documentType) {
+        truckService.approveTruckDocument(truckId, documentType);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Truck document approved successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "백오피스 트럭 문서 반려")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "반려 사유가 비어있는 경우",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "트럭 문서를 못 찾을 경우[30014]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping(value = "/v1/backoffice/{truckId}/documents/{documentType}/reject")
+    public ResponseEntity<CommonResponse<String>> rejectTruckDocument(@Valid @PathVariable("truckId") String truckId,
+                                                                      @Valid @PathVariable("documentType") DocumentType documentType,
+                                                                      @Valid @RequestBody RequestTruck.RejectTruckDocumentDto rejectTruckDocumentDto) {
+        truckService.rejectTruckDocument(truckId, documentType, rejectTruckDocumentDto.getRejectionReason());
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Truck document rejected successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
     @Operation(summary = "트럭 목록 조회", description = "정렬 : 최신순(createdAt, DESC), 조회순(views, DESC)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
@@ -168,9 +245,18 @@ public class TruckController {
     public ResponseEntity<CommonResponse<Page<TruckList>>> getTruckList(@RequestParam(value = "region", required = false) List<String> regionCodes,
                                                                         @RequestParam(value = "category", required = false) List<String> categoryNames,
                                                                         @RequestParam(value = "search", required = false) String searchTerm,
+                                                                        @RequestParam(value = "types", required = false) Set<TruckType> types,
+                                                                        @RequestParam(value = "colors", required = false) Set<TruckColor> colors,
+                                                                        @RequestParam(value = "bodyTypes", required = false) Set<TruckBodyType> bodyTypes,
+                                                                        @RequestParam(value = "paymentMethods", required = false) Set<PaymentMethod> paymentMethods,
+                                                                        @RequestParam(value = "proofIssuanceTypes", required = false) Set<ProofIssuanceType> proofIssuanceTypes,
+                                                                        @RequestParam(value = "minAvgMenuPrice", required = false) Integer minAvgMenuPrice,
+                                                                        @RequestParam(value = "maxAvgMenuPrice", required = false) Integer maxAvgMenuPrice,
+                                                                        @RequestParam(value = "isCatering", required = false) Boolean isCatering,
                                                                         @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        Page<TruckList> truckLists = truckListService.findTruckList(regionCodes, categoryNames, searchTerm, pageable);
+        Page<TruckList> truckLists = truckListService.findTruckList(regionCodes, categoryNames, searchTerm, types, minAvgMenuPrice, maxAvgMenuPrice,
+                colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering, pageable);
         CommonResponse<Page<TruckList>> commonResponse = CommonResponse.<Page<TruckList>>builder()
                 .data(truckLists)
                 .build();
@@ -187,10 +273,19 @@ public class TruckController {
     public ResponseEntity<CommonResponse<Page<TruckList>>> getLikeTruckList(@RequestParam(value = "region", required = false) List<String> regionCodes,
                                                                             @RequestParam(value = "category", required = false) List<String> categoryNames,
                                                                             @RequestParam(value = "search", required = false) String searchTerm,
+                                                                            @RequestParam(value = "types", required = false) Set<TruckType> types,
+                                                                            @RequestParam(value = "colors", required = false) Set<TruckColor> colors,
+                                                                            @RequestParam(value = "bodyTypes", required = false) Set<TruckBodyType> bodyTypes,
+                                                                            @RequestParam(value = "paymentMethods", required = false) Set<PaymentMethod> paymentMethods,
+                                                                            @RequestParam(value = "proofIssuanceTypes", required = false) Set<ProofIssuanceType> proofIssuanceTypes,
+                                                                            @RequestParam(value = "minAvgMenuPrice", required = false) Integer minAvgMenuPrice,
+                                                                            @RequestParam(value = "maxAvgMenuPrice", required = false) Integer maxAvgMenuPrice,
+                                                                            @RequestParam(value = "isCatering", required = false) Boolean isCatering,
                                                                             @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
-        Page<TruckList> truckLists = truckListService.findLikeTruckByTruckList(memberId, regionCodes, categoryNames, searchTerm, pageable);
+        Page<TruckList> truckLists = truckListService.findLikeTruckByTruckList(memberId, regionCodes, categoryNames, searchTerm, types, minAvgMenuPrice, maxAvgMenuPrice,
+                colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering, pageable);
         CommonResponse<Page<TruckList>> commonResponse = CommonResponse.<Page<TruckList>>builder()
                 .data(truckLists)
                 .build();
@@ -234,6 +329,37 @@ public class TruckController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "트럭 평균 메뉴 가격 최대값 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공")
+    })
+    @GetMapping(value = "/v1/avg-menu-price/max")
+    public ResponseEntity<CommonResponse<ResponseTruck.GetMaxAvgMenuPriceDto>> getMaxAvgMenuPrice() {
+        ResponseTruck.GetMaxAvgMenuPriceDto response = truckQueryService.getMaxAvgMenuPrice();
+        CommonResponse<ResponseTruck.GetMaxAvgMenuPriceDto> commonResponse = CommonResponse.<ResponseTruck.GetMaxAvgMenuPriceDto>builder()
+                .data(response)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "트럭 수정 가능 여부 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/{truckId}/available/update")
+    public ResponseEntity<CommonResponse<ResponseTruck.GetTruckUpdateAvailabilityDto>> getTruckUpdateAvailability(
+            @Valid @PathVariable("truckId") String truckId
+    ) {
+        ResponseTruck.GetTruckUpdateAvailabilityDto response = truckQueryService.getTruckUpdateAvailability(truckId);
+        CommonResponse<ResponseTruck.GetTruckUpdateAvailabilityDto> commonResponse =
+                CommonResponse.<ResponseTruck.GetTruckUpdateAvailabilityDto>builder()
+                        .data(response)
+                        .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
     @Operation(summary = "트럭 기본 정보 수정")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
@@ -274,7 +400,7 @@ public class TruckController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
-    @Operation(summary = "트럭 카테고리 및 메뉴 수정")
+    @Operation(summary = "트럭 메뉴 정보 수정")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
@@ -290,6 +416,25 @@ public class TruckController {
         truckService.updateTruckMenu(truckId, updateTruckMenuDto);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Truck menu updated successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "트럭 결제 정보 수정")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
+                    "멤버를 못 찾을 경우[20004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PutMapping(value = "/v1/{truckId}/payment")
+    public ResponseEntity<CommonResponse<String>> updateTruckPayment(@Valid @PathVariable("truckId") String truckId,
+                                                                     @Valid @RequestBody RequestTruck.UpdateTruckPaymentDto updateTruckPaymentDto) {
+        truckService.updateTruckPayment(truckId, updateTruckPaymentDto);
+        CommonResponse<String> commonResponse = CommonResponse.<String>builder()
+                .data("Truck payment updated successfully.")
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
@@ -384,14 +529,33 @@ public class TruckController {
             @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
                     "멤버를 못 찾을 경우[20004], 트럭 소유자를 못 찾을(아닐) 경우[30005]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "400", description = "트럭이 현재 진행중인 행사에 참여중인 경우[40023]",
+            @ApiResponse(responseCode = "400", description = "트럭이 현재 진행중인 행사에 참여중인 경우[30012]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @DeleteMapping(value = "/v1/{truckId}")
     public ResponseEntity<CommonResponse<String>> deleteTruck(@Valid @PathVariable("truckId") String truckId) {
-        truckService.deleteTruck(truckId);
+        truckService.deleteTruck(truckId, false);
         CommonResponse<String> commonResponse = CommonResponse.<String>builder()
                 .data("Truck deleted successfully.")
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
+    @Operation(summary = "트럭 연락처 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000], " +
+                    "멤버를 못 찾을 경우[20004]" + "비회원일 경우[30013]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/{truckId}/contact")
+    public ResponseEntity<CommonResponse<ResponseTruck.GetTruckManagerContactDto>> getTruckManagerContract(@Valid @PathVariable("truckId") String truckId) {
+
+        ResponseTruck.GetTruckManagerContactDto response = truckService.getTruckManagerContract(truckId);
+        CommonResponse<ResponseTruck.GetTruckManagerContactDto> commonResponse = CommonResponse.<ResponseTruck.GetTruckManagerContactDto>builder()
+                .data(response)
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }

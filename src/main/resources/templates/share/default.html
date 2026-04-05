@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+
+    <meta property="og:title" th:content="${title}" />
+    <meta property="og:description" th:content="${description}" />
+    <meta property="og:image" th:content="${image}" />
+    <meta property="og:url" th:content="${url}" />
+    <meta property="og:type" content="article" />
+
+    <title th:text="${title}">공유</title>
+
+    <!-- 앱으로 보내고 싶으면 -->
+    <meta http-equiv="refresh" th:content="|2;url=${deepLink}|">
+</head>
+<body>
+</body>
+</html>

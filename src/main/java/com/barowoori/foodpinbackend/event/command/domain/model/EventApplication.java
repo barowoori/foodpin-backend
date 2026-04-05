@@ -9,6 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Entity
@@ -65,5 +66,14 @@ public class EventApplication {
 
     public void read() {
         this.isRead = Boolean.TRUE;
+    }
+
+    public List<EventApplicationDate> getSortedEventDates() {
+        if(this.dates == null){
+            return new ArrayList<>();
+        }
+        return dates.stream()
+                .sorted(Comparator.comparing(EventApplicationDate::getCreatedAt))
+                .toList();
     }
 }

@@ -27,8 +27,8 @@ import com.barowoori.foodpinbackend.notification.command.domain.model.event.Inte
 import com.barowoori.foodpinbackend.notification.command.domain.model.event.SelectionCanceledNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.event.SelectionConfirmedNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.EventCastedNotificationEvent;
-import com.barowoori.foodpinbackend.notification.command.domain.model.truck.EventNoticePostedNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.EventRecruitmentCanceledNotificationEvent;
+import com.barowoori.foodpinbackend.notification.command.domain.model.truck.EventUpdatedNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.TruckSelectionConfirmedNotificationEvent;
 import com.barowoori.foodpinbackend.region.command.domain.model.Region;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
@@ -95,6 +95,22 @@ public class EventService {
         if (!event.getCreatedBy().equals(memberId)) {
             throw new CustomException(EventErrorCode.NOT_EVENT_CREATOR);
         }
+    }
+
+    private void validateEventUpdatable(String eventId) {
+        if (Boolean.TRUE.equals(eventTruckRepository.existsConfirmedEventTruck(eventId))) {
+            throw new CustomException(EventErrorCode.CONFIRMED_EVENT_TRUCK_EXISTS);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseEvent.GetEventUpdateAvailabilityDto getEventUpdateAvailability(String eventId) {
+        if (!eventRepository.existsById(eventId)) {
+            throw new CustomException(EventErrorCode.NOT_FOUND_EVENT);
+        }
+
+        boolean hasConfirmedEventTruck = eventTruckRepository.existsConfirmedEventTruck(eventId);
+        return ResponseEvent.GetEventUpdateAvailabilityDto.of(!hasConfirmedEventTruck);
     }
 
     @Transactional
@@ -216,6 +232,7 @@ public class EventService {
         String memberId = getMemberId();
         Event event = getEvent(eventId);
         validateEventAccess(event, memberId);
+        validateEventUpdatable(eventId);
         event.updateBasicInfo(
                 updateEventInfoDto.getName(),
                 updateEventInfoDto.getType(),
@@ -252,12 +269,14 @@ public class EventService {
         event.initEventRegion(eventRegion);
 
         eventRepository.save(event);
+        NotificationEvent.raise(new EventUpdatedNotificationEvent(event.getId(), event.getName()));
     }
 
     @Transactional
     public void updateEventRecruit(String eventId, RequestEvent.UpdateEventRecruitDto eventRecruitDto) {
         Event event = getEvent(eventId);
         validateEventAccess(event, getMemberId());
+        validateEventUpdatable(eventId);
         EventRecruitDetail eventRecruitDetail = eventRecruitDetailRepository.findByEvent(event);
         if (eventRecruitDetail == null)
             throw new CustomException(EventErrorCode.EVENT_RECRUIT_DETAIL_NOT_FOUND);
@@ -280,12 +299,14 @@ public class EventService {
         );
         eventRecruitDetailRepository.save(eventRecruitDetail);
         eventRepository.save(event);
+        NotificationEvent.raise(new EventUpdatedNotificationEvent(event.getId(), event.getName()));
     }
 
     @Transactional
     public void updateEventDetail(String eventId, RequestEvent.UpdateEventDetailDto updateEventDetailDto) {
         Event event = getEvent(eventId);
         validateEventAccess(event, getMemberId());
+        validateEventUpdatable(eventId);
         EventRecruitDetail eventRecruitDetail = eventRecruitDetailRepository.findByEvent(event);
         if (eventRecruitDetail == null) {
             throw new CustomException(EventErrorCode.EVENT_RECRUIT_DETAIL_NOT_FOUND);
@@ -308,12 +329,14 @@ public class EventService {
         );
         eventRecruitDetailRepository.save(eventRecruitDetail);
         eventRepository.save(event);
+        NotificationEvent.raise(new EventUpdatedNotificationEvent(event.getId(), event.getName()));
     }
 
     @Transactional
     public void updateEventTarget(String eventId, RequestEvent.UpdateEventTargetDto updateEventTargetDto) {
         Event event = getEvent(eventId);
         validateEventAccess(event, getMemberId());
+        validateEventUpdatable(eventId);
 
         List<EventCategory> eventCategoryList = eventCategoryRepository.findAllByEvent(event);
         eventCategoryList.forEach(eventCategoryRepository::delete);
@@ -333,12 +356,14 @@ public class EventService {
         );
 
         eventRepository.save(event);
+        NotificationEvent.raise(new EventUpdatedNotificationEvent(event.getId(), event.getName()));
     }
 
     @Transactional
     public void updateEventDocument(String eventId, RequestEvent.UpdateEventDocumentDto updateEventDocumentDto) {
         Event event = getEvent(eventId);
         validateEventAccess(event, getMemberId());
+        validateEventUpdatable(eventId);
         List<EventDocument> eventDocumentList = eventDocumentRepository.findByEventId(eventId);
         if (eventDocumentList != null) {
             eventDocumentList.forEach(eventDocumentRepository::delete);
@@ -354,6 +379,7 @@ public class EventService {
                 updateEventDocumentDto.getDocumentSubmissionTarget()
         );
         eventRepository.save(event);
+        NotificationEvent.raise(new EventUpdatedNotificationEvent(event.getId(), event.getName()));
     }
 
     @Transactional

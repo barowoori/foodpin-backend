@@ -160,6 +160,21 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "행사 수정 가능 여부 조회", description = "참여 확정자가 1명이라도 있으면 수정 불가")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "404", description = "행사를 못 찾을 경우[40000]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/{eventId}/available/update")
+    public ResponseEntity<CommonResponse<ResponseEvent.GetEventUpdateAvailabilityDto>> getEventUpdateAvailability(@Valid @PathVariable("eventId") String eventId) {
+        ResponseEvent.GetEventUpdateAvailabilityDto response = eventService.getEventUpdateAvailability(eventId);
+        CommonResponse<ResponseEvent.GetEventUpdateAvailabilityDto> commonResponse = CommonResponse.<ResponseEvent.GetEventUpdateAvailabilityDto>builder()
+                .data(response)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
     @Operation(summary = "행사 목록 조회", description = "정렬 : 최신순(createdAt, DESC), 지원순(applicant, DESC), 마감순(deadline, ASC)"
             + "\n\n 행사 상태 : RECRUITING(모집중), RECRUITMENT_CANCELLED(모집취소), RECRUITMENT_CLOSED(모집마감)")
     @ApiResponses(value = {

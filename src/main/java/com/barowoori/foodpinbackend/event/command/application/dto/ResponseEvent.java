@@ -117,4 +117,16 @@ public class ResponseEvent {
         }
     }
 
+    @Builder
+    @Getter
+    public static class GetEventUpdateAvailabilityDto {
+        private Boolean isAvailableUpdate;
+
+        public static GetEventUpdateAvailabilityDto of(Boolean isAvailableUpdate) {
+            return GetEventUpdateAvailabilityDto.builder()
+                    .isAvailableUpdate(isAvailableUpdate)
+                    .build();
+        }
+    }
+
 }

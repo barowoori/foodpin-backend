@@ -124,6 +124,16 @@ public class TruckService {
         }
     }
 
+    private void validateTruckUpdatable(String truckId) {
+        boolean hasPendingApplication = Boolean.TRUE.equals(eventApplicationRepository.existsPendingApplicationByTruckId(truckId));
+        boolean hasPendingEventTruck = Boolean.TRUE.equals(eventTruckRepository.existsPendingEventTruckByTruckId(truckId));
+        boolean hasConfirmedProgressEventTruck = Boolean.TRUE.equals(eventTruckRepository.existsConfirmedProgressEventTruckByTruckId(truckId));
+
+        if (hasPendingApplication || hasPendingEventTruck || hasConfirmedProgressEventTruck) {
+            throw new CustomException(TruckErrorCode.TRUCK_UPDATE_NOT_AVAILABLE);
+        }
+    }
+
     @Transactional
     public void createTruck(RequestTruck.CreateTruckDto createTruckDto) {
         String memberId = getMemberId();
@@ -307,6 +317,7 @@ public class TruckService {
         String memberId = getMemberId();
         Truck truck = getTruck(truckId);
         validateTruckAccess(truck.getId(), memberId);
+        validateTruckUpdatable(truckId);
         truck.updateMenuInfo(memberId, updateTruckMenuDto.getTypes());
         truckRepository.save(truck);
 
@@ -355,6 +366,7 @@ public class TruckService {
         String memberId = getMemberId();
         Truck truck = getTruck(truckId);
         validateTruckAccess(truck.getId(), memberId);
+        validateTruckUpdatable(truckId);
         truck.updatePaymentInfo(memberId, updateTruckPaymentDto.getPaymentMethods(), updateTruckPaymentDto.getProofIssuanceTypes());
         truckRepository.save(truck);
     }

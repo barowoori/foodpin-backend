@@ -338,6 +338,24 @@ public class TruckController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "트럭 수정 가능 여부 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "404", description = "트럭을 못 찾을 경우[30000]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @GetMapping(value = "/v1/{truckId}/available/update")
+    public ResponseEntity<CommonResponse<ResponseTruck.GetTruckUpdateAvailabilityDto>> getTruckUpdateAvailability(
+            @Valid @PathVariable("truckId") String truckId
+    ) {
+        ResponseTruck.GetTruckUpdateAvailabilityDto response = truckQueryService.getTruckUpdateAvailability(truckId);
+        CommonResponse<ResponseTruck.GetTruckUpdateAvailabilityDto> commonResponse =
+                CommonResponse.<ResponseTruck.GetTruckUpdateAvailabilityDto>builder()
+                        .data(response)
+                        .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
     @Operation(summary = "트럭 기본 정보 수정")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),

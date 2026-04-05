@@ -12,6 +12,9 @@ import java.util.List;
 public interface EventTruckRepositoryCustom {
     Page<EventTruck> findSelectedEventTrucks(String eventId, String status, Pageable pageable);
     Page<EventTruck> findSelectedApplications(String status, String truckId, Pageable pageable);
+    Boolean existsConfirmedEventTruck(String eventId);
+    Boolean existsPendingEventTruckByTruckId(String truckId);
+    Boolean existsConfirmedProgressEventTruckByTruckId(String truckId);
     Boolean isConfirmedEventTruck(String eventId, String truckId);
     EventTruck findConfirmedEventTruck(String eventId, String truckId);
     List<MemberFcmInfoDto> findEventTruckManagersFcmInfo(String eventTruckId);

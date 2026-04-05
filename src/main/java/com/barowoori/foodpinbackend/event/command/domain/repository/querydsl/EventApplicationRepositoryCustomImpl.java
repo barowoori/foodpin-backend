@@ -131,6 +131,17 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
                 .fetchOne();
     }
 
+    @Override
+    public Boolean existsPendingApplicationByTruckId(String truckId) {
+        return jpaQueryFactory.selectOne()
+                .from(eventApplication)
+                .where(
+                        eventApplication.truck.id.eq(truckId)
+                                .and(eventApplication.status.eq(EventApplicationStatus.PENDING))
+                )
+                .fetchFirst() != null;
+    }
+
     private BooleanBuilder createStatusBuilder(String status) {
         BooleanBuilder filterBuilder = new BooleanBuilder();
         if (status.equals("ALL")) {
@@ -155,7 +166,7 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
                 .innerJoin(eventApplication.truck, truck)
                 .innerJoin(truckManager).on(truck.eq(truckManager.truck))
                 .innerJoin(truckManager.member, member)
-                .where(eventApplication.event.id.eq(eventId))
+                .where(eventApplication.event.id.eq(eventId).and(eventApplication.status.ne(EventApplicationStatus.REJECTED)))
                 .fetch();
     }
 

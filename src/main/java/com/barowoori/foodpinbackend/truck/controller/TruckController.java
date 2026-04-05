@@ -28,6 +28,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -174,6 +175,7 @@ public class TruckController {
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping(value = "/v1/backoffice/documents")
     public ResponseEntity<CommonResponse<Page<ResponseTruck.GetBackOfficeTruckDocumentDto>>> getBackOfficeTruckDocumentTempList(
             @RequestParam(name = "nickname", required = false) String nickname,
@@ -200,6 +202,7 @@ public class TruckController {
             @ApiResponse(responseCode = "404", description = "트럭 문서를 못 찾을 경우[30014]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping(value = "/v1/backoffice/{truckId}/documents/{documentType}/approve")
     public ResponseEntity<CommonResponse<String>> approveTruckDocument(@Valid @PathVariable("truckId") String truckId,
                                                                        @Valid @PathVariable("documentType") DocumentType documentType) {
@@ -220,6 +223,7 @@ public class TruckController {
             @ApiResponse(responseCode = "404", description = "트럭 문서를 못 찾을 경우[30014]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping(value = "/v1/backoffice/{truckId}/documents/{documentType}/reject")
     public ResponseEntity<CommonResponse<String>> rejectTruckDocument(@Valid @PathVariable("truckId") String truckId,
                                                                       @Valid @PathVariable("documentType") DocumentType documentType,

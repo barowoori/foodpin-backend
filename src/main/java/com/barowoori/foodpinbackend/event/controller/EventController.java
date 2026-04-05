@@ -26,6 +26,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -78,6 +79,7 @@ public class EventController {
                     "지역을 못 찾을 경우[40002], 카테고리를 못 찾을 경우[40003]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(value = "/v1/backoffice")
     public ResponseEntity<CommonResponse<String>> createBackOfficeEvent(@Valid @RequestBody RequestEvent.CreateBackOfficeEventDto createBackOfficeEventDto) {
         eventService.createBackOfficeEvent(createBackOfficeEventDto);
@@ -95,6 +97,7 @@ public class EventController {
             @ApiResponse(responseCode = "404", description = "행사를 못 찾을 경우[40000]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping(value = "/v1/backoffice/{eventId}/recruitment-url")
     public ResponseEntity<CommonResponse<String>> updateBackOfficeRecruitmentUrl(@PathVariable("eventId") String eventId,
                                                                                  @Valid @RequestBody RequestEvent.UpdateBackOfficeRecruitmentUrlDto updateBackOfficeRecruitmentUrlDto) {
@@ -113,6 +116,7 @@ public class EventController {
             @ApiResponse(responseCode = "404", description = "행사를 못 찾을 경우[40000]",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping(value = "/v1/backoffice/{eventId}/hidden")
     public ResponseEntity<CommonResponse<String>> updateBackOfficeEventHidden(@PathVariable("eventId") String eventId,
                                                                               @Valid @RequestBody RequestEvent.UpdateBackOfficeEventHiddenDto updateBackOfficeEventHiddenDto) {
@@ -209,6 +213,7 @@ public class EventController {
             @ApiResponse(responseCode = "401", description = "권한이 없을 경우(액세스 토큰 만료)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping(value = "/v1/backoffice")
     public ResponseEntity<CommonResponse<Page<BackOfficeEventList>>> getEventListForBackOffice(@RequestParam(value = "region", required = false) List<String> regionCodes,
                                                                                                @RequestParam(value = "category", required = false) List<String> categoryCodes,

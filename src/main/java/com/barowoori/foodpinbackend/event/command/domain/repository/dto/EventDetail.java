@@ -37,7 +37,7 @@ public class EventDetail {
     private List<DocumentType> documents;
     private EventType type;
     private Set<TruckType> truckTypes;
-    private ExpectedParticipants expectedParticipants;
+    private String expectedParticipants;
     private SaleType saleType;
     private PriceRange priceRange;
     private String cateringDetail;

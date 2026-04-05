@@ -21,13 +21,13 @@ public interface EventRepositoryCustom {
     Page<Event> findEventListByFilter(String searchTerm, Map<RegionType, List<String>> regionIds,
                                       LocalDate startDate, LocalDate endDate,
                                       List<String> categoryCodes,
-                                      EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering, List<EventRecruitingStatus> recruitingStatuses,
+                                      EventType type, Set<TruckType> truckTypes, Boolean isCatering, List<EventRecruitingStatus> recruitingStatuses,
                                       Pageable pageable);
 
     Page<Event> findBackOfficeEventListByFilter(String searchTerm, Map<RegionType, List<String>> regionIds,
                                                 LocalDate startDate, LocalDate endDate,
                                                 List<String> categoryCodes,
-                                                EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering,
+                                                EventType type, Set<TruckType> truckTypes, Boolean isCatering,
                                                 LocalDate recruitEndDateFrom, LocalDate recruitEndDateTo,
                                                 Pageable pageable);
 
@@ -36,7 +36,7 @@ public interface EventRepositoryCustom {
     Page<Event> findLikeEventListByFilter(String memberId, String searchTerm, Map<RegionType, List<String>> regionIds,
                                           LocalDate startDate, LocalDate endDate,
                                           List<String> categoryCodes,
-                                          EventType type, ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, Boolean isCatering, Pageable pageable);
+                                          EventType type,Set<TruckType> truckTypes, Boolean isCatering, Pageable pageable);
 
     List<Event> findEndedEventsByIsSelecting(LocalDateTime now, Boolean isSelecting);
 

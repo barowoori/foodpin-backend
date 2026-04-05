@@ -37,6 +37,7 @@ public class TruckQueryService {
     private final MemberRepository memberRepository;
     private final TruckManagerRepository truckManagerRepository;
     private final EventApplicationRepository eventApplicationRepository;
+    private final TruckRepository truckRepository;
     private final JPAQueryFactory jpaQueryFactory;
 
     @Transactional(readOnly = true)
@@ -57,5 +58,10 @@ public class TruckQueryService {
                 .fetch().size();
 
         return ResponseTruck.GetAppliedEventCountDto.of(count);
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseTruck.GetMaxAvgMenuPriceDto getMaxAvgMenuPrice() {
+        return ResponseTruck.GetMaxAvgMenuPriceDto.of(truckRepository.findMaxAvgMenuPrice());
     }
 }

@@ -92,9 +92,8 @@ public class Event {
     @Convert(converter = TruckTypeSetConverter.class)
     private Set<TruckType> truckTypes = new HashSet<>();
 
-    @Enumerated(value = EnumType.STRING)
     @Column(name = "expected_participants")
-    private ExpectedParticipants expectedParticipants;
+    private String expectedParticipants;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "sale_type")
@@ -131,7 +130,7 @@ public class Event {
     @Builder
     public Event(String createdBy, EventCreatorType creatorType, String name, String description, String guidelines, Boolean isDeleted,
                  EventDocumentSubmissionTarget documentSubmissionTarget, String submissionEmail, EventType type,
-                 ExpectedParticipants expectedParticipants, Set<TruckType> truckTypes, SaleType saleType,
+                 String expectedParticipants, Set<TruckType> truckTypes, SaleType saleType,
                  PriceRange priceRange, String cateringDetail, String contact,
                  String recruitmentUrl, int recruitmentUrlClickCount) {
         this.createdBy = createdBy;
@@ -154,7 +153,7 @@ public class Event {
         this.isHidden = false;
     }
 
-    public void updateBasicInfo(String name, EventType type, ExpectedParticipants expectedParticipants) {
+    public void updateBasicInfo(String name, EventType type, String expectedParticipants) {
         this.name = name;
         this.type = type;
         this.expectedParticipants = expectedParticipants;

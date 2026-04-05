@@ -79,7 +79,7 @@ public class RequestEvent {
 
         @Schema(description = "예상 참여 인원")
         @NotNull
-        private ExpectedParticipants expectedParticipants;
+        private String expectedParticipants;
 
         @Schema(description = "행사 사진 파일 id 리스트")
         private List<String> fileIdList;
@@ -124,7 +124,7 @@ public class RequestEvent {
 
         @Schema(description = "예상 참여 인원")
         @NotNull
-        private ExpectedParticipants expectedParticipants;
+        private String expectedParticipants;
 
         @Schema(description = "행사 사진 파일 id 리스트")
         private List<String> fileIdList;
@@ -295,7 +295,7 @@ public class RequestEvent {
 
         @Schema(description = "예상 참여 인원")
         @NotNull
-        private ExpectedParticipants expectedParticipants;
+        private String expectedParticipants;
 
         @Schema(description = "행사 사진 파일 id 리스트")
         private List<String> fileIdList;

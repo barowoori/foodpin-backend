@@ -325,6 +325,19 @@ public class TruckController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "트럭 평균 메뉴 가격 최대값 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공")
+    })
+    @GetMapping(value = "/v1/avg-menu-price/max")
+    public ResponseEntity<CommonResponse<ResponseTruck.GetMaxAvgMenuPriceDto>> getMaxAvgMenuPrice() {
+        ResponseTruck.GetMaxAvgMenuPriceDto response = truckQueryService.getMaxAvgMenuPrice();
+        CommonResponse<ResponseTruck.GetMaxAvgMenuPriceDto> commonResponse = CommonResponse.<ResponseTruck.GetMaxAvgMenuPriceDto>builder()
+                .data(response)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
     @Operation(summary = "트럭 기본 정보 수정")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),

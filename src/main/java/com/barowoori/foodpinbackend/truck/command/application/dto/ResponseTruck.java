@@ -66,6 +66,18 @@ public class ResponseTruck {
 
     @Builder
     @Data
+    public static class GetTruckUpdateAvailabilityDto {
+        private Boolean isAvailableUpdate;
+
+        public static GetTruckUpdateAvailabilityDto of(Boolean isAvailableUpdate) {
+            return GetTruckUpdateAvailabilityDto.builder()
+                    .isAvailableUpdate(isAvailableUpdate)
+                    .build();
+        }
+    }
+
+    @Builder
+    @Data
     public static class GetBusinessRegistrationInfo {
         private String businessNumber;
         private String businessName;

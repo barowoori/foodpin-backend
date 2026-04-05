@@ -22,6 +22,8 @@ public enum NotificationType {
     RECRUITMENT_DEADLINE_SOON("모집마감일 알림", "[{행사명}] 모집 마감 6시간 전입니다.\n" +
             "추가 모집이 필요하다면 모집마감일을 연장해 주세요!"),
     RECRUITMENT_CANCELED("모집취소 알림","[{행사명}] 모집이 취소되었어요."),
+    EVENT_UPDATED("행사 수정 알림", "지원하신 [{행사명}] 정보가 업데이트되었습니다.\n" +
+            "수정된 내용을 반드시 확인해 주세요!"),
 
     // 관심 행사 관련
     INTEREST_REGISTERED("관심 행사 등록 알림", "{행사지역} - {행사명}"),

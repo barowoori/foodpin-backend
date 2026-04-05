@@ -5,6 +5,7 @@ import com.barowoori.foodpinbackend.event.command.domain.model.Event;
 import com.barowoori.foodpinbackend.event.command.domain.model.EventRecruitingStatus;
 import com.barowoori.foodpinbackend.event.command.domain.model.EventType;
 import com.barowoori.foodpinbackend.event.command.domain.model.ExpectedParticipants;
+import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventDashboardCount;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.MemberForEventFcmInfoDto;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckType;
@@ -59,6 +60,8 @@ public interface EventRepositoryCustom {
     Long findCountProgressStatus(String memberId);
 
     Long findCountEndStatus(String memberId);
+
+    EventDashboardCount findEventDashboardCount(String memberId);
 
     String getEventPhone(String eventId);
 }

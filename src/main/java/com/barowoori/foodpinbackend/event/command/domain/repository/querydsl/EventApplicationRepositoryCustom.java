@@ -16,4 +16,5 @@ public interface EventApplicationRepositoryCustom {
     List<EventApplication> findEventApplicationsByMemberAndEvent(String memberId, String eventId);
     Long findTruckAppliedRecruitingApplications(String truckId);
     Boolean existsPendingApplicationByTruckId(String truckId);
+    Boolean existsSelectedApplicationByEventId(String eventId);
 }

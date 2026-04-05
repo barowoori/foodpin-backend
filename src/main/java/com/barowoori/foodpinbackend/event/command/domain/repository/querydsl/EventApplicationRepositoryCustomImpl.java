@@ -142,6 +142,17 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
                 .fetchFirst() != null;
     }
 
+    @Override
+    public Boolean existsSelectedApplicationByEventId(String eventId) {
+        return jpaQueryFactory.selectOne()
+                .from(eventApplication)
+                .where(
+                        eventApplication.event.id.eq(eventId)
+                                .and(eventApplication.status.eq(EventApplicationStatus.SELECTED))
+                )
+                .fetchFirst() != null;
+    }
+
     private BooleanBuilder createStatusBuilder(String status) {
         BooleanBuilder filterBuilder = new BooleanBuilder();
         if (status.equals("ALL")) {

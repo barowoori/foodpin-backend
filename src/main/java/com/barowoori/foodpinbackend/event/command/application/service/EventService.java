@@ -106,8 +106,11 @@ public class EventService {
 
     @Transactional(readOnly = true)
     public ResponseEvent.GetEventUpdateAvailabilityDto getEventUpdateAvailability(String eventId) {
-        if (!eventRepository.existsById(eventId)) {
-            throw new CustomException(EventErrorCode.NOT_FOUND_EVENT);
+        String memberId = getMemberId();
+        Event event = getEvent(eventId);
+
+        if (!event.getCreatedBy().equals(memberId)) {
+            return ResponseEvent.GetEventUpdateAvailabilityDto.of(Boolean.FALSE);
         }
 
         boolean hasSelectedEventApplication = Boolean.TRUE.equals(eventApplicationRepository.existsSelectedApplicationByEventId(eventId));

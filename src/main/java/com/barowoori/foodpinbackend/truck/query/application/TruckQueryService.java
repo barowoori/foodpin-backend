@@ -63,8 +63,13 @@ public class TruckQueryService {
 
     @Transactional(readOnly = true)
     public ResponseTruck.GetTruckUpdateAvailabilityDto getTruckUpdateAvailability(String truckId) {
-        if (!truckRepository.existsById(truckId)) {
-            throw new CustomException(TruckErrorCode.NOT_FOUND_TRUCK);
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        truckRepository.findById(truckId)
+                .orElseThrow(() -> new CustomException(TruckErrorCode.NOT_FOUND_TRUCK));
+
+        TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(truckId, memberId);
+        if (truckManager == null) {
+            return ResponseTruck.GetTruckUpdateAvailabilityDto.of(Boolean.FALSE);
         }
 
         boolean hasPendingApplication = Boolean.TRUE.equals(eventApplicationRepository.existsPendingApplicationByTruckId(truckId));

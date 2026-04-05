@@ -160,7 +160,7 @@ public class EventController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
-    @Operation(summary = "행사 수정 가능 여부 조회", description = "참여 확정자가 1명이라도 있으면 수정 불가")
+    @Operation(summary = "행사 수정 가능 여부 조회", description = "선정이 1건이라도 있으면 수정 불가")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "성공"),
             @ApiResponse(responseCode = "404", description = "행사를 못 찾을 경우[40000]",

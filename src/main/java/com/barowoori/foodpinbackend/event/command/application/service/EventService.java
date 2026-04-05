@@ -10,6 +10,7 @@ import com.barowoori.foodpinbackend.event.command.application.dto.ResponseEvent;
 import com.barowoori.foodpinbackend.event.command.domain.exception.EventErrorCode;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.event.command.domain.repository.*;
+import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventDashboardCount;
 import com.barowoori.foodpinbackend.event.command.domain.service.EventContactAccessLogService;
 import com.barowoori.foodpinbackend.event.command.domain.service.EventDateCalculator;
 import com.barowoori.foodpinbackend.event.query.application.EventRegionFullNameGenerator;
@@ -98,8 +99,8 @@ public class EventService {
     }
 
     private void validateEventUpdatable(String eventId) {
-        if (Boolean.TRUE.equals(eventTruckRepository.existsConfirmedEventTruck(eventId))) {
-            throw new CustomException(EventErrorCode.CONFIRMED_EVENT_TRUCK_EXISTS);
+        if (Boolean.TRUE.equals(eventApplicationRepository.existsSelectedApplicationByEventId(eventId))) {
+            throw new CustomException(EventErrorCode.SELECTED_EVENT_APPLICATION_EXISTS);
         }
     }
 
@@ -109,8 +110,8 @@ public class EventService {
             throw new CustomException(EventErrorCode.NOT_FOUND_EVENT);
         }
 
-        boolean hasConfirmedEventTruck = eventTruckRepository.existsConfirmedEventTruck(eventId);
-        return ResponseEvent.GetEventUpdateAvailabilityDto.of(!hasConfirmedEventTruck);
+        boolean hasSelectedEventApplication = Boolean.TRUE.equals(eventApplicationRepository.existsSelectedApplicationByEventId(eventId));
+        return ResponseEvent.GetEventUpdateAvailabilityDto.of(!hasSelectedEventApplication);
     }
 
     @Transactional
@@ -603,16 +604,12 @@ public class EventService {
     @Transactional(readOnly = true)
     public ResponseEvent.GetEventDashboard getEventDashboard() {
         String memberId = getMemberId();
-        Integer recruitingCount = eventRepository.findCountRecruitingStatus(memberId).intValue();
-
-        Integer progressCount = eventRepository.findCountProgressStatus(memberId).intValue();
-
-        Integer endCount = eventRepository.findCountEndStatus(memberId).intValue();
+        EventDashboardCount dashboardCount = eventRepository.findEventDashboardCount(memberId);
 
         return ResponseEvent.GetEventDashboard.of(
-                recruitingCount,
-                progressCount,
-                endCount
+                dashboardCount.getRecruitingCount().intValue(),
+                dashboardCount.getProgressCount().intValue(),
+                dashboardCount.getEndCount().intValue()
         );
     }
 

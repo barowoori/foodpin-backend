@@ -3,15 +3,18 @@ package com.barowoori.foodpinbackend.event.command.domain.repository.querydsl;
 import com.barowoori.foodpinbackend.category.command.domain.model.QCategory;
 import com.barowoori.foodpinbackend.common.dto.MemberFcmInfoDto;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
+import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventDashboardCount;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.MemberForEventFcmInfoDto;
 import com.barowoori.foodpinbackend.member.command.domain.model.EventCreatorType;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckType;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.StringPath;
 import com.querydsl.jpa.JPAExpressions;
@@ -660,6 +663,74 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .join(event.recruitDetail, eventRecruitDetail)
                 .where(event.isDeleted.isFalse().and(event.createdBy.eq(memberId)).and(completedBuilder))
                 .fetchOne();
+    }
+
+    @Override
+    public EventDashboardCount findEventDashboardCount(String memberId) {
+        QEventDate progressEventDate = new QEventDate("progressEventDate");
+        QEventDate completedFutureEventDate = new QEventDate("completedFutureEventDate");
+        QEventDate completedPastEventDate = new QEventDate("completedPastEventDate");
+        LocalDate today = LocalDate.now();
+
+        Tuple counts = jpaQueryFactory
+                .select(
+                        new CaseBuilder()
+                                .when(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
+                                .then(1L)
+                                .otherwise(0L)
+                                .sum(),
+                        new CaseBuilder()
+                                .when(
+                                        eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITMENT_CLOSED)
+                                                .and(
+                                                        JPAExpressions.selectOne()
+                                                                .from(progressEventDate)
+                                                                .where(
+                                                                        progressEventDate.event.eq(event),
+                                                                        progressEventDate.date.goe(today)
+                                                                )
+                                                                .exists()
+                                                )
+                                )
+                                .then(1L)
+                                .otherwise(0L)
+                                .sum(),
+                        new CaseBuilder()
+                                .when(
+                                        eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITMENT_CANCELLED)
+                                                .or(
+                                                        JPAExpressions.selectOne()
+                                                                .from(completedPastEventDate)
+                                                                .where(
+                                                                        completedPastEventDate.event.eq(event),
+                                                                        completedPastEventDate.date.before(today)
+                                                                )
+                                                                .exists()
+                                                                .and(
+                                                                        JPAExpressions.selectOne()
+                                                                                .from(completedFutureEventDate)
+                                                                                .where(
+                                                                                        completedFutureEventDate.event.eq(event),
+                                                                                        completedFutureEventDate.date.goe(today)
+                                                                                )
+                                                                                .notExists()
+                                                                )
+                                                )
+                                )
+                                .then(1L)
+                                .otherwise(0L)
+                                .sum()
+                )
+                .from(event)
+                .join(event.recruitDetail, eventRecruitDetail)
+                .where(event.isDeleted.isFalse().and(event.createdBy.eq(memberId)))
+                .fetchOne();
+
+        return EventDashboardCount.builder()
+                .recruitingCount(counts != null && counts.get(0, Long.class) != null ? counts.get(0, Long.class) : 0L)
+                .progressCount(counts != null && counts.get(1, Long.class) != null ? counts.get(1, Long.class) : 0L)
+                .endCount(counts != null && counts.get(2, Long.class) != null ? counts.get(2, Long.class) : 0L)
+                .build();
     }
 
     public String getEventPhone(String eventId) {

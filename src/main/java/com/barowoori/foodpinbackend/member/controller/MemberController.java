@@ -101,6 +101,25 @@ public class MemberController {
         return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
     }
 
+    @Operation(summary = "백오피스 로그인")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "성공"),
+            @ApiResponse(responseCode = "400", description = "인증 토큰이 유효하지 않은 경우[20010], 소셜 타입이 누락된 경우[20009]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "관리자가 아닌 경우[20015]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "해당 회원 정보가 없을 경우[20004]",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping("/v2/login/backoffice")
+    public ResponseEntity<CommonResponse<ResponseMember.LoginMemberRsDto>> backOfficeLoginMember(@Valid @RequestBody RequestMember.BackOfficeLoginMemberRqDto loginMemberRqDto) {
+        ResponseMember.LoginMemberRsDto loginMemberRsDto = memberService.backOfficeLoginMember(loginMemberRqDto);
+        CommonResponse<ResponseMember.LoginMemberRsDto> commonResponse = CommonResponse.<ResponseMember.LoginMemberRsDto>builder()
+                .data(loginMemberRsDto)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(commonResponse);
+    }
+
     @Operation(summary = "액세스 토큰 재발급", description = "Authorization 헤더에 RefreshToken 입력" +
             "\n\n해당 API 호출 시 리프레쉬 토큰이 만료 7일 전부터 자동 갱신되므로 반환되는 액세스, 리프레쉬 토큰 전부 저장 필요")
     @ApiResponses(value = {

@@ -138,6 +138,28 @@ public class MemberService {
     }
 
     @Transactional
+    public ResponseMember.LoginMemberRsDto backOfficeLoginMember(RequestMember.BackOfficeLoginMemberRqDto loginMemberRqDto) {
+        Member member = memberRepository.findBySocialLoginInfo_TypeAndSocialLoginInfo_Id(loginMemberRqDto.getSocialInfoDto().getType(), loginMemberRqDto.getSocialInfoDto().getId());
+        if (member == null)
+            throw new CustomException(MemberErrorCode.MEMBER_NOT_FOUND);
+
+        String verifiedSocialId = socialTokenVerifier.verify(loginMemberRqDto.getSocialInfoDto().getType(), loginMemberRqDto.getIdentityToken());
+        if (!Objects.equals(verifiedSocialId, loginMemberRqDto.getSocialInfoDto().getId())) {
+            throw new CustomException(MemberErrorCode.INVALID_IDENTITY_TOKEN);
+        }
+
+        if (!member.getTypes().contains(MemberType.ADMIN)) {
+            throw new CustomException(MemberErrorCode.MEMBER_NOT_ADMIN);
+        }
+
+        String accessToken = jwtTokenProvider.createAccessToken(member.getId());
+        String refreshToken = jwtTokenProvider.createRefreshToken(member.getId());
+        member.updateRefreshToken(refreshToken);
+        memberRepository.save(member);
+        return ResponseMember.LoginMemberRsDto.toDto(accessToken, refreshToken);
+    }
+
+    @Transactional
     public ResponseMember.LoginMemberRsDto v2loginMember(RequestMember.V2LoginMemberRqDto loginMemberRqDto) {
         Member member = memberRepository.findBySocialLoginInfo_TypeAndSocialLoginInfo_Id(loginMemberRqDto.getSocialInfoDto().getType(), loginMemberRqDto.getSocialInfoDto().getId());
         if (member == null)

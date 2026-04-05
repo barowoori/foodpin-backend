@@ -4,6 +4,7 @@ import com.barowoori.foodpinbackend.common.security.CustomAccessDeniedHandler;
 import com.barowoori.foodpinbackend.common.security.CustomAuthenticationEntryPoint;
 import com.barowoori.foodpinbackend.common.security.JwtAuthenticationFilter;
 import com.barowoori.foodpinbackend.common.security.JwtTokenProvider;
+import org.springframework.core.env.Environment;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -25,13 +26,17 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
+    private final Environment environment;
 
-    public SecurityConfig(JwtTokenProvider jwtTokenProvider) {
+    public SecurityConfig(JwtTokenProvider jwtTokenProvider, Environment environment) {
         this.jwtTokenProvider = jwtTokenProvider;
+        this.environment = environment;
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        boolean isProdProfile = List.of(environment.getActiveProfiles()).contains("prod");
+
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
@@ -44,12 +49,14 @@ public class SecurityConfig {
                 )
                 //리퀘스트에 대한 사용 권한 체크
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/v3/api-docs/**", "/swagger-resources/**", "/swagger-ui/**", "/index.html",
-                                "/api/members/v1/register", "/api/members/v1/register/temporary", "/api/members/v2/login/temporary", "/api/members/v2/login", "/api/members/v2/login/backoffice", "/api/members/v1/random-nickname"
+                        .requestMatchers("/api/members/v1/register", "/api/members/v1/register/temporary", "/api/members/v2/login/temporary", "/api/members/v2/login", "/api/members/v1/random-nickname", "/api/members/v2/login/backoffice"
                                 , "/api/members/v1/nickname/{nickname}/valid", "/api/members/v1/phone/{phone}/valid", "/api/files/**", "/api/documents/**", "/api/auth/apple/callback").permitAll()
                         .requestMatchers("/api/trucks/v1", "/api/trucks/v1/{truckId}/detail","/api/trucks/v1/avg-menu-price/max", "/api/events/v1", "/api/events/v1/{eventId}/detail",
                                 "/api/events/progress/status/{status}", "/api/trucks/v1/completed/status/{status}", "/api/trucks/v1/{truckId}/contact", "/api/events/v1/{eventId}/contact").hasAnyRole("NORMAL", "UNREGISTERED")
                         .requestMatchers("**exception**", "/share/**", "/api/trucks/v1/{truckId}/detail", "/api/events/v1/{eventId}/detail").permitAll())
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/v3/api-docs/**", "/swagger-resources/**", "/swagger-ui/**", "/index.html")
+                        .access((authentication, object) -> new org.springframework.security.authorization.AuthorizationDecision(!isProdProfile)))
 
                 // 나머지 요청은 인증된 NORMAL 접근 가능
                 .authorizeHttpRequests(authorize -> authorize.anyRequest().hasRole("NORMAL"))

@@ -10,7 +10,6 @@ import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
 
 @Getter
@@ -28,16 +27,19 @@ public class EventList {
     private Integer views;
 
     public static EventList of(Event event, List<String> regions, ImageManager imageManager) {
+        LocalDate startDate = EventDateCalculator.getMinDate(event);
+        LocalDate endDate = EventDateCalculator.getMaxDate(event);
+
         return EventList.builder()
                 .id(event.getId())
                 .photo(event.getEventMainPhotoUrl(imageManager))
                 .name(event.getName())
                 .recruitEndDateTime(event.getRecruitDetail().getRecruitEndDateTime())
-                .startDate(EventDateCalculator.getMinDate(event))
-                .endDate(EventDateCalculator.getMaxDate(event))
+                .startDate(startDate)
+                .endDate(endDate)
                 .region(regions.isEmpty() ? null : regions.getFirst())
                 .categories(event.getCategories().stream().map(EventCategory::getCategory).map(Category::getName).toList())
-                .recruitInfo(RecruitInfo.of(event.getRecruitDetail()))
+                .recruitInfo(RecruitInfo.of(event.getRecruitDetail(), endDate))
                 .views(event.getView().getViews())
                 .build();
     }

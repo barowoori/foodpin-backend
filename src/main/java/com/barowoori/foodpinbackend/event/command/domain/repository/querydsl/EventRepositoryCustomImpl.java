@@ -14,6 +14,7 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.StringPath;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -49,16 +50,12 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
     }
 
     public Event findEventDetail(String eventId) {
-        return jpaQueryFactory.selectFrom(event)
-                .leftJoin(event.eventRegion, eventRegion)
-                .leftJoin(event.eventDates, eventDate)
-                .leftJoin(event.categories, eventCategory)
-                .leftJoin(eventCategory.category, category)
-                .leftJoin(event.recruitDetail, eventRecruitDetail)
-                .leftJoin(event.view, eventView)
-                .leftJoin(event.photos, eventPhoto)
-                .leftJoin(eventPhoto.file, file)
-                .leftJoin(event.documents, eventDocument)
+        return jpaQueryFactory.selectDistinct(event)
+                .from(event)
+                .leftJoin(event.recruitDetail, eventRecruitDetail).fetchJoin()
+                .leftJoin(event.view, eventView).fetchJoin()
+                .leftJoin(event.photos, eventPhoto).fetchJoin()
+                .leftJoin(eventPhoto.file, file).fetchJoin()
                 .where(event.id.eq(eventId).and(event.isDeleted.isFalse()))
                 .fetchOne();
     }
@@ -69,48 +66,31 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                                              List<String> categoryCodes,
                                              EventType type, Set<TruckType> truckTypes, Boolean isCatering, List<EventRecruitingStatus> recruitingStatuses,
                                              Pageable pageable) {
-        List<Event> events = jpaQueryFactory.selectDistinct(event)
+        List<String> eventIds = jpaQueryFactory.select(event.id).distinct()
                 .from(event)
-                .leftJoin(event.eventRegion, eventRegion)
-                .leftJoin(event.eventDates, eventDate)
-                .leftJoin(event.categories, eventCategory)
-                .leftJoin(eventCategory.category, category)
-                .innerJoin(event.recruitDetail, eventRecruitDetail).fetchJoin()
-                .leftJoin(event.view, eventView)
-                .leftJoin(event.photos, eventPhoto)
-                .leftJoin(eventPhoto.file, file)
+                .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .where(
                         event.isDeleted.isFalse()
                                 .and(event.isHidden.isFalse())
                                 .and(eventRecruitDetail.recruitingStatus.in(recruitingStatuses))
-                                .and(
-                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, truckTypes, isCatering, null, null, event, eventDate, category)
-                                                .and(regionFilterCondition(regionIds))
-                                )
+                                .and(createListFilterBuilder(searchTerm, regionIds, startDate, endDate, categoryCodes, type, truckTypes, isCatering, null, null))
                 )
                 .orderBy(getOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        Long total = jpaQueryFactory.select(event.countDistinct()).from(event)
-                .leftJoin(event.eventRegion, eventRegion)
-                .leftJoin(event.eventDates, eventDate)
-                .leftJoin(event.categories, eventCategory)
-                .leftJoin(eventCategory.category, category)
+        Long total = jpaQueryFactory.select(event.id.countDistinct()).from(event)
                 .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .where(
                         event.isDeleted.isFalse()
                                 .and(event.isHidden.isFalse())
                                 .and(eventRecruitDetail.recruitingStatus.in(recruitingStatuses))
-                                .and(
-                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, truckTypes, isCatering, null, null, event, eventDate, category)
-                                                .and(regionFilterCondition(regionIds))
-                                )
+                                .and(createListFilterBuilder(searchTerm, regionIds, startDate, endDate, categoryCodes, type, truckTypes, isCatering, null, null))
                 )
                 .fetchOne();
 
-        return new PageImpl<>(events, pageable, total);
+        return new PageImpl<>(findEventsByIds(eventIds), pageable, total);
     }
 
     @Override
@@ -120,48 +100,29 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                                                        EventType type, Set<TruckType> truckTypes, Boolean isCatering,
                                                        LocalDate recruitEndDateFrom, LocalDate recruitEndDateTo,
                                                        Pageable pageable) {
-        List<Event> events = jpaQueryFactory.selectDistinct(event)
+        List<String> eventIds = jpaQueryFactory.select(event.id).distinct()
                 .from(event)
-                .leftJoin(event.eventRegion, eventRegion)
-                .leftJoin(event.eventDates, eventDate)
-                .leftJoin(event.categories, eventCategory)
-                .leftJoin(eventCategory.category, category)
-                .innerJoin(event.recruitDetail, eventRecruitDetail).fetchJoin()
-                .leftJoin(event.view, eventView)
-                .leftJoin(event.photos, eventPhoto)
-                .leftJoin(eventPhoto.file, file)
+                .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .where(
                         event.isDeleted.isFalse()
                                 .and(event.creatorType.eq(EventCreatorType.ADMIN))
-//                                .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
-                                .and(
-                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, truckTypes, isCatering, recruitEndDateFrom, recruitEndDateTo, event, eventDate, category)
-                                                .and(regionFilterCondition(regionIds))
-                                )
+                                .and(createListFilterBuilder(searchTerm, regionIds, startDate, endDate, categoryCodes, type, truckTypes, isCatering, recruitEndDateFrom, recruitEndDateTo))
                 )
                 .orderBy(getOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        Long total = jpaQueryFactory.select(event.countDistinct()).from(event)
-                .leftJoin(event.eventRegion, eventRegion)
-                .leftJoin(event.eventDates, eventDate)
-                .leftJoin(event.categories, eventCategory)
-                .leftJoin(eventCategory.category, category)
+        Long total = jpaQueryFactory.select(event.id.countDistinct()).from(event)
                 .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .where(
                         event.isDeleted.isFalse()
                                 .and(event.creatorType.eq(EventCreatorType.ADMIN))
-//                                .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
-                                .and(
-                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, truckTypes, isCatering, recruitEndDateFrom, recruitEndDateTo, event, eventDate, category)
-                                                .and(regionFilterCondition(regionIds))
-                                )
+                                .and(createListFilterBuilder(searchTerm, regionIds, startDate, endDate, categoryCodes, type, truckTypes, isCatering, recruitEndDateFrom, recruitEndDateTo))
                 )
                 .fetchOne();
 
-        return new PageImpl<>(events, pageable, total);
+        return new PageImpl<>(findEventsByIds(eventIds), pageable, total);
     }
 
     @Override
@@ -170,46 +131,87 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                                                  List<String> categoryCodes,
                                                  EventType type, Set<TruckType> truckTypes, Boolean isCatering,
                                                  Pageable pageable) {
-        List<Event> events = jpaQueryFactory.selectDistinct(event)
+        List<String> eventIds = jpaQueryFactory.select(event.id).distinct()
                 .from(event)
                 .innerJoin(eventLike).on(eventLike.event.eq(event).and(eventLike.member.id.eq(memberId)))
-                .leftJoin(event.eventRegion, eventRegion)
-                .leftJoin(event.eventDates, eventDate)
-                .leftJoin(event.categories, eventCategory)
-                .leftJoin(eventCategory.category, category)
-                .innerJoin(event.recruitDetail, eventRecruitDetail).fetchJoin()
-                .leftJoin(event.view, eventView)
-                .leftJoin(event.photos, eventPhoto)
-                .leftJoin(eventPhoto.file, file)
+                .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .where(
                         event.isDeleted.isFalse()
-                                .and(
-                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, truckTypes, isCatering, null, null, event, eventDate, category)
-                                                .and(regionFilterCondition(regionIds))
-                                )
+                                .and(createListFilterBuilder(searchTerm, regionIds, startDate, endDate, categoryCodes, type, truckTypes, isCatering, null, null))
                 )
                 .orderBy(getLikeOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        Long total = jpaQueryFactory.select(event.countDistinct()).from(event)
+        Long total = jpaQueryFactory.select(event.id.countDistinct()).from(event)
                 .innerJoin(eventLike).on(eventLike.event.eq(event).and(eventLike.member.id.eq(memberId)))
-                .leftJoin(event.eventRegion, eventRegion)
-                .leftJoin(event.eventDates, eventDate)
-                .leftJoin(event.categories, eventCategory)
-                .leftJoin(eventCategory.category, category)
                 .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .where(
                         event.isDeleted.isFalse()
-                                .and(
-                                        createFilterBuilder(searchTerm, categoryCodes, startDate, endDate, type, truckTypes, isCatering, null, null, event, eventDate, category)
-                                                .and(regionFilterCondition(regionIds))
-                                )
+                                .and(createListFilterBuilder(searchTerm, regionIds, startDate, endDate, categoryCodes, type, truckTypes, isCatering, null, null))
                 )
                 .fetchOne();
 
-        return new PageImpl<>(events, pageable, total);
+        return new PageImpl<>(findEventsByIds(eventIds), pageable, total);
+    }
+
+    private BooleanBuilder createListFilterBuilder(String searchTerm, Map<RegionType, List<String>> regionIds,
+                                                   LocalDate startDate, LocalDate endDate,
+                                                   List<String> categoryCodes,
+                                                   EventType type, Set<TruckType> truckTypes, Boolean isCatering,
+                                                   LocalDate recruitEndDateFrom, LocalDate recruitEndDateTo) {
+        BooleanBuilder builder = new BooleanBuilder();
+        addSearchTermFilter(event, searchTerm, builder);
+        addEventTypeFilter(type, builder);
+        addTruckTypeFilter(truckTypes, builder);
+        addCateringFilter(isCatering, builder);
+        addRecruitEndDateFilter(recruitEndDateFrom, recruitEndDateTo, builder);
+
+        BooleanExpression periodFilter = periodExistsCondition(startDate, endDate);
+        if (periodFilter != null) {
+            builder.and(periodFilter);
+        }
+
+        BooleanExpression categoryFilter = categoryExistsCondition(categoryCodes);
+        if (categoryFilter != null) {
+            builder.and(categoryFilter);
+        }
+
+        BooleanExpression regionFilter = regionExistsCondition(regionIds);
+        if (regionFilter != null) {
+            builder.and(regionFilter);
+        }
+
+        return builder;
+    }
+
+    private List<Event> findEventsByIds(List<String> eventIds) {
+        if (eventIds == null || eventIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<Event> events = jpaQueryFactory.selectDistinct(event)
+                .from(event)
+                .innerJoin(event.recruitDetail, eventRecruitDetail).fetchJoin()
+                .leftJoin(event.view, eventView).fetchJoin()
+                .where(event.id.in(eventIds))
+                .fetch();
+
+        Map<String, Event> eventMap = new java.util.HashMap<>();
+        for (Event eventEntity : events) {
+            eventMap.put(eventEntity.getId(), eventEntity);
+        }
+
+        List<Event> orderedEvents = new ArrayList<>();
+        for (String eventId : eventIds) {
+            Event eventEntity = eventMap.get(eventId);
+            if (eventEntity != null) {
+                orderedEvents.add(eventEntity);
+            }
+        }
+
+        return orderedEvents;
     }
 
     @Override
@@ -308,6 +310,53 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
         builder.and(eventDate.date.between(startDate, endDate));
     }
 
+    private BooleanExpression periodExistsCondition(LocalDate startDate, LocalDate endDate) {
+        if (startDate == null || endDate == null) {
+            return null;
+        }
+
+        QEventDate eventDateSub = new QEventDate("eventDateSub");
+        return JPAExpressions.selectOne()
+                .from(eventDateSub)
+                .where(eventDateSub.event.eq(event)
+                        .and(eventDateSub.date.between(startDate, endDate)))
+                .exists();
+    }
+
+    private BooleanExpression categoryExistsCondition(List<String> categoryCodes) {
+        if (categoryCodes == null || categoryCodes.isEmpty()) {
+            return null;
+        }
+
+        QEventCategory eventCategorySub = new QEventCategory("eventCategorySub");
+        QCategory categorySub = new QCategory("categorySub");
+
+        return JPAExpressions.selectOne()
+                .from(eventCategorySub)
+                .innerJoin(eventCategorySub.category, categorySub)
+                .where(eventCategorySub.event.eq(event)
+                        .and(categorySub.code.in(categoryCodes)))
+                .exists();
+    }
+
+    private BooleanExpression regionExistsCondition(Map<RegionType, List<String>> regionIds) {
+        if (regionIds == null || regionIds.isEmpty()) {
+            return null;
+        }
+
+        QEventRegion eventRegionSub = new QEventRegion("eventRegionSub");
+        BooleanExpression regionCondition = regionFilterCondition(regionIds, eventRegionSub);
+        if (regionCondition == null) {
+            return null;
+        }
+
+        return JPAExpressions.selectOne()
+                .from(eventRegionSub)
+                .where(eventRegionSub.event.eq(event)
+                        .and(regionCondition))
+                .exists();
+    }
+
     private BooleanExpression regionFilterCondition(Map<RegionType, List<String>> regionIds) {
         if (regionIds == null || regionIds.isEmpty()) {
             return null;
@@ -316,6 +365,16 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .or(eventRegion.regionId.in(regionIds.get(RegionType.REGION_SI)).and(eventRegion.regionType.eq(RegionType.REGION_SI)))
                 .or(eventRegion.regionId.in(regionIds.get(RegionType.REGION_GU)).and(eventRegion.regionType.eq(RegionType.REGION_GU)))
                 .or(eventRegion.regionId.in(regionIds.get(RegionType.REGION_GUN)).and(eventRegion.regionType.eq(RegionType.REGION_GUN)));
+    }
+
+    private BooleanExpression regionFilterCondition(Map<RegionType, List<String>> regionIds, QEventRegion eventRegionAlias) {
+        if (regionIds == null || regionIds.isEmpty()) {
+            return null;
+        }
+        return eventRegionAlias.regionId.in(regionIds.get(RegionType.REGION_DO)).and(eventRegionAlias.regionType.eq(RegionType.REGION_DO))
+                .or(eventRegionAlias.regionId.in(regionIds.get(RegionType.REGION_SI)).and(eventRegionAlias.regionType.eq(RegionType.REGION_SI)))
+                .or(eventRegionAlias.regionId.in(regionIds.get(RegionType.REGION_GU)).and(eventRegionAlias.regionType.eq(RegionType.REGION_GU)))
+                .or(eventRegionAlias.regionId.in(regionIds.get(RegionType.REGION_GUN)).and(eventRegionAlias.regionType.eq(RegionType.REGION_GUN)));
     }
 
     private void addCateringFilter(Boolean isCatering, BooleanBuilder builder) {

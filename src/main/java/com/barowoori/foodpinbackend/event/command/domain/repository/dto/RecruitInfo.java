@@ -2,7 +2,6 @@ package com.barowoori.foodpinbackend.event.command.domain.repository.dto;
 
 import com.barowoori.foodpinbackend.event.command.domain.model.Event;
 import com.barowoori.foodpinbackend.event.command.domain.model.EventRecruitDetail;
-import com.barowoori.foodpinbackend.event.command.domain.model.EventRecruitingStatus;
 import com.barowoori.foodpinbackend.event.command.domain.service.EventDateCalculator;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,9 +17,17 @@ public class RecruitInfo {
     private Integer selectedCount;
     private Integer recruitCount;
 
+    public static RecruitInfo of(Event event, EventRecruitDetail eventRecruitDetail) {
+        return of(eventRecruitDetail, EventDateCalculator.getMaxDate(event));
+    }
+
     public static RecruitInfo of(EventRecruitDetail eventRecruitDetail) {
+        return of(eventRecruitDetail, null);
+    }
+
+    public static RecruitInfo of(EventRecruitDetail eventRecruitDetail, LocalDate endDate) {
         return RecruitInfo.builder()
-                .status(convertStatus(eventRecruitDetail))
+                .status(convertStatus(eventRecruitDetail, endDate))
                 .isRecruitEndOnSelection(eventRecruitDetail.getIsRecruitEndOnSelection())
                 .applicantCount(eventRecruitDetail.getApplicantCount())
                 .selectedCount(eventRecruitDetail.getSelectedCount())
@@ -28,17 +35,9 @@ public class RecruitInfo {
                 .build();
     }
 
-    private static String convertStatus(EventRecruitDetail eventRecruitDetail) {
-//        if (eventRecruitDetail.getRecruitingStatus().equals(EventRecruitingStatus.RECRUITING)){
-//            return eventRecruitDetail.getRecruitingStatus().toString();
-//        }
-//        if (eventRecruitDetail.getRecruitingStatus().equals(EventRecruitingStatus.RECRUITMENT_CLOSED)){
-//            return eventRecruitDetail.getRecruitingStatus().toString();
-//        }
-//        if (eventRecruitDetail.getRecruitingStatus().equals(EventRecruitingStatus.RECRUITMENT_CANCELLED)){
-//            return eventRecruitDetail.getRecruitingStatus().toString();
-//        }
-        if (!eventRecruitDetail.isEventProgress()) {
+    private static String convertStatus(EventRecruitDetail eventRecruitDetail, LocalDate endDate) {
+        if ((endDate != null && endDate.isBefore(LocalDate.now()))
+                || (endDate == null && !eventRecruitDetail.isEventProgress())) {
             return "COMPLETED";
         }
         return eventRecruitDetail.getRecruitingStatus().toString();

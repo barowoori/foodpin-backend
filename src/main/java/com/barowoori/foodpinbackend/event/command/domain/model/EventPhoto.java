@@ -4,10 +4,11 @@ import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-
+@BatchSize(size = 50)
 @Entity
 @Table(name = "event_photos")
 @Getter

@@ -4,7 +4,6 @@ import com.barowoori.foodpinbackend.event.command.domain.model.Event;
 import com.barowoori.foodpinbackend.event.command.domain.model.EventRecruitingStatus;
 import com.barowoori.foodpinbackend.event.command.domain.model.EventType;
 import com.barowoori.foodpinbackend.event.command.domain.model.ExpectedParticipants;
-import com.barowoori.foodpinbackend.event.command.domain.repository.EventRegionRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventRepository;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.BackOfficeEventList;
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventList;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,15 +26,13 @@ public class EventListService {
     private final EventRepository eventRepository;
     private final RegionDoRepository regionDoRepository;
     private final ImageManager imageManager;
-    private final EventRegionRepository eventRegionRepository;
     private final EventRegionFullNameGenerator eventRegionFullNameGenerator;
 
-    public EventListService(EventRepository eventRepository, RegionDoRepository regionDoRepository, ImageManager imageManager, EventRegionRepository eventRegionRepository,
+    public EventListService(EventRepository eventRepository, RegionDoRepository regionDoRepository, ImageManager imageManager,
                             EventRegionFullNameGenerator eventRegionFullNameGenerator) {
         this.eventRepository = eventRepository;
         this.regionDoRepository = regionDoRepository;
         this.imageManager = imageManager;
-        this.eventRegionRepository = eventRegionRepository;
         this.eventRegionFullNameGenerator = eventRegionFullNameGenerator;
     }
 

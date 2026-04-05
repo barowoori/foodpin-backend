@@ -9,6 +9,7 @@ import com.barowoori.foodpinbackend.truck.command.domain.service.TruckTypeSetCon
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -110,15 +111,19 @@ public class Event {
     private String contact;
 
     @OneToMany(mappedBy = "event")
+    @BatchSize(size = 50)
     private List<EventPhoto> photos = new ArrayList<>();
 
     @OneToMany(mappedBy = "event")
+    @BatchSize(size = 50)
     private List<EventDate> eventDates = new ArrayList<>();
 
     @OneToMany(mappedBy = "event")
+    @BatchSize(size = 50)
     private List<EventCategory> categories = new ArrayList<>();
 
     @OneToMany(mappedBy = "event")
+    @BatchSize(size = 50)
     private List<EventDocument> documents = new ArrayList<>();
 
     @OneToMany(mappedBy = "event")

@@ -35,8 +35,7 @@ public class JwtTokenProvider {
     @Value("${jwt.secret}")
     private String secretKey;
 
-    private final long accessTokenValidMillisecond = 1000L * 60; // 1분 액세스 토큰 유효, 임시
-//    private final long accessTokenValidMillisecond = 1000L * 60 * 60; // 1시간 액세스 토큰 유효
+    private final long accessTokenValidMillisecond = 1000L * 60 * 60; // 1시간 액세스 토큰 유효
     private final long refreshTokenValidMillisecond = 1000L * 60 * 60 * 24 * 30; // 30일 리프레쉬 토큰 유효
     private final long millisecondBeforeExpiry = 1000L * 60 * 60 * 24 * 7; // 7일 이내 만료인 지
 

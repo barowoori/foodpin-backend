@@ -395,6 +395,7 @@ public class TruckService {
                         saveTruckDocumentPhotos(dto.getFileIdList(), newDoc, memberId);
                     }
                 } else {
+                    validateTruckUpdatable(truckId);
                     BusinessRegistration br = truckDocumentRepository.getBusinessRegistrationDocumentByTruckId(truck.getId());
                     br.update(memberId,
                             dto.getCreateBusinessRegistrationDto().getBusinessNumber(),
@@ -419,6 +420,7 @@ public class TruckService {
                     truckDocumentRepository.save(newDoc);
                     saveTruckDocumentPhotos(dto.getFileIdList(), newDoc, memberId);
                 } else {
+                    validateTruckUpdatable(truckId);
                     List<TruckDocumentPhoto> existingPhotos = truckDocumentPhotoRepository.findByTruckDocumentId(existingDoc.getId());
                     existingPhotos.forEach(truckDocumentPhotoRepository::delete);
                     saveTruckDocumentPhotos(dto.getFileIdList(), existingDoc, memberId);

@@ -140,6 +140,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .where(
                         event.isDeleted.isFalse()
+                                .and(event.isHidden.isFalse())
                                 .and(createListFilterBuilder(searchTerm, regionIds, startDate, endDate, categoryCodes, type, truckTypes, isCatering, null, null))
                 )
                 .orderBy(getLikeOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
@@ -152,6 +153,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .innerJoin(event.recruitDetail, eventRecruitDetail)
                 .where(
                         event.isDeleted.isFalse()
+                                .and(event.isHidden.isFalse())
                                 .and(createListFilterBuilder(searchTerm, regionIds, startDate, endDate, categoryCodes, type, truckTypes, isCatering, null, null))
                 )
                 .fetchOne();

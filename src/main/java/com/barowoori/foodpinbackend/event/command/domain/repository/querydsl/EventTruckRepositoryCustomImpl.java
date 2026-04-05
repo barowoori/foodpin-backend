@@ -79,6 +79,47 @@ public class EventTruckRepositoryCustomImpl implements EventTruckRepositoryCusto
     }
 
     @Override
+    public Boolean existsConfirmedEventTruck(String eventId) {
+        return jpaQueryFactory.selectOne()
+                .from(eventTruck)
+                .where(eventTruck.event.id.eq(eventId)
+                        .and(eventTruck.status.eq(CONFIRMED)))
+                .fetchFirst() != null;
+    }
+
+    @Override
+    public Boolean existsPendingEventTruckByTruckId(String truckId) {
+        return jpaQueryFactory.selectOne()
+                .from(eventTruck)
+                .where(
+                        eventTruck.truck.id.eq(truckId)
+                                .and(eventTruck.status.eq(EventTruckStatus.PENDING))
+                )
+                .fetchFirst() != null;
+    }
+
+    @Override
+    public Boolean existsConfirmedProgressEventTruckByTruckId(String truckId) {
+        return jpaQueryFactory.selectOne()
+                .from(eventTruck)
+                .where(
+                        eventTruck.truck.id.eq(truckId)
+                                .and(eventTruck.status.eq(EventTruckStatus.CONFIRMED))
+                                .and(
+                                        eventTruck.event.id.in(
+                                                jpaQueryFactory
+                                                        .select(event.id)
+                                                        .from(event)
+                                                        .leftJoin(event.eventDates, eventDate)
+                                                        .groupBy(event.id)
+                                                        .having(eventDate.date.max().goe(LocalDate.now()))
+                                        )
+                                )
+                )
+                .fetchFirst() != null;
+    }
+
+    @Override
     public Page<EventTruck> findSelectedApplications(String status, String truckId, Pageable pageable) {
         List<EventTruck> eventTrucks = jpaQueryFactory.selectDistinct(eventTruck)
                 .from(eventTruck)

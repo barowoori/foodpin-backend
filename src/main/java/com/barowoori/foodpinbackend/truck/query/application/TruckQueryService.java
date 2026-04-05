@@ -1,8 +1,8 @@
 package com.barowoori.foodpinbackend.truck.query.application;
 
 import com.barowoori.foodpinbackend.common.exception.CustomException;
-import com.barowoori.foodpinbackend.event.command.domain.model.EventApplication;
 import com.barowoori.foodpinbackend.event.command.domain.repository.EventApplicationRepository;
+import com.barowoori.foodpinbackend.event.command.domain.repository.EventTruckRepository;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
@@ -23,12 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.barowoori.foodpinbackend.event.command.domain.model.QEvent.event;
 import static com.barowoori.foodpinbackend.event.command.domain.model.QEventApplication.eventApplication;
-import static com.barowoori.foodpinbackend.event.command.domain.model.QEventApplicationDate.eventApplicationDate;
-import static com.barowoori.foodpinbackend.event.command.domain.model.QEventPhoto.eventPhoto;
-import static com.barowoori.foodpinbackend.event.command.domain.model.QEventRecruitDetail.eventRecruitDetail;
-import static com.barowoori.foodpinbackend.file.command.domain.model.QFile.file;
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruck.truck;
 
 @Service
@@ -37,6 +32,7 @@ public class TruckQueryService {
     private final MemberRepository memberRepository;
     private final TruckManagerRepository truckManagerRepository;
     private final EventApplicationRepository eventApplicationRepository;
+    private final EventTruckRepository eventTruckRepository;
     private final TruckRepository truckRepository;
     private final JPAQueryFactory jpaQueryFactory;
 
@@ -63,5 +59,20 @@ public class TruckQueryService {
     @Transactional(readOnly = true)
     public ResponseTruck.GetMaxAvgMenuPriceDto getMaxAvgMenuPrice() {
         return ResponseTruck.GetMaxAvgMenuPriceDto.of(truckRepository.findMaxAvgMenuPrice());
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseTruck.GetTruckUpdateAvailabilityDto getTruckUpdateAvailability(String truckId) {
+        if (!truckRepository.existsById(truckId)) {
+            throw new CustomException(TruckErrorCode.NOT_FOUND_TRUCK);
+        }
+
+        boolean hasPendingApplication = Boolean.TRUE.equals(eventApplicationRepository.existsPendingApplicationByTruckId(truckId));
+        boolean hasPendingEventTruck = Boolean.TRUE.equals(eventTruckRepository.existsPendingEventTruckByTruckId(truckId));
+        boolean hasConfirmedProgressEventTruck = Boolean.TRUE.equals(eventTruckRepository.existsConfirmedProgressEventTruckByTruckId(truckId));
+
+        return ResponseTruck.GetTruckUpdateAvailabilityDto.of(
+                !(hasPendingApplication || hasPendingEventTruck || hasConfirmedProgressEventTruck)
+        );
     }
 }

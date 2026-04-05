@@ -97,6 +97,24 @@ public class TruckNotificationEventHandler {
         });
     }
 
+    //행사 수정 알림 Handler
+    @EventListener(EventUpdatedNotificationEvent.class)
+    public void handle(EventUpdatedNotificationEvent event) {
+        NotificationType type = NotificationType.EVENT_UPDATED;
+        NotificationTargetType targetType = NotificationTargetType.EVENT_DETAIL;
+
+        String content = type.format(Map.of(
+                "행사명", event.getEventName()
+        ));
+        List<MemberFcmInfoDto> memberFcmInfoDtos = eventApplicationRepository.findAllFcmInfoOfTruckManagersByEventId(event.getEventId());
+        memberFcmInfoDtos.forEach(memberFcmInfoDto -> {
+            Map<String, Object> params = Map.of("eventId", event.getEventId());
+            notificationService.pushAlarmToToken(type, type.getName(), content, memberFcmInfoDto.getFcmToken(), targetType, event.getEventId(), params);
+
+            savePushAlarmHistory(memberFcmInfoDto.getMemberId(), type, targetType, event.getEventId(), params, content);
+        });
+    }
+
     //미선정 알림 Handler
     @EventListener(SelectionNotSelectedNotificationEvent.class)
     public void handle(SelectionNotSelectedNotificationEvent event) {

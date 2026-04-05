@@ -54,6 +54,18 @@ public class ResponseTruck {
 
     @Builder
     @Data
+    public static class GetMaxAvgMenuPriceDto {
+        private Integer maxAvgMenuPrice;
+
+        public static GetMaxAvgMenuPriceDto of(Integer maxAvgMenuPrice) {
+            return GetMaxAvgMenuPriceDto.builder()
+                    .maxAvgMenuPrice(maxAvgMenuPrice)
+                    .build();
+        }
+    }
+
+    @Builder
+    @Data
     public static class GetBusinessRegistrationInfo {
         private String businessNumber;
         private String businessName;

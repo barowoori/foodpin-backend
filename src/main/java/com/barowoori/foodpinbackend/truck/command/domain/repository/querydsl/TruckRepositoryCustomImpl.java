@@ -53,6 +53,14 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
     }
 
     @Override
+    public Integer findMaxAvgMenuPrice() {
+        return jpaQueryFactory.select(truck.avgMenuPrice.max())
+                .from(truck)
+                .where(truck.isDeleted.isFalse())
+                .fetchOne();
+    }
+
+    @Override
     public Page<Truck> findTruckListByFilter(String searchTerm, List<String> categoryCodes, Map<RegionType, List<String>> regionIds,
                                              Set<TruckType> types, Integer minAvgMenuPrice,  Integer maxAvgMenuPrice, Set<TruckColor> colors, Set<TruckBodyType> bodyTypes,
                                              Set<PaymentMethod> paymentMethods, Set<ProofIssuanceType> proofIssuanceTypes, Boolean isCatering,

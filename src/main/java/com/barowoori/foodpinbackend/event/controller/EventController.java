@@ -201,14 +201,13 @@ public class EventController {
                                                                                                @RequestParam(value = "startDate", required = false) LocalDate startDate,
                                                                                                @RequestParam(value = "endDate", required = false) LocalDate endDate,
                                                                                                @RequestParam(value = "type", required = false) EventType type,
-                                                                                               @RequestParam(value = "expectedParticipants", required = false) ExpectedParticipants expectedParticipants,
                                                                                                @RequestParam(value = "truckTypes", required = false) Set<TruckType> truckTypes,
                                                                                                @RequestParam(value = "isCatering", required = false) Boolean isCatering,
                                                                                                @RequestParam(value = "recruitEndDateFrom", required = false) LocalDate recruitEndDateFrom,
                                                                                                @RequestParam(value = "recruitEndDateTo", required = false) LocalDate recruitEndDateTo,
                                                                                                @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        Page<BackOfficeEventList> eventLists = eventListService.findEventListForBackOffice(searchTerm, regionCodes, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, isCatering, recruitEndDateFrom, recruitEndDateTo, pageable);
+        Page<BackOfficeEventList> eventLists = eventListService.findEventListForBackOffice(searchTerm, regionCodes, startDate, endDate, categoryCodes, type, truckTypes, isCatering, recruitEndDateFrom, recruitEndDateTo, pageable);
         CommonResponse<Page<BackOfficeEventList>> commonResponse = CommonResponse.<Page<BackOfficeEventList>>builder()
                 .data(eventLists)
                 .build();
@@ -228,13 +227,12 @@ public class EventController {
                                                                             @RequestParam(value = "startDate", required = false) LocalDate startDate,
                                                                             @RequestParam(value = "endDate", required = false) LocalDate endDate,
                                                                             @RequestParam(value = "type", required = false) EventType type,
-                                                                            @RequestParam(value = "expectedParticipants", required = false) ExpectedParticipants expectedParticipants,
                                                                             @RequestParam(value = "truckTypes", required = false) Set<TruckType> truckTypes,
                                                                             @RequestParam(value = "isCatering", required = false) Boolean isCatering,
                                                                             @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
-        Page<EventList> eventLists = eventListService.findLikeEventList(memberId, searchTerm, regionCodes, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, isCatering, pageable);
+        Page<EventList> eventLists = eventListService.findLikeEventList(memberId, searchTerm, regionCodes, startDate, endDate, categoryCodes, type, truckTypes, isCatering, pageable);
         CommonResponse<Page<EventList>> commonResponse = CommonResponse.<Page<EventList>>builder()
                 .data(eventLists)
                 .build();

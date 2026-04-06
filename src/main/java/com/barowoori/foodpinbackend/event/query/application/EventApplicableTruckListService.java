@@ -12,6 +12,7 @@ import com.barowoori.foodpinbackend.event.command.domain.repository.EventTruckRe
 import com.barowoori.foodpinbackend.event.command.domain.repository.dto.EventApplicableTruckList;
 import com.barowoori.foodpinbackend.truck.command.domain.model.Truck;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckDocument;
+import com.barowoori.foodpinbackend.truck.command.domain.model.TruckDocumentStatus;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -64,8 +65,20 @@ public class EventApplicableTruckListService {
         Set<DocumentType> truckDocumentTypes = truckDocuments.stream()
                 .map(TruckDocument::getType)
                 .collect(Collectors.toSet());
-        return eventDocuments.stream()
+        List<DocumentType> missingDocuments = eventDocuments.stream()
                 .filter(doc -> !truckDocumentTypes.contains(doc))
                 .collect(Collectors.toList());
+
+        boolean hasRejectedBusinessRegistration = truckDocuments.stream()
+                .anyMatch(truckDocument ->
+                        truckDocument.getType() == DocumentType.BUSINESS_REGISTRATION
+                                && truckDocument.getStatus() == TruckDocumentStatus.REJECTED
+                );
+
+        if (hasRejectedBusinessRegistration && !missingDocuments.contains(DocumentType.BUSINESS_REGISTRATION)) {
+            missingDocuments.add(DocumentType.BUSINESS_REGISTRATION);
+        }
+
+        return missingDocuments;
     }
 }

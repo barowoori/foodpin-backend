@@ -25,13 +25,14 @@ import java.util.List;
 public class EventAppliedTruckDetail extends TruckDetail {
     private String eventApplicationId;
     private String eventId;
+    private Boolean isFullAttendanceRequired;
     private EventApplicationStatus status;
     private List<EventDetail.EventDateInfo> dates;
 
     public static EventAppliedTruckDetail of(EventApplication eventApplication, Truck truck, TruckDocumentManager truckDocumentManager, List<RegionCode> regions, String regionList, List<Category> categories, List<TruckMenu> truckMenus, ImageManager imageManager) {
         return EventAppliedTruckDetail.builder()
                 .truck(TruckInfo.of(truck, imageManager))
-                .documents(truckDocumentManager.getTypes())
+                .documents(truckDocumentManager.getTypesForTruckDetail())
                 .documentInfos(truckDocumentManager.getDocuments().stream().map(TruckDocumentInfo::of).toList())
                 .businessRegistrationApproved(
                         truckDocumentManager.getDocuments() != null? truckDocumentManager.getDocuments().stream()
@@ -47,6 +48,7 @@ public class EventAppliedTruckDetail extends TruckDetail {
                         .toList())
                 .eventApplicationId(eventApplication.getId())
                 .eventId(eventApplication.getEvent().getId())
+                .isFullAttendanceRequired(eventApplication.getEvent().getRecruitDetail().getIsFullAttendanceRequired())
                 .status(eventApplication.getStatus())
                 .dates(eventApplication.getSortedEventDates().stream()
                         .map(EventDateInfo::of).toList())

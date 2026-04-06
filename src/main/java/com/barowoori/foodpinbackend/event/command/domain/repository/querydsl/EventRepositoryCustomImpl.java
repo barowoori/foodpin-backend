@@ -132,7 +132,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
     public Page<Event> findLikeEventListByFilter(String memberId, String searchTerm, Map<RegionType, List<String>> regionIds,
                                                  LocalDate startDate, LocalDate endDate,
                                                  List<String> categoryCodes,
-                                                 EventType type, Set<TruckType> truckTypes, Boolean isCatering,
+                                                 EventType type, Set<TruckType> truckTypes, Boolean isCatering, List<EventRecruitingStatus> recruitingStatuses,
                                                  Pageable pageable) {
         List<String> eventIds = jpaQueryFactory.select(event.id).distinct()
                 .from(event)
@@ -141,6 +141,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .where(
                         event.isDeleted.isFalse()
                                 .and(event.isHidden.isFalse())
+                                .and(eventRecruitDetail.recruitingStatus.in(recruitingStatuses))
                                 .and(createListFilterBuilder(searchTerm, regionIds, startDate, endDate, categoryCodes, type, truckTypes, isCatering, null, null))
                 )
                 .orderBy(getLikeOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
@@ -154,6 +155,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .where(
                         event.isDeleted.isFalse()
                                 .and(event.isHidden.isFalse())
+                                .and(eventRecruitDetail.recruitingStatus.in(recruitingStatuses))
                                 .and(createListFilterBuilder(searchTerm, regionIds, startDate, endDate, categoryCodes, type, truckTypes, isCatering, null, null))
                 )
                 .fetchOne();

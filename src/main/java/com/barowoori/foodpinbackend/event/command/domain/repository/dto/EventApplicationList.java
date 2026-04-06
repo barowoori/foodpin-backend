@@ -39,6 +39,7 @@ public class EventApplicationList {
     @Builder
     public static class EventPendingApplication {
         private String eventApplicationId;
+        private Boolean isFullAttendanceRequired;
         private TruckInfo truck;
         private List<ApplicationDateInfo> dates;
         private Boolean isRead;
@@ -53,6 +54,11 @@ public class EventApplicationList {
                             .sorted(Comparator.comparing(EventDate::getDate))
                             .map(ApplicationDateInfo::of).toList())
                     .isRead(eventApplication.getIsRead())
+                    .isFullAttendanceRequired(
+                            eventApplication.getEvent().getRecruitDetail() != null
+                                    ? eventApplication.getEvent().getRecruitDetail().getIsFullAttendanceRequired()
+                                    : null
+                    )
                     .build();
 
         }

@@ -193,13 +193,12 @@ public class EventController {
                                                                         @RequestParam(value = "startDate", required = false) LocalDate startDate,
                                                                         @RequestParam(value = "endDate", required = false) LocalDate endDate,
                                                                         @RequestParam(value = "type", required = false) EventType type,
-                                                                        @RequestParam(value = "expectedParticipants", required = false) ExpectedParticipants expectedParticipants,
                                                                         @RequestParam(value = "truckTypes", required = false) Set<TruckType> truckTypes,
                                                                         @RequestParam(value = "isCatering", required = false) Boolean isCatering,
                                                                         @RequestParam(value = "isOnlyRecruiting", defaultValue = "false") Boolean isOnlyRecruiting,
                                                                         @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        Page<EventList> eventLists = eventListService.findEventList(searchTerm, regionCodes, startDate, endDate, categoryCodes, type, expectedParticipants, truckTypes, isCatering,isOnlyRecruiting, pageable);
+        Page<EventList> eventLists = eventListService.findEventList(searchTerm, regionCodes, startDate, endDate, categoryCodes, type, truckTypes, isCatering,isOnlyRecruiting, pageable);
         CommonResponse<Page<EventList>> commonResponse = CommonResponse.<Page<EventList>>builder()
                 .data(eventLists)
                 .build();
@@ -249,10 +248,11 @@ public class EventController {
                                                                             @RequestParam(value = "type", required = false) EventType type,
                                                                             @RequestParam(value = "truckTypes", required = false) Set<TruckType> truckTypes,
                                                                             @RequestParam(value = "isCatering", required = false) Boolean isCatering,
+                                                                            @RequestParam(value = "isOnlyRecruiting", defaultValue = "false") Boolean isOnlyRecruiting,
                                                                             @ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
-        Page<EventList> eventLists = eventListService.findLikeEventList(memberId, searchTerm, regionCodes, startDate, endDate, categoryCodes, type, truckTypes, isCatering, pageable);
+        Page<EventList> eventLists = eventListService.findLikeEventList(memberId, searchTerm, regionCodes, startDate, endDate, categoryCodes, type, truckTypes, isCatering, isOnlyRecruiting, pageable);
         CommonResponse<Page<EventList>> commonResponse = CommonResponse.<Page<EventList>>builder()
                 .data(eventLists)
                 .build();

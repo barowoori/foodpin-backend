@@ -24,7 +24,7 @@ public class EventSelectedTruckDetail extends TruckDetail {
     public static EventSelectedTruckDetail of(EventTruck eventTruck, Truck truck, TruckDocumentManager truckDocumentManager, List<RegionCode> regions, List<Category> categories, List<TruckMenu> truckMenus, ImageManager imageManager){
         return EventSelectedTruckDetail.builder()
                 .truck(TruckInfo.of(truck, imageManager))
-                .documents(truckDocumentManager.getTypes())
+                .documents(truckDocumentManager.getTypesForTruckDetail())
                 .documentInfos(truckDocumentManager.getDocuments().stream().map(TruckDocumentInfo::of).toList())
                 .businessRegistrationApproved(
                         truckDocumentManager.getDocuments() != null? truckDocumentManager.getDocuments().stream()

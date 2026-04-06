@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -40,22 +41,18 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
 
     @Override
     public Page<EventApplication> findPendingEventApplications(String eventId, Pageable pageable) {
-        List<EventApplication> eventApplications = jpaQueryFactory.selectDistinct(eventApplication)
+        List<String> eventApplicationIds = jpaQueryFactory.select(eventApplication.id)
                 .from(eventApplication)
-                .innerJoin(eventApplication.truck, truck)
-                .leftJoin(truck.menus, truckMenu)
-                .leftJoin(eventApplication.dates, eventApplicationDate)
-                .leftJoin(truck.photos, truckPhoto)
-                .leftJoin(truck.documents, truckDocument)
-                .leftJoin(truckPhoto.file, file)
                 .where(eventApplication.event.id.eq(eventId)
                         .and(eventApplication.status.eq(EventApplicationStatus.PENDING)))
-                .orderBy(eventApplication.createdAt.desc())
+                .orderBy(eventApplication.createdAt.desc(), eventApplication.id.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        Long total = jpaQueryFactory.select(eventApplication.countDistinct())
+        List<EventApplication> eventApplications = findEventApplicationsByIds(eventApplicationIds);
+
+        Long total = jpaQueryFactory.select(eventApplication.count())
                 .from(eventApplication)
                 .where(eventApplication.event.id.eq(eventId)
                         .and(eventApplication.status.eq(EventApplicationStatus.PENDING)))
@@ -66,28 +63,49 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
 
     @Override
     public Page<EventApplication> findRejectedEventApplications(String eventId, Pageable pageable) {
-        List<EventApplication> eventApplications = jpaQueryFactory.selectDistinct(eventApplication)
+        List<String> eventApplicationIds = jpaQueryFactory.select(eventApplication.id)
                 .from(eventApplication)
-                .innerJoin(eventApplication.truck, truck)
-                .leftJoin(truck.menus, truckMenu)
-                .leftJoin(eventApplication.dates, eventApplicationDate)
-                .leftJoin(truck.documents, truckDocument)
-                .leftJoin(truck.photos, truckPhoto)
-                .leftJoin(truckPhoto.file, file)
                 .where(eventApplication.event.id.eq(eventId)
                         .and(eventApplication.status.eq(EventApplicationStatus.REJECTED)))
-                .orderBy(eventApplication.createdAt.desc())
+                .orderBy(eventApplication.createdAt.desc(), eventApplication.id.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        Long total = jpaQueryFactory.select(eventApplication.countDistinct())
+        List<EventApplication> eventApplications = findEventApplicationsByIds(eventApplicationIds);
+
+        Long total = jpaQueryFactory.select(eventApplication.count())
                 .from(eventApplication)
                 .where(eventApplication.event.id.eq(eventId)
                         .and(eventApplication.status.eq(EventApplicationStatus.REJECTED)))
                 .fetchOne();
 
         return new PageImpl<>(eventApplications, pageable, total);
+    }
+
+    private List<EventApplication> findEventApplicationsByIds(List<String> eventApplicationIds) {
+        if (eventApplicationIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<EventApplication> eventApplications = jpaQueryFactory.selectDistinct(eventApplication)
+                .from(eventApplication)
+                .innerJoin(eventApplication.truck, truck)
+                .leftJoin(truck.menus, truckMenu)
+                .leftJoin(eventApplication.dates, eventApplicationDate)
+                .leftJoin(truck.photos, truckPhoto)
+                .leftJoin(truck.documents, truckDocument)
+                .leftJoin(truckPhoto.file, file)
+                .where(eventApplication.id.in(eventApplicationIds))
+                .fetch();
+
+        return eventApplicationIds.stream()
+                .map(id -> eventApplications.stream()
+                        .filter(application -> application.getId().equals(id))
+                        .findFirst()
+                        .orElse(null))
+                .filter(java.util.Objects::nonNull)
+                .toList();
     }
 
     public Page<EventApplication> findAppliedApplications(String status, String truckId, Pageable pageable) {
@@ -129,6 +147,20 @@ public class EventApplicationRepositoryCustomImpl implements EventApplicationRep
                                 .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
                 )
                 .fetchOne();
+    }
+
+    @Override
+    public List<String> findRecruitingEventIdsByTruckId(String truckId) {
+        return jpaQueryFactory
+                .selectDistinct(eventApplication.event.id)
+                .from(eventApplication)
+                .innerJoin(eventApplication.event, event)
+                .leftJoin(event.recruitDetail, eventRecruitDetail)
+                .where(
+                        eventApplication.truck.id.eq(truckId)
+                                .and(eventRecruitDetail.recruitingStatus.eq(EventRecruitingStatus.RECRUITING))
+                )
+                .fetch();
     }
 
     @Override

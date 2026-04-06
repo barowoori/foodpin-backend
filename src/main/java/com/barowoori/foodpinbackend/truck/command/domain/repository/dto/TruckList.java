@@ -35,7 +35,14 @@ public class TruckList {
                                 .filter(document -> document.getType().equals(DocumentType.BUSINESS_REGISTRATION))
                                 .map(TruckDocumentInfoDto::getStatus)
                                 .anyMatch(status -> status.equals(TruckDocumentStatus.APPROVED)) : Boolean.FALSE)
-                .documents(documents != null ? documents.stream().map(TruckDocumentInfoDto::getType).toList() : new ArrayList<>())
+                .documents(documents != null
+                        ? documents.stream()
+                        .filter(document -> document.getType() != DocumentType.BUSINESS_REGISTRATION
+                                || document.getStatus() == TruckDocumentStatus.APPROVED)
+                        .map(TruckDocumentInfoDto::getType)
+                        .distinct()
+                        .toList()
+                        : new ArrayList<>())
                 .regions(regions)
                 .regionList(regionList)
                 .menuNames(truck.getSortedTruckMenuNames())

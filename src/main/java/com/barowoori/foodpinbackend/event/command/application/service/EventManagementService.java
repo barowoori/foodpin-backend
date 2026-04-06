@@ -184,12 +184,6 @@ public class EventManagementService {
         List<EventTruckDate> eventTruckDates = eventTruck.getDates();
         eventTruckDateRepository.deleteAll(eventTruckDates);
         eventTruckRepository.delete(eventTruck);
-
-        NotificationEvent.raise(new SelectionCanceledNotificationEvent(
-                event.getId(),
-                event.getName(),
-                eventTruck.getTruck().getName()
-        ));
     }
 
 

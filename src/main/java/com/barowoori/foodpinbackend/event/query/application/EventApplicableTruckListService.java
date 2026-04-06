@@ -69,13 +69,11 @@ public class EventApplicableTruckListService {
                 .filter(doc -> !truckDocumentTypes.contains(doc))
                 .collect(Collectors.toList());
 
-        boolean hasRejectedBusinessRegistration = truckDocuments.stream()
-                .anyMatch(truckDocument ->
-                        truckDocument.getType() == DocumentType.BUSINESS_REGISTRATION
-                                && truckDocument.getStatus() == TruckDocumentStatus.REJECTED
-                );
+        boolean hasUnavailableBusinessRegistration = truckDocuments.stream()
+                .filter(truckDocument -> truckDocument.getType() == DocumentType.BUSINESS_REGISTRATION)
+                .anyMatch(truckDocument -> truckDocument.getStatus() != TruckDocumentStatus.APPROVED);
 
-        if (hasRejectedBusinessRegistration && !missingDocuments.contains(DocumentType.BUSINESS_REGISTRATION)) {
+        if (hasUnavailableBusinessRegistration && !missingDocuments.contains(DocumentType.BUSINESS_REGISTRATION)) {
             missingDocuments.add(DocumentType.BUSINESS_REGISTRATION);
         }
 

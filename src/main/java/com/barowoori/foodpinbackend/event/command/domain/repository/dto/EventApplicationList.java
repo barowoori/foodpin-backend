@@ -54,7 +54,11 @@ public class EventApplicationList {
                             .sorted(Comparator.comparing(EventDate::getDate))
                             .map(ApplicationDateInfo::of).toList())
                     .isRead(eventApplication.getIsRead())
-                    .isFullAttendanceRequired(eventApplication.getEvent().getRecruitDetail().getIsFullAttendanceRequired())
+                    .isFullAttendanceRequired(
+                            eventApplication.getEvent().getRecruitDetail() != null
+                                    ? eventApplication.getEvent().getRecruitDetail().getIsFullAttendanceRequired()
+                                    : null
+                    )
                     .build();
 
         }

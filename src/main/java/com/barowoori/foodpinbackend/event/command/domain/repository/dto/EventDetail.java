@@ -25,7 +25,7 @@ public class EventDetail {
     private Boolean isEventManager;
     private Boolean isLike;
     private List<Photo> photos;
-    private RecruitInfo recruitInfo;
+    private com.barowoori.foodpinbackend.event.command.domain.repository.dto.RecruitInfo recruitInfo;
     private String name;
     private List<RegionCode> regions;
     private String regionList;
@@ -57,7 +57,7 @@ public class EventDetail {
                 .id(event.getId())
                 .photos(event.getEventPhotoFiles().stream()
                         .map(file -> Photo.of(file, imageManager)).toList())
-                .recruitInfo(RecruitInfo.of(event, event.getRecruitDetail()))
+                .recruitInfo(com.barowoori.foodpinbackend.event.command.domain.repository.dto.RecruitInfo.of(event, event.getRecruitDetail()))
                 .name(event.getName())
                 .regions(regions)
                 .regionList(regionList)
@@ -118,26 +118,6 @@ public class EventDetail {
             return CategoryInfo.builder()
                     .code(category.getCode())
                     .name(category.getName())
-                    .build();
-        }
-    }
-
-    @Getter
-    @Builder
-    public static class RecruitInfo {
-        private EventRecruitingStatus status;
-        private String statusComment;
-        private Integer applicantCount;
-        private Integer selectedCount;
-        private Integer recruitCount;
-
-        public static RecruitInfo of(Event event, EventRecruitDetail eventRecruitDetail) {
-            return RecruitInfo.builder()
-                    .status(eventRecruitDetail.getRecruitingStatus())
-                    .statusComment(event.getStatusComment())
-                    .applicantCount(eventRecruitDetail.getApplicantCount())
-                    .selectedCount(eventRecruitDetail.getSelectedCount())
-                    .recruitCount(eventRecruitDetail.getRecruitCount())
                     .build();
         }
     }

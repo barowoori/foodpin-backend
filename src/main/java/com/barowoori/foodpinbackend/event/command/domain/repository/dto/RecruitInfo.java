@@ -27,7 +27,7 @@ public class RecruitInfo {
 
     public static RecruitInfo of(EventRecruitDetail eventRecruitDetail, LocalDate endDate) {
         return RecruitInfo.builder()
-                .status(convertStatus(eventRecruitDetail, endDate))
+                .status(resolveStatus(eventRecruitDetail, endDate))
                 .isRecruitEndOnSelection(eventRecruitDetail.getIsRecruitEndOnSelection())
                 .applicantCount(eventRecruitDetail.getApplicantCount())
                 .selectedCount(eventRecruitDetail.getSelectedCount())
@@ -35,8 +35,9 @@ public class RecruitInfo {
                 .build();
     }
 
-    private static String convertStatus(EventRecruitDetail eventRecruitDetail, LocalDate endDate) {
-        if ((endDate != null && endDate.isBefore(LocalDate.now()))
+    public static String resolveStatus(EventRecruitDetail eventRecruitDetail, LocalDate endDate) {
+        LocalDate today = LocalDate.now();
+        if ((endDate != null && endDate.isBefore(today))
                 || (endDate == null && !eventRecruitDetail.isEventProgress())) {
             return "COMPLETED";
         }

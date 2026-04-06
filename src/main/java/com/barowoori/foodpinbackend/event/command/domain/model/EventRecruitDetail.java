@@ -119,8 +119,10 @@ public class EventRecruitDetail {
     }
 
     public boolean isEventProgress(){
-        LocalDate minDate = EventDateCalculator.getMinDate(event);
         LocalDate maxDate = EventDateCalculator.getMaxDate(event);
+        if (maxDate == null) {
+            return false;
+        }
         LocalDate now = LocalDate.now();
         return (maxDate.isAfter(now) || maxDate.isEqual(now));
     }

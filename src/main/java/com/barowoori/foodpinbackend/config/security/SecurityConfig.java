@@ -79,12 +79,14 @@ public class SecurityConfig {
                 "https://dev.barowoori.click",
                 "https://barowoori.click",
                 "http://localhost:5173",
-                "https://foodpin-admin-fe.vercel.app"
+                "https://foodpin-admin-fe.vercel.app",
+                "https://appleid.apple.com"
         ));
         config.setAllowCredentials(true);
 
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
+        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;

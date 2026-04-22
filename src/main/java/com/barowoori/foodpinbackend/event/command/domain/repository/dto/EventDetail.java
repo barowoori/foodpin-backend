@@ -5,6 +5,7 @@ import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
+import com.barowoori.foodpinbackend.member.command.domain.model.EventCreatorType;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionCode;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckType;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckDetail;
@@ -22,6 +23,7 @@ import java.util.Set;
 @Builder
 public class EventDetail {
     private String id;
+    EventCreatorType creatorType;
     private Boolean isEventManager;
     private Boolean isLike;
     private List<Photo> photos;
@@ -54,6 +56,7 @@ public class EventDetail {
     public static EventDetail of(Event event, String memberId, Boolean isLike, ImageManager imageManager, List<RegionCode> regions, String regionList) {
         return EventDetail.builder()
                 .isEventManager(memberId != null && event.isCreator(memberId))
+                .creatorType(event.getCreatorType())
                 .id(event.getId())
                 .photos(event.getEventPhotoFiles().stream()
                         .map(file -> Photo.of(file, imageManager)).toList())

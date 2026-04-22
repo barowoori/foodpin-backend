@@ -588,9 +588,9 @@ public class EventService {
 
     @Transactional(readOnly = true)
     public ResponseEvent.GetTruckAppliedEventDashboard getTruckAppliedEventDashboard(String truckId) {
-
-        Integer appliedCount = eventApplicationRepository.findTruckAppliedRecruitingApplications(truckId).intValue()
-                + eventTruckRepository.findPendingEventsByTruckId(truckId).intValue();
+        Set<String> appliedEventIds = new HashSet<>(eventApplicationRepository.findRecruitingEventIdsByTruckId(truckId));
+        appliedEventIds.addAll(eventTruckRepository.findPendingEventIdsByTruckId(truckId));
+        Integer appliedCount = appliedEventIds.size();
 
         Integer progressCount = eventTruckRepository.findProgressEventsByTruckId(truckId).intValue();
 

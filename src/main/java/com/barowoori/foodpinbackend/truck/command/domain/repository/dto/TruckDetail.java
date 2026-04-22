@@ -37,7 +37,7 @@ public class TruckDetail {
                 .isAvailableUpdate(checkAvailableUpdate(truckManager))
                 .isAvailableDelete(checkAvailableDelete(truckManager))
                 .truck(TruckInfo.of(truck, imageManager))
-                .documents(truckDocumentManager.getTypes())
+                .documents(truckDocumentManager.getTypesForTruckDetail())
 
                 .documentInfos(truckDocumentManager.getDocuments().stream().map(TruckDocumentInfo::of).toList())
                 .businessRegistrationApproved(

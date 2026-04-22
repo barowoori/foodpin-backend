@@ -4,6 +4,7 @@ import com.barowoori.foodpinbackend.category.command.domain.model.Category;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.event.command.domain.service.EventDateCalculator;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
+import com.barowoori.foodpinbackend.member.command.domain.model.EventCreatorType;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
@@ -16,6 +17,7 @@ import java.util.List;
 @SuperBuilder
 public class EventList {
     private String id;
+    private EventCreatorType creatorType;
     private String photo;
     private String name;
     private LocalDateTime recruitEndDateTime;
@@ -32,6 +34,7 @@ public class EventList {
 
         return EventList.builder()
                 .id(event.getId())
+                .creatorType(event.getCreatorType())
                 .photo(event.getEventMainPhotoUrl(imageManager))
                 .name(event.getName())
                 .recruitEndDateTime(event.getRecruitDetail().getRecruitEndDateTime())

@@ -15,6 +15,7 @@ public interface EventApplicationRepositoryCustom {
     List<MemberFcmInfoDto> findFcmInfoOfTruckManagers(String eventApplicationId);
     List<EventApplication> findEventApplicationsByMemberAndEvent(String memberId, String eventId);
     Long findTruckAppliedRecruitingApplications(String truckId);
+    List<String> findRecruitingEventIdsByTruckId(String truckId);
     Boolean existsPendingApplicationByTruckId(String truckId);
     Boolean existsSelectedApplicationByEventId(String eventId);
 }

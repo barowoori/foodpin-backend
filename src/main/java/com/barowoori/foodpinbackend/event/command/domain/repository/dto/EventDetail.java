@@ -5,6 +5,7 @@ import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.event.command.domain.model.*;
 import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
+import com.barowoori.foodpinbackend.member.command.domain.model.EventCreatorType;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionCode;
 import com.barowoori.foodpinbackend.truck.command.domain.model.TruckType;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckDetail;
@@ -22,10 +23,11 @@ import java.util.Set;
 @Builder
 public class EventDetail {
     private String id;
+    EventCreatorType creatorType;
     private Boolean isEventManager;
     private Boolean isLike;
     private List<Photo> photos;
-    private RecruitInfo recruitInfo;
+    private com.barowoori.foodpinbackend.event.command.domain.repository.dto.RecruitInfo recruitInfo;
     private String name;
     private List<RegionCode> regions;
     private String regionList;
@@ -54,10 +56,11 @@ public class EventDetail {
     public static EventDetail of(Event event, String memberId, Boolean isLike, ImageManager imageManager, List<RegionCode> regions, String regionList) {
         return EventDetail.builder()
                 .isEventManager(memberId != null && event.isCreator(memberId))
+                .creatorType(event.getCreatorType())
                 .id(event.getId())
                 .photos(event.getEventPhotoFiles().stream()
                         .map(file -> Photo.of(file, imageManager)).toList())
-                .recruitInfo(RecruitInfo.of(event, event.getRecruitDetail()))
+                .recruitInfo(com.barowoori.foodpinbackend.event.command.domain.repository.dto.RecruitInfo.of(event, event.getRecruitDetail()))
                 .name(event.getName())
                 .regions(regions)
                 .regionList(regionList)
@@ -118,26 +121,6 @@ public class EventDetail {
             return CategoryInfo.builder()
                     .code(category.getCode())
                     .name(category.getName())
-                    .build();
-        }
-    }
-
-    @Getter
-    @Builder
-    public static class RecruitInfo {
-        private EventRecruitingStatus status;
-        private String statusComment;
-        private Integer applicantCount;
-        private Integer selectedCount;
-        private Integer recruitCount;
-
-        public static RecruitInfo of(Event event, EventRecruitDetail eventRecruitDetail) {
-            return RecruitInfo.builder()
-                    .status(eventRecruitDetail.getRecruitingStatus())
-                    .statusComment(event.getStatusComment())
-                    .applicantCount(eventRecruitDetail.getApplicantCount())
-                    .selectedCount(eventRecruitDetail.getSelectedCount())
-                    .recruitCount(eventRecruitDetail.getRecruitCount())
                     .build();
         }
     }

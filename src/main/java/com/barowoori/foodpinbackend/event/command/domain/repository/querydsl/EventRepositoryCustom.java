@@ -37,7 +37,8 @@ public interface EventRepositoryCustom {
     Page<Event> findLikeEventListByFilter(String memberId, String searchTerm, Map<RegionType, List<String>> regionIds,
                                           LocalDate startDate, LocalDate endDate,
                                           List<String> categoryCodes,
-                                          EventType type,Set<TruckType> truckTypes, Boolean isCatering, Pageable pageable);
+                                          EventType type,Set<TruckType> truckTypes, Boolean isCatering, List<EventRecruitingStatus> recruitingStatuses,
+                                          Pageable pageable);
 
     List<Event> findEndedEventsByIsSelecting(LocalDateTime now, Boolean isSelecting);
 

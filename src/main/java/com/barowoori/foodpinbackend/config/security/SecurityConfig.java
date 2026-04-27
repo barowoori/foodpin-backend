@@ -81,7 +81,6 @@ public class SecurityConfig {
                 "http://localhost:5173",
                 "https://foodpin-admin-fe.vercel.app",
                 "https://www.barowoori.click",
-                "https://foodpin-admin-fe.vercel.app",
                 "https://appleid.apple.com"
         ));
         config.setAllowCredentials(true);

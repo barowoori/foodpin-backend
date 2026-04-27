@@ -25,7 +25,7 @@ public class TruckShareController {
         model.addAttribute("title", "푸드핀");
         model.addAttribute("description", truck.getName());
         model.addAttribute("image", getImage(truck.getTruckMainPhotoUrl(imageManager)));
-        model.addAttribute("url", "https://www.barowoori.click/share/truck/" + id);
+        model.addAttribute("url", "https://www.barowoori.click/truck/" + id);
         model.addAttribute("deepLink", "foodpin://truck?truckId=" + id);
         return "share/default";
     }
@@ -49,7 +49,7 @@ public class TruckShareController {
         model.addAttribute("title", "푸드핀");
         model.addAttribute("description", truck.getName() + " 운영자 초대");
         model.addAttribute("image", getDefaultImage());
-        model.addAttribute("url", "https://www.barowoori.click/share/inviting/truck/" + id + "/code/" + code);
+        model.addAttribute("url", "https://www.barowoori.click/inviting/truck/" + id + "/code/" + code);
         model.addAttribute("deepLink", "foodpin://owner?truckId=" + id + "&" + "code=" + code);
         return "share/default";
     }

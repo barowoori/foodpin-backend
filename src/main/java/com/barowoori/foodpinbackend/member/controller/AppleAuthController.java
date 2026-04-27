@@ -21,11 +21,15 @@ public class AppleAuthController {
     }
 
     @PostMapping("/callback")
-    public ResponseEntity<Void> appleCallback(@RequestParam("code") String authorizationCode, @RequestParam("id_token") String idToken) {
-        String redirectUrl = appleAuthService.makeCallBackRedirectURL(authorizationCode, idToken);
-        log.info("redirectUrl: {}", redirectUrl);
+    public ResponseEntity<Void> appleCallback(
+            @RequestParam("code") String authorizationCode,
+            @RequestParam("id_token") String idToken,
+            @RequestParam(value = "state", required = false) String state
+    ) {
+        String redirectUrl = appleAuthService.makeCallBackRedirectURL(authorizationCode, idToken, state);
+
         return ResponseEntity
-                .status(HttpStatus.FOUND)
+                .status(HttpStatus.SEE_OTHER) // 303 추천
                 .header(HttpHeaders.LOCATION, redirectUrl)
                 .build();
     }

@@ -2,11 +2,8 @@ package com.barowoori.foodpinbackend.member.command.application.service;
 
 import com.barowoori.foodpinbackend.common.exception.CustomException;
 import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
-import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.stereotype.Service;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
 @Service
 public class AppleAuthService {
@@ -16,15 +13,17 @@ public class AppleAuthService {
         this.socialTokenVerifier = socialTokenVerifier;
     }
 
-    public String makeCallBackRedirectURL(String authorizationCode, String token) {
+    public String makeCallBackRedirectURL(String authorizationCode, String token, String state) {
         try {
-            JsonNode payload = socialTokenVerifier.getAppleTokenPayload(token);
-            String sub = payload.get("sub").asText();
-            String email = payload.has("email") ? payload.get("email").asText() : "";
+            if ("web".equals(state)) {
+                // 웹으로 리다이렉트
+                return "https://www.barowoori.click/auth/apple/callback?code="
+                        + authorizationCode + "&id_token=" + token;
+            }
 
-            //앱 리다이렉트
-//            return "com.barowoori.foodpin.signinwithapple://callback?code=" + authorizationCode +"&sub="+ sub + "&email="+ URLEncoder.encode(email, StandardCharsets.UTF_8);
-            return "com.barowoori.foodpin.signinwithapple://callback?code=" + authorizationCode + "&id_token=" + token;
+            // 앱
+            return "com.barowoori.foodpin.signinwithapple://callback?code="
+                    + authorizationCode + "&id_token=" + token;
 
         } catch (Exception e) {
             throw new CustomException(MemberErrorCode.SOCIAL_LOGIN_DATA_PARSING_ERROR);

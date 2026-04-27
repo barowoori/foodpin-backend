@@ -33,7 +33,7 @@ public class EventShareController {
             log.error("행사 공유하기 D-Day 계산 오류 : {} ", e.getMessage());
         }
         model.addAttribute("image", getImage(event.getEventMainPhotoUrl(imageManager)));
-        model.addAttribute("url", "https://barowoori.click/share/event/" + id);
+        model.addAttribute("url", "https://www.barowoori.click/share/event/" + id);
         model.addAttribute("deepLink", "foodpin://events?eventId=" + id);
         return "share/default";
     }

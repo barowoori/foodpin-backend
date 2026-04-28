@@ -2,6 +2,7 @@
 <html lang="ko" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <meta property="og:title" th:content="${title}" />
     <meta property="og:description" th:content="${description}" />
@@ -11,51 +12,51 @@
 
     <title th:text="${title}">공유</title>
 
-    <meta http-equiv="refresh" th:content="|5;url=${url}|">
+    <script th:inline="javascript">
+        (function () {
+            const deepLink = /*[[${deepLink}]]*/ "";
+            const webUrl = /*[[${url}]]*/ "/";
+            const appStore = "https://apps.apple.com/kr/app/id6742713685";
+            const playStore = "https://play.google.com/store/apps/details?id=com.barowoori.foodpin&pcampaignid=web_share";
+
+            const ua = navigator.userAgent;
+            const isIOS = /iPhone|iPad|iPod/i.test(ua);
+            const isAndroid = /Android/i.test(ua);
+
+            function goFallback() {
+                if (isIOS) {
+                    window.location.replace(appStore);
+                } else if (isAndroid) {
+                    window.location.replace(playStore);
+                } else {
+                    window.location.replace(webUrl);
+                }
+            }
+
+            // 모바일이면 앱 실행 시도
+            if (isIOS || isAndroid) {
+                window.location.replace(deepLink);
+
+                const timeoutId = setTimeout(goFallback, 1500);
+
+                window.addEventListener("pagehide", function () {
+                    clearTimeout(timeoutId);
+                });
+
+                document.addEventListener("visibilitychange", function () {
+                    if (document.hidden) {
+                        clearTimeout(timeoutId);
+                    }
+                });
+
+                return;
+            }
+
+            // PC는 웹으로 이동
+            window.location.replace(webUrl);
+        })();
+    </script>
 </head>
-<body>
-<p>앱으로 이동 중입니다...</p>
 
-<script th:inline="javascript">
-    (function () {
-        const deepLink = /*[[${deepLink}]]*/ "";
-        const appStore = "https://apps.apple.com/kr/app/id6742713685";
-        const playStore = "https://play.google.com/store/apps/details?id=com.barowoori.foodpin&pcampaignid=web_share";
-
-        const ua = navigator.userAgent;
-        const isIOS = /iPhone|iPad|iPod/i.test(ua);
-        const isAndroid = /Android/i.test(ua);
-
-        function goStore() {
-            if (isIOS) {
-                window.location.href = appStore;
-            } else if (isAndroid) {
-                window.location.href = playStore;
-            } else {
-                window.location.href = /*[[${url}]]*/ "/";
-            }
-        }
-
-        // PC면 바로 스토어 선택 페이지로
-        if (!isIOS && !isAndroid) {
-            goStore();
-            return;
-        }
-
-        // 모바일 → 딥링크 시도
-        window.location.href = deepLink;
-        const timeoutId = setTimeout(goStore, 1500);
-
-        window.addEventListener("pagehide", function () {
-            clearTimeout(timeoutId);
-        });
-
-        document.addEventListener("visibilitychange", function () {
-            if (document.hidden) {
-                clearTimeout(timeoutId);
-            }
-        });
-    })();
-</script>
-</body>
+<body style="display:none;"></body>
 </html>

@@ -51,7 +51,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/members/v1/register", "/api/members/v1/register/temporary", "/api/members/v2/login/temporary", "/api/members/v2/login", "/api/members/v1/random-nickname", "/api/members/v2/login/backoffice"
                                 , "/api/members/v1/nickname/{nickname}/valid", "/api/members/v1/phone/{phone}/valid", "/api/files/**", "/api/documents/**", "/api/auth/apple/callback").permitAll()
-                        .requestMatchers("/api/trucks/v1", "/api/trucks/v1/{truckId}/detail","/api/trucks/v1/avg-menu-price/max", "/api/events/v1", "/api/events/v1/{eventId}/detail",
+                        .requestMatchers("/api/trucks/v1", "/api/trucks/v1/avg-menu-price/max", "/api/events/v1",
                                 "/api/events/progress/status/{status}", "/api/trucks/v1/completed/status/{status}", "/api/trucks/v1/{truckId}/contact", "/api/events/v1/{eventId}/contact").hasAnyRole("NORMAL", "UNREGISTERED")
                         .requestMatchers("**exception**", "/share/**", "/api/trucks/v1/{truckId}/detail", "/api/events/v1/{eventId}/detail").permitAll())
                 .authorizeHttpRequests(authorize -> authorize

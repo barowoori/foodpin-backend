@@ -4,15 +4,25 @@ import com.barowoori.foodpinbackend.common.security.CustomAccessDeniedHandler;
 import com.barowoori.foodpinbackend.common.security.CustomAuthenticationEntryPoint;
 import com.barowoori.foodpinbackend.common.security.JwtAuthenticationFilter;
 import com.barowoori.foodpinbackend.common.security.JwtTokenProvider;
-import org.springframework.core.env.Environment;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -27,6 +37,10 @@ import java.util.List;
 public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
     private final Environment environment;
+    @Value("${swagger.basic.username:}")
+    private String swaggerBasicUsername;
+    @Value("${swagger.basic.password:}")
+    private String swaggerBasicPassword;
 
     public SecurityConfig(JwtTokenProvider jwtTokenProvider, Environment environment) {
         this.jwtTokenProvider = jwtTokenProvider;
@@ -34,8 +48,39 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    @Order(1)
+    public SecurityFilterChain swaggerFilterChain(HttpSecurity http) throws Exception {
         boolean isProdProfile = List.of(environment.getActiveProfiles()).contains("prod");
+
+        http
+                .securityMatcher("/v3/api-docs/**", "/swagger-resources/**", "/swagger-ui/**", "/index.html")
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement((sessionManagement) ->
+                        sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                );
+
+        if (!isProdProfile) {
+            http.authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll());
+            return http.build();
+        }
+
+        if (!isSwaggerBasicAuthConfigured()) {
+            http.authorizeHttpRequests(authorize -> authorize.anyRequest().denyAll());
+            return http.build();
+        }
+
+        http
+                .authenticationProvider(swaggerAuthenticationProvider())
+                .authorizeHttpRequests(authorize -> authorize.anyRequest().hasRole("SWAGGER"))
+                .httpBasic(Customizer.withDefaults());
+
+        return http.build();
+    }
+
+    @Bean
+    @Order(2)
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -54,9 +99,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/trucks/v1", "/api/trucks/v1/avg-menu-price/max", "/api/events/v1",
                                 "/api/events/progress/status/{status}", "/api/trucks/v1/completed/status/{status}", "/api/trucks/v1/{truckId}/contact", "/api/events/v1/{eventId}/contact").hasAnyRole("NORMAL", "UNREGISTERED")
                         .requestMatchers("**exception**", "/share/**", "/api/trucks/v1/{truckId}/detail", "/api/events/v1/{eventId}/detail").permitAll())
-                .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/v3/api-docs/**", "/swagger-resources/**", "/swagger-ui/**", "/index.html")
-                        .access((authentication, object) -> new org.springframework.security.authorization.AuthorizationDecision(!isProdProfile)))
 
                 // 나머지 요청은 인증된 NORMAL 접근 가능
                 .authorizeHttpRequests(authorize -> authorize.anyRequest().hasRole("NORMAL"))
@@ -91,5 +133,38 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
+    }
+
+    @Bean
+    public PasswordEncoder swaggerPasswordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public UserDetailsService swaggerUserDetailsService() {
+        if (!isSwaggerBasicAuthConfigured()) {
+            return new InMemoryUserDetailsManager();
+        }
+
+        return new InMemoryUserDetailsManager(
+                User.builder()
+                        .username(swaggerBasicUsername)
+                        .password(swaggerPasswordEncoder().encode(swaggerBasicPassword))
+                        .roles("SWAGGER")
+                        .build()
+        );
+    }
+
+    @Bean
+    public AuthenticationProvider swaggerAuthenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(swaggerUserDetailsService());
+        provider.setPasswordEncoder(swaggerPasswordEncoder());
+        return provider;
+    }
+
+    private boolean isSwaggerBasicAuthConfigured() {
+        return swaggerBasicUsername != null && !swaggerBasicUsername.isBlank()
+                && swaggerBasicPassword != null && !swaggerBasicPassword.isBlank();
     }
 }

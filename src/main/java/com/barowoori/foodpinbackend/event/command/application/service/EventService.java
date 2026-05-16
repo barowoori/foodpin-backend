@@ -18,6 +18,7 @@ import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepository;
 import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
 import com.barowoori.foodpinbackend.member.command.domain.model.EventLike;
+import com.barowoori.foodpinbackend.member.command.domain.model.GuestMember;
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
 import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginType;
 import com.barowoori.foodpinbackend.member.command.domain.repository.EventLikeRepository;
@@ -620,6 +621,10 @@ public class EventService {
     public ResponseEvent.GetEventContactDto getEventContact(String eventId){
         String memberId = null;
         try {
+            Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (principal instanceof GuestMember) {
+                throw new CustomException(EventErrorCode.EVENT_CONTACT_ACCESS_DENIED);
+            }
             memberId = getMemberId();
             Member member = memberRepository.findById(memberId)
                     .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));

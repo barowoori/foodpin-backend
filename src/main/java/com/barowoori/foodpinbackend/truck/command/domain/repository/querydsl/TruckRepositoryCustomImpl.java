@@ -188,6 +188,62 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
         return new PageImpl<>(trucks, pageable, total);
     }
 
+    @Override
+    public Page<Truck> findBackOfficeTruckListByFilter(String searchTerm, List<String> categoryCodes, Map<RegionType, List<String>> regionIds,
+                                                       Set<TruckType> types, Integer minAvgMenuPrice, Integer maxAvgMenuPrice, Set<TruckColor> colors, Set<TruckBodyType> bodyTypes,
+                                                       Set<PaymentMethod> paymentMethods, Set<ProofIssuanceType> proofIssuanceTypes, Boolean isCatering, Boolean isDeleted,
+                                                       Pageable pageable) {
+        BooleanBuilder filterBuilder = createFilterBuilder(searchTerm, categoryCodes,
+                types, minAvgMenuPrice, maxAvgMenuPrice, colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering,
+                truck, category, truckMenu);
+        BooleanExpression deletedFilter = isDeletedEq(isDeleted);
+        if (deletedFilter != null) {
+            filterBuilder.and(deletedFilter);
+        }
+        BooleanExpression regionFilter = regionFilterCondition(regionIds);
+        if (regionFilter != null) {
+            filterBuilder.and(regionFilter);
+        }
+
+        List<Tuple> result = jpaQueryFactory.selectDistinct(truck.id, truck.createdAt, truck.views)
+                .from(truck)
+                .leftJoin(truck.regions, truckRegion)
+                .leftJoin(truck.categories, truckCategory)
+                .leftJoin(truckCategory.category, category)
+                .leftJoin(truck.menus, truckMenu)
+                .where(filterBuilder)
+                .orderBy(getOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        List<String> truckIds = result.stream()
+                .map(tuple -> tuple.get(truck.id))
+                .collect(Collectors.toList());
+
+        List<Truck> trucks = truckIds.isEmpty() ? List.of() : jpaQueryFactory.selectDistinct(truck)
+                .from(truck)
+                .leftJoin(truck.regions, truckRegion).fetchJoin()
+                .leftJoin(truck.categories, truckCategory).fetchJoin()
+                .leftJoin(truckCategory.category, category).fetchJoin()
+                .leftJoin(truck.menus, truckMenu).fetchJoin()
+                .leftJoin(truck.photos, truckPhoto).fetchJoin()
+                .leftJoin(truckPhoto.file, file).fetchJoin()
+                .where(truck.id.in(truckIds))
+                .orderBy(getOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
+                .fetch();
+
+        Long total = jpaQueryFactory.select(truck.countDistinct()).from(truck)
+                .leftJoin(truck.regions, truckRegion)
+                .leftJoin(truck.categories, truckCategory)
+                .leftJoin(truckCategory.category, category)
+                .leftJoin(truck.menus, truckMenu)
+                .where(filterBuilder)
+                .fetchOne();
+
+        return new PageImpl<>(trucks, pageable, total == null ? 0 : total);
+    }
+
     public BooleanBuilder createFilterBuilder(String searchTerm,
                                               List<String> categoryCodes,
                                               Set<TruckType> types,
@@ -343,6 +399,13 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
                 .or(truckRegion.regionId.in(regionIds.get(RegionType.REGION_SI)).and(truckRegion.regionType.eq(RegionType.REGION_SI)))
                 .or(truckRegion.regionId.in(regionIds.get(RegionType.REGION_GU)).and(truckRegion.regionType.eq(RegionType.REGION_GU)))
                 .or(truckRegion.regionId.in(regionIds.get(RegionType.REGION_GUN)).and(truckRegion.regionType.eq(RegionType.REGION_GUN)));
+    }
+
+    private BooleanExpression isDeletedEq(Boolean isDeleted) {
+        if (isDeleted == null) {
+            return null;
+        }
+        return truck.isDeleted.eq(isDeleted);
     }
 
     private List<OrderSpecifier> getOrderSpecifier(Sort sort) {

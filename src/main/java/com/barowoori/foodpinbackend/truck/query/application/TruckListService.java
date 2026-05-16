@@ -116,4 +116,32 @@ public class TruckListService {
             return TruckList.of(truck, documents.get(truck.getId()), regionNames, regionList, imageManager);
         });
     }
+
+    @Transactional(readOnly = true)
+    public Page<TruckList> findBackOfficeTruckList(List<String> regionCodes,
+                                                   List<String> categoryNames,
+                                                   String searchTerm,
+                                                   Set<TruckType> types,
+                                                   Integer minAvgMenuPrice,
+                                                   Integer maxAvgMenuPrice,
+                                                   Set<TruckColor> colors,
+                                                   Set<TruckBodyType> bodyTypes,
+                                                   Set<PaymentMethod> paymentMethods,
+                                                   Set<ProofIssuanceType> proofIssuanceTypes,
+                                                   Boolean isCatering,
+                                                   Boolean isDeleted,
+                                                   Pageable pageable) {
+        RegionSearchProcessor regionSearchProcessor = getRegionSearchProcessor();
+        Map<RegionType, List<String>> regionIds = regionDoRepository.findRegionIdsByFilter(regionCodes);
+        Page<Truck> trucks = truckRepository.findBackOfficeTruckListByFilter(searchTerm, categoryNames, regionIds, types, minAvgMenuPrice, maxAvgMenuPrice,
+                colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering, isDeleted, pageable);
+        List<String> truckIds = trucks.map(Truck::getId).stream().toList();
+        Map<String, List<TruckDocumentInfoDto>> documents = truckDocumentRepository.getDocumentTypeByTruckIds(truckIds);
+
+        return trucks.map(truck -> {
+            List<String> regionNames = truck.getTruckRegionNames(regionSearchProcessor);
+            String regionList = truckRegionFullNameGenerator.makeRegionListByRegionNames(regionNames);
+            return TruckList.of(truck, documents.get(truck.getId()), regionNames, regionList, imageManager);
+        });
+    }
 }

@@ -79,6 +79,9 @@ jobs:
           echo "    web:" >> ${APP_CONFIG_FILE}
           echo "      pageable:" >> ${APP_CONFIG_FILE}
           echo "        max-page-size: 100000" >> ${APP_CONFIG_FILE}
+          echo "    redis:" >> ${APP_CONFIG_FILE}
+          echo "      host: localhost" >> ${APP_CONFIG_FILE}
+          echo "      port: 6379" >> ${APP_CONFIG_FILE}
           echo "  datasource:" >> ${APP_CONFIG_FILE}
           echo "    driver-class-name: com.mysql.cj.jdbc.Driver" >> ${APP_CONFIG_FILE}
           echo "    url: ${DB_URL}" >> ${APP_CONFIG_FILE}
@@ -105,6 +108,10 @@ jobs:
           echo "  tomcat:" >> ${APP_CONFIG_FILE}
           echo "    max-swallow-size: 50MB" >> ${APP_CONFIG_FILE}
           echo "    max-http-post-size: 50MB" >> ${APP_CONFIG_FILE}
+          echo "swagger:" >> ${APP_CONFIG_FILE}
+          echo "  basic:" >> ${APP_CONFIG_FILE}
+          echo "    username: ${{ secrets.SWAGGER_USERNAME }}" >> ${APP_CONFIG_FILE}
+          echo "    password: ${{ secrets.SWAGGER_PASSWORD }}" >> ${APP_CONFIG_FILE}
       # application-S3.properties 생성
       - name: Create aws-s3-config.yml
         env: # 환경 변수로 GitHub Secrets 값을 읽어옵니다.

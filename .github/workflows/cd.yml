@@ -80,7 +80,7 @@ jobs:
           echo "      pageable:" >> ${APP_CONFIG_FILE}
           echo "        max-page-size: 100000" >> ${APP_CONFIG_FILE}
           echo "    redis:" >> ${APP_CONFIG_FILE}
-          echo "      host: localhost" >> ${APP_CONFIG_FILE}
+          echo "      host: redis" >> ${APP_CONFIG_FILE}
           echo "      port: 6379" >> ${APP_CONFIG_FILE}
           echo "  datasource:" >> ${APP_CONFIG_FILE}
           echo "    driver-class-name: com.mysql.cj.jdbc.Driver" >> ${APP_CONFIG_FILE}

@@ -16,7 +16,9 @@ import com.barowoori.foodpinbackend.file.command.domain.model.File;
 import com.barowoori.foodpinbackend.file.command.domain.repository.FileRepository;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.member.command.domain.exception.MemberErrorCode;
+import com.barowoori.foodpinbackend.member.command.domain.model.GuestMember;
 import com.barowoori.foodpinbackend.member.command.domain.model.Member;
+import com.barowoori.foodpinbackend.member.command.domain.model.MemberType;
 import com.barowoori.foodpinbackend.member.command.domain.model.SocialLoginType;
 import com.barowoori.foodpinbackend.member.command.domain.model.TruckLike;
 import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
@@ -34,6 +36,7 @@ import com.barowoori.foodpinbackend.region.command.domain.repository.RegionGuRep
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionGunRepository;
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionSiRepository;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionInfo;
+import com.barowoori.foodpinbackend.truck.command.application.dto.CreateBackOfficeTruckDto;
 import com.barowoori.foodpinbackend.truck.command.application.dto.RequestTruck;
 import com.barowoori.foodpinbackend.truck.command.application.dto.ResponseTruck;
 import com.barowoori.foodpinbackend.truck.command.domain.exception.TruckErrorCode;
@@ -56,6 +59,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -121,6 +125,51 @@ public class TruckService {
         long managedTruckCount = truckManagerRepository.countByMemberIdAndTruckIsDeletedFalse(memberId);
         if (managedTruckCount >= 100) {
             throw new CustomException(TruckErrorCode.TRUCK_MANAGER_LIMIT_EXCEEDED);
+        }
+    }
+
+    private Member getAssignableMember(String memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+        if (Boolean.TRUE.equals(member.getIsDeleted())
+                || member.getSocialLoginInfo() == null
+                || member.getSocialLoginInfo().getType() == SocialLoginType.UNREGISTERED) {
+            throw new CustomException(MemberErrorCode.MEMBER_NOT_FOUND);
+        }
+        return member;
+    }
+
+    private void createTruckManagers(Truck truck, String ownerMemberId, Set<String> managerMemberIds) {
+        Member owner = getAssignableMember(ownerMemberId);
+        validateManagedTruckLimit(ownerMemberId);
+        TruckManager ownerManager = TruckManager.builder()
+                .role(TruckManagerRole.OWNER)
+                .roleUpdatedAt(LocalDateTime.now())
+                .member(owner)
+                .truck(truck)
+                .build();
+        truckManagerRepository.save(ownerManager);
+
+        if (managerMemberIds == null || managerMemberIds.isEmpty()) {
+            return;
+        }
+
+        for (String managerMemberId : managerMemberIds) {
+            if (Objects.equals(managerMemberId, ownerMemberId)) {
+                continue;
+            }
+            Member manager = getAssignableMember(managerMemberId);
+            if (truckManagerRepository.findByTruckIdAndMemberId(truck.getId(), managerMemberId) != null) {
+                continue;
+            }
+            validateManagedTruckLimit(managerMemberId);
+            TruckManager truckManager = TruckManager.builder()
+                    .role(TruckManagerRole.MEMBER)
+                    .roleUpdatedAt(LocalDateTime.now())
+                    .member(manager)
+                    .truck(truck)
+                    .build();
+            truckManagerRepository.save(truckManager);
         }
     }
 
@@ -217,15 +266,7 @@ public class TruckService {
         }
 
         // 트럭 관리자 생성
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
-        TruckManager truckManager = TruckManager.builder()
-                .role(TruckManagerRole.OWNER)
-                .roleUpdatedAt(LocalDateTime.now())
-                .member(member)
-                .truck(truck)
-                .build();
-        truckManagerRepository.save(truckManager);
+        createTruckManagers(truck, memberId, null);
     }
 
     @Transactional
@@ -612,6 +653,10 @@ public class TruckService {
     public ResponseTruck.GetTruckManagerContactDto getTruckManagerContract(String truckId) {
         String memberId = null;
         try {
+            Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (principal instanceof GuestMember) {
+                throw new CustomException(TruckErrorCode.TRUCK_CONTACT_ACCESS_DENIED);
+            }
             memberId = getMemberId();
             Member member = memberRepository.findById(memberId)
                     .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
@@ -643,6 +688,282 @@ public class TruckService {
             );
             throw e;
         }
+    }
+
+    @Transactional
+    public void createTruckByAdmin(CreateBackOfficeTruckDto createBackOfficeTruckDto) {
+        String adminMemberId = getMemberId();
+        RequestTruck.CreateTruckDto createTruckDto = createBackOfficeTruckDto.getCreateTruckDto();
+
+        Truck truck = createTruckDto.getTruckInfoDto().toEntity(adminMemberId);
+
+        List<Integer> createdMenuPrices = createTruckDto.getTruckMenuDtoList().stream()
+                .map(RequestTruck.TruckMenuDto::getPrice)
+                .toList();
+        truck.updateAvgMenuPrice(createdMenuPrices);
+
+        truckRepository.save(truck);
+
+        for (String fileId : createTruckDto.getTruckInfoDto().getFileIdList()) {
+            File file = fileRepository.findById(fileId)
+                    .orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_PHOTO_NOT_FOUND));
+            TruckPhoto truckPhoto = TruckPhoto.builder().file(file).updatedBy(adminMemberId).truck(truck).build();
+            truckPhotoRepository.save(truckPhoto);
+        }
+
+        List<RegionDo> regionDos = regionDoRepository.findAll();
+        List<RegionSi> regionSis = regionSiRepository.findAll();
+        List<RegionGu> regionGus = regionGuRepository.findAll();
+        List<RegionGun> regionGuns = regionGunRepository.findAll();
+
+        RegionSearchProcessor regionSearchProcessor = new RegionSearchProcessor(regionDos, regionSis, regionGus, regionGuns);
+
+        List<TruckRegion> truckRegions = createTruckDto.getTruckRegionCodeSet().stream()
+                .map(truckRegionCode -> {
+                    RegionInfo regionInfo = regionSearchProcessor.findByCode(truckRegionCode);
+                    return TruckRegion.builder()
+                            .regionType(regionInfo.getRegionType())
+                            .regionId(regionInfo.getRegionId())
+                            .truck(truck)
+                            .build();
+                })
+                .toList();
+        truckRegionRepository.saveAll(truckRegions);
+
+        createTruckDto.getTruckCategoryCodeSet().forEach(truckCategoryCode -> {
+            Category category = categoryRepository.findByCode(truckCategoryCode);
+            if (category == null) {
+                throw new CustomException(TruckErrorCode.CATEGORY_NOT_FOUND);
+            }
+            TruckCategory truckCategory = new TruckCategory(truck, category);
+            truckCategoryRepository.save(truckCategory);
+        });
+
+        for (RequestTruck.TruckMenuDto truckMenuDto : createTruckDto.getTruckMenuDtoList()) {
+            TruckMenu truckMenu = truckMenuDto.toEntity(truck);
+            truckMenuRepository.save(truckMenu);
+            if (!Objects.equals(truckMenuDto.getFileIdList(), null) && !truckMenuDto.getFileIdList().isEmpty()) {
+                for (String fileId : truckMenuDto.getFileIdList()) {
+                    File file = fileRepository.findById(fileId)
+                            .orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_MENU_PHOTO_NOT_FOUND));
+                    TruckMenuPhoto truckMenuPhoto = TruckMenuPhoto.builder().file(file).updatedBy(adminMemberId).truckMenu(truckMenu).build();
+                    truckMenuPhotoRepository.save(truckMenuPhoto);
+                }
+            }
+        }
+
+        if (!Objects.equals(createTruckDto.getTruckDocumentDtoSet(), null) && !createTruckDto.getTruckDocumentDtoSet().isEmpty()) {
+            for (RequestTruck.TruckDocumentDto truckDocumentDto : createTruckDto.getTruckDocumentDtoSet()) {
+                if (truckDocumentDto.getType().equals(DocumentType.BUSINESS_REGISTRATION) && !Objects.equals(truckDocumentDto.getCreateBusinessRegistrationDto(), null)) {
+                    BusinessRegistration businessRegistration = truckDocumentDto.getCreateBusinessRegistrationDto().toEntity(adminMemberId);
+                    businessRegistration = businessRegistrationRepository.save(businessRegistration);
+                    TruckDocument truckDocument = truckDocumentDto.toEntity(adminMemberId, businessRegistration.getId(), truck);
+                    truckDocumentRepository.save(truckDocument);
+                    if (truckDocumentDto.getFileIdList() != null && !truckDocumentDto.getFileIdList().isEmpty()) {
+                        saveTruckDocumentPhotos(truckDocumentDto.getFileIdList(), truckDocument, adminMemberId);
+                    }
+                } else {
+                    throw new CustomException(TruckErrorCode.BUSINESS_INFO_MISSED);
+                }
+            }
+        }
+
+        createTruckManagers(truck, createBackOfficeTruckDto.getOwnerMemberId(), createBackOfficeTruckDto.getManagerMemberIds());
+    }
+
+    @Transactional
+    public void updateTruckByAdmin(String truckId, RequestTruck.UpdateBackOfficeTruckDto updateBackOfficeTruckDto) {
+        String adminMemberId = getMemberId();
+        Truck truck = getTruck(truckId);
+
+        RequestTruck.UpdateTruckInfoDto truckInfoDto = updateBackOfficeTruckDto.getTruckInfoDto();
+        truck.updateBasicInfo(
+                truckInfoDto.getName(),
+                adminMemberId,
+                truckInfoDto.getDescription(),
+                truckInfoDto.getTruckColors(),
+                truckInfoDto.getBodyType()
+        );
+        truck.updateOperationInfo(
+                adminMemberId,
+                updateBackOfficeTruckDto.getTruckOperationDto().getElectricityUsage(),
+                updateBackOfficeTruckDto.getTruckOperationDto().getGasUsage(),
+                updateBackOfficeTruckDto.getTruckOperationDto().getSelfGenerationAvailability(),
+                updateBackOfficeTruckDto.getTruckOperationDto().getIsCatering()
+        );
+        truck.updateMenuInfo(adminMemberId, updateBackOfficeTruckDto.getTruckMenuDto().getTypes());
+        truck.updatePaymentInfo(adminMemberId,
+                updateBackOfficeTruckDto.getTruckPaymentDto().getPaymentMethods(),
+                updateBackOfficeTruckDto.getTruckPaymentDto().getProofIssuanceTypes());
+        truckRepository.save(truck);
+
+        List<TruckPhoto> photoList = truckPhotoRepository.findByTruckOrderByCreateAt(truck);
+        photoList.forEach(truckPhotoRepository::delete);
+        truckPhotoRepository.flush();
+        for (String fileId : truckInfoDto.getFileIdList()) {
+            File file = fileRepository.findById(fileId)
+                    .orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_PHOTO_NOT_FOUND));
+            TruckPhoto truckPhoto = TruckPhoto.builder().file(file).updatedBy(adminMemberId).truck(truck).build();
+            truckPhotoRepository.save(truckPhoto);
+        }
+
+        List<TruckRegion> truckRegionList = truckRegionRepository.findAllByTruck(truck);
+        truckRegionList.forEach(truckRegionRepository::delete);
+        updateBackOfficeTruckDto.getTruckOperationDto().getTruckRegionCodeSet().forEach(truckRegionCode -> {
+            RegionInfo regionInfo = regionDoRepository.findByCode(truckRegionCode);
+            TruckRegion truckRegion = TruckRegion.builder()
+                    .truck(truck)
+                    .regionType(regionInfo.getRegionType())
+                    .regionId(regionInfo.getRegionId())
+                    .build();
+            truckRegionRepository.save(truckRegion);
+        });
+
+        List<TruckCategory> truckCategoryList = truckCategoryRepository.findAllByTruck(truck);
+        truckCategoryList.forEach(truckCategoryRepository::delete);
+        updateBackOfficeTruckDto.getTruckMenuDto().getTruckCategoryCodeSet().forEach(truckCategoryCode -> {
+            Category category = categoryRepository.findByCode(truckCategoryCode);
+            if (category == null) {
+                throw new CustomException(TruckErrorCode.CATEGORY_NOT_FOUND);
+            }
+            TruckCategory truckCategory = new TruckCategory(truck, category);
+            truckCategoryRepository.save(truckCategory);
+        });
+
+        List<TruckMenu> truckMenuList = truckMenuRepository.getMenuListWithPhotoByTruckId(truckId);
+        truckMenuList.forEach(truckMenu -> {
+            List<TruckMenuPhoto> truckMenuPhotoList = truckMenuPhotoRepository.findAllByTruckMenu(truckMenu);
+            if (truckMenuPhotoList != null) {
+                truckMenuPhotoList.forEach(truckMenuPhotoRepository::delete);
+            }
+            truckMenuRepository.delete(truckMenu);
+        });
+        truckMenuPhotoRepository.flush();
+        for (RequestTruck.TruckMenuDto truckMenuDto : updateBackOfficeTruckDto.getTruckMenuDto().getTruckMenuDtoList()) {
+            TruckMenu truckMenu = truckMenuDto.toEntity(truck);
+            truckMenuRepository.save(truckMenu);
+
+            if (!Objects.equals(truckMenuDto.getFileIdList(), null) && !truckMenuDto.getFileIdList().isEmpty()) {
+                for (String fileId : truckMenuDto.getFileIdList()) {
+                    File file = fileRepository.findById(fileId)
+                            .orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_MENU_PHOTO_NOT_FOUND));
+                    TruckMenuPhoto truckMenuPhoto = TruckMenuPhoto.builder().file(file).updatedBy(adminMemberId).truckMenu(truckMenu).build();
+                    truckMenuPhotoRepository.save(truckMenuPhoto);
+                }
+            }
+        }
+
+        List<Integer> createdMenuPrices = updateBackOfficeTruckDto.getTruckMenuDto().getTruckMenuDtoList().stream()
+                .map(RequestTruck.TruckMenuDto::getPrice)
+                .toList();
+        truck.updateAvgMenuPrice(createdMenuPrices);
+
+        if (updateBackOfficeTruckDto.getTruckDocumentDtoList() != null && !updateBackOfficeTruckDto.getTruckDocumentDtoList().isEmpty()) {
+            for (RequestTruck.TruckDocumentDto dto : updateBackOfficeTruckDto.getTruckDocumentDtoList()) {
+                DocumentType type = dto.getType();
+                if (type == DocumentType.BUSINESS_REGISTRATION) {
+                    if (dto.getCreateBusinessRegistrationDto() == null) {
+                        throw new CustomException(TruckErrorCode.BUSINESS_INFO_MISSED);
+                    }
+
+                    TruckDocument existingDoc = truckDocumentRepository.findByTruckIdAndType(truck.getId(), dto.getType());
+                    if (existingDoc == null) {
+                        BusinessRegistration br = dto.getCreateBusinessRegistrationDto().toEntity(adminMemberId);
+                        br = businessRegistrationRepository.save(br);
+                        TruckDocument newDoc = dto.toEntity(adminMemberId, br.getId(), truck);
+                        truckDocumentRepository.save(newDoc);
+                        if (dto.getFileIdList() != null && !dto.getFileIdList().isEmpty()) {
+                            saveTruckDocumentPhotos(dto.getFileIdList(), newDoc, adminMemberId);
+                        }
+                    } else {
+                        BusinessRegistration br = truckDocumentRepository.getBusinessRegistrationDocumentByTruckId(truck.getId());
+                        br.update(adminMemberId,
+                                dto.getCreateBusinessRegistrationDto().getBusinessNumber(),
+                                dto.getCreateBusinessRegistrationDto().getBusinessName(),
+                                dto.getCreateBusinessRegistrationDto().getRepresentativeName(),
+                                dto.getCreateBusinessRegistrationDto().getOpeningDate());
+                        businessRegistrationRepository.save(br);
+                        List<TruckDocumentPhoto> existingPhotos = truckDocumentPhotoRepository.findByTruckDocumentId(existingDoc.getId());
+                        existingPhotos.forEach(truckDocumentPhotoRepository::delete);
+                        if (dto.getFileIdList() != null && !dto.getFileIdList().isEmpty()) {
+                            saveTruckDocumentPhotos(dto.getFileIdList(), existingDoc, adminMemberId);
+                        }
+                        existingDoc.update(LocalDateTime.now(), adminMemberId);
+                        truckDocumentRepository.save(existingDoc);
+                    }
+                } else if (dto.getFileIdList() != null && !dto.getFileIdList().isEmpty()) {
+                    TruckDocument existingDoc = truckDocumentRepository.findByTruckIdAndType(truck.getId(), dto.getType());
+                    if (existingDoc == null) {
+                        TruckDocument newDoc = dto.toEntity(adminMemberId, truck);
+                        truckDocumentRepository.save(newDoc);
+                        saveTruckDocumentPhotos(dto.getFileIdList(), newDoc, adminMemberId);
+                    } else {
+                        List<TruckDocumentPhoto> existingPhotos = truckDocumentPhotoRepository.findByTruckDocumentId(existingDoc.getId());
+                        existingPhotos.forEach(truckDocumentPhotoRepository::delete);
+                        saveTruckDocumentPhotos(dto.getFileIdList(), existingDoc, adminMemberId);
+                        existingDoc.update(LocalDateTime.now(), adminMemberId);
+                        truckDocumentRepository.save(existingDoc);
+                    }
+                } else {
+                    throw new CustomException(TruckErrorCode.DOCUMENT_PHOTO_MISSED);
+                }
+            }
+        }
+    }
+
+    @Transactional
+    public void addManagerByAdmin(String truckId, String targetMemberId) {
+        Truck truck = getTruck(truckId);
+        Member member = getAssignableMember(targetMemberId);
+        if (truckManagerRepository.findByTruckIdAndMemberId(truckId, targetMemberId) != null) {
+            throw new CustomException(TruckErrorCode.TRUCK_MANAGER_EXISTS);
+        }
+        validateManagedTruckLimit(targetMemberId);
+        TruckManager newTruckManager = TruckManager.builder()
+                .role(TruckManagerRole.MEMBER)
+                .roleUpdatedAt(LocalDateTime.now())
+                .member(member)
+                .truck(truck)
+                .build();
+        truckManagerRepository.save(newTruckManager);
+    }
+
+    @Transactional
+    public void changeOwnerByAdmin(String truckManagerId, String truckId) {
+        TruckManager nextOwner = truckManagerRepository.findById(truckManagerId)
+                .orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_MANAGER_NOT_FOUND));
+        TruckManager currentOwner = truckManagerRepository.findTruckManagerPages(truckId, "", Pageable.unpaged())
+                .stream()
+                .filter(summary -> summary.getRole() == TruckManagerRole.OWNER)
+                .findFirst()
+                .map(summary -> truckManagerRepository.findById(summary.getTruckManagerId()).orElse(null))
+                .orElse(null);
+
+        if (currentOwner == null || !Objects.equals(nextOwner.getTruck().getId(), truckId)) {
+            throw new CustomException(TruckErrorCode.TRUCK_OWNER_NOT_FOUND);
+        }
+
+        nextOwner.updateRole(TruckManagerRole.OWNER);
+        truckManagerRepository.save(nextOwner);
+        currentOwner.updateRole(TruckManagerRole.MEMBER);
+        truckManagerRepository.save(currentOwner);
+    }
+
+    @Transactional
+    public void deleteManagerByAdmin(String managerId, String truckId) {
+        TruckManager truckManager = truckManagerRepository.findById(managerId)
+                .orElseThrow(() -> new CustomException(TruckErrorCode.TRUCK_MANAGER_NOT_FOUND));
+        if (!Objects.equals(truckManager.getTruck().getId(), truckId) || truckManager.getRole() == TruckManagerRole.OWNER) {
+            throw new CustomException(TruckErrorCode.TRUCK_OWNER_NOT_FOUND);
+        }
+        truckManagerRepository.delete(truckManager);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<TruckManagerSummary> getTruckManagerListByAdmin(String truckId, Pageable pageable) {
+        validateNotDeletedTruck(truckId);
+        return truckManagerRepository.findTruckManagerPages(truckId, "", pageable)
+                .map(truckManagerSummary -> truckManagerSummary.convertToPreSignedUrl(imageManager));
     }
 
 

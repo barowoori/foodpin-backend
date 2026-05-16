@@ -20,6 +20,10 @@ public interface TruckRepositoryCustom {
                                           Set<TruckType> types, Integer minAvgMenuPrice,  Integer maxAvgMenuPrice, Set<TruckColor> colors, Set<TruckBodyType> bodyTypes,
                                           Set<PaymentMethod> paymentMethods, Set<ProofIssuanceType> proofIssuanceTypes, Boolean isCatering,
                                           Pageable pageable);
+    Page<Truck> findBackOfficeTruckListByFilter(String searchTerm, List<String> categoryCodes, Map<RegionType, List<String>> regionIds,
+                                                Set<TruckType> types, Integer minAvgMenuPrice, Integer maxAvgMenuPrice, Set<TruckColor> colors, Set<TruckBodyType> bodyTypes,
+                                                Set<PaymentMethod> paymentMethods, Set<ProofIssuanceType> proofIssuanceTypes, Boolean isCatering, Boolean isDeleted,
+                                                Pageable pageable);
     Page<Truck> findApplicableTrucks(String memberId, Pageable pageable);
     List<Truck> findAllApplicableTrucks(String memberId);
 }

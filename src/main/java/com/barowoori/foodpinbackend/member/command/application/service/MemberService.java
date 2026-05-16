@@ -20,6 +20,7 @@ import com.barowoori.foodpinbackend.member.command.domain.repository.InterestEve
 import com.barowoori.foodpinbackend.member.command.domain.repository.InterestEventRepository;
 import com.barowoori.foodpinbackend.member.command.domain.repository.MemberRepository;
 import com.barowoori.foodpinbackend.member.command.domain.repository.TruckLikeRepository;
+import com.barowoori.foodpinbackend.member.command.domain.repository.UnregisteredMemberRedisRepository;
 import com.barowoori.foodpinbackend.region.command.domain.query.application.RegionSearchProcessor;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionDo;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionGu;
@@ -72,6 +73,7 @@ public class MemberService {
     private final SocialTokenVerifier socialTokenVerifier;
     private final AuthCodeExchanger authCodeExchanger;
     private final OAuthRevokeService oauthRevokeService;
+    private final UnregisteredMemberRedisRepository unregisteredMemberRedisRepository;
     private final RegionDoRepository regionDoRepository;
     private final RegionSiRepository regionSiRepository;
     private final RegionGuRepository regionGuRepository;
@@ -82,6 +84,14 @@ public class MemberService {
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new CustomException(MemberErrorCode.MEMBER_NOT_FOUND));
+        return member;
+    }
+
+    private Member findLegacyTemporaryMember(String socialLoginId) {
+        Member member = memberRepository.findBySocialLoginInfo_TypeAndSocialLoginInfo_Id(SocialLoginType.UNREGISTERED, socialLoginId);
+        if (member == null || !member.getTypes().contains(MemberType.UNREGISTERED)) {
+            return null;
+        }
         return member;
     }
 
@@ -119,21 +129,29 @@ public class MemberService {
             throw new CustomException(MemberErrorCode.ONLY_UNREGISTERED_ALLOWED);
         }
 
-        member = registerTemporaryDto.toEntity();
-        member.getTypes().remove(MemberType.NORMAL);
-        member.getTypes().add(MemberType.UNREGISTERED);
-        memberRepository.save(member);
+        String socialLoginId = registerTemporaryDto.getSocialInfoDto().getId();
+        if (unregisteredMemberRedisRepository.existsBySocialLoginId(socialLoginId)) {
+            throw new CustomException(MemberErrorCode.MEMBER_SOCIAL_LOGIN_INFO_EXISTS);
+        }
+
+        unregisteredMemberRedisRepository.createSession(socialLoginId);
     }
 
     @Transactional
     public ResponseMember.LoginMemberRsDto loginTemporary(RequestMember.LoginMemberRqDto loginMemberRqDto) {
-        Member member = memberRepository.findBySocialLoginInfo_TypeAndSocialLoginInfo_Id(loginMemberRqDto.getSocialInfoDto().getType(), loginMemberRqDto.getSocialInfoDto().getId());
-        if (member == null)
-            throw new CustomException(MemberErrorCode.MEMBER_NOT_FOUND);
-        String accessToken = jwtTokenProvider.createAccessToken(member.getId());
-        String refreshToken = jwtTokenProvider.createRefreshToken(member.getId());
-        member.updateRefreshToken(refreshToken);
-        memberRepository.save(member);
+        String socialLoginId = loginMemberRqDto.getSocialInfoDto().getId();
+        String sessionId = unregisteredMemberRedisRepository.findSessionIdBySocialLoginId(socialLoginId);
+        if (sessionId == null) {
+            Member legacyGuestMember = findLegacyTemporaryMember(socialLoginId);
+            if (legacyGuestMember == null) {
+                throw new CustomException(MemberErrorCode.MEMBER_NOT_FOUND);
+            }
+            sessionId = unregisteredMemberRedisRepository.createSession(socialLoginId).getSessionId();
+        }
+        String subject = "GUEST:" + sessionId;
+        String accessToken = jwtTokenProvider.createAccessToken(subject);
+        String refreshToken = jwtTokenProvider.createRefreshToken(subject);
+        unregisteredMemberRedisRepository.updateRefreshToken(sessionId, refreshToken);
         return ResponseMember.LoginMemberRsDto.toDto(accessToken, refreshToken);
     }
 
@@ -188,6 +206,11 @@ public class MemberService {
 
     @Transactional
     public ResponseMember.ReissueTokenDto reissueToken(String refreshToken) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof GuestMember guestMember) {
+            return reissueGuestToken(guestMember.getSessionId(), refreshToken);
+        }
+
         Member member = getMember();
         String accessToken;
         if (member.matchRefreshToken(refreshToken)) {
@@ -200,6 +223,25 @@ public class MemberService {
             return ResponseMember.ReissueTokenDto.toDto(accessToken, refreshToken);
         } else
             throw new CustomException(MemberErrorCode.REFRESH_TOKEN_MATCH_FAILED);
+    }
+
+    private ResponseMember.ReissueTokenDto reissueGuestToken(String sessionId, String refreshToken) {
+        UnregisteredMemberSession session = unregisteredMemberRedisRepository.findBySessionId(sessionId);
+        if (session == null) {
+            throw new CustomException(MemberErrorCode.MEMBER_NOT_FOUND);
+        }
+        if (!Objects.equals(session.getRefreshToken(), refreshToken)) {
+            throw new CustomException(MemberErrorCode.REFRESH_TOKEN_MATCH_FAILED);
+        }
+
+        String subject = "GUEST:" + sessionId;
+        String newAccessToken = jwtTokenProvider.createAccessToken(subject);
+        String newRefreshToken = refreshToken;
+        if (jwtTokenProvider.checkExpiry(refreshToken)) {
+            newRefreshToken = jwtTokenProvider.createRefreshToken(subject);
+            unregisteredMemberRedisRepository.updateRefreshToken(sessionId, newRefreshToken);
+        }
+        return ResponseMember.ReissueTokenDto.toDto(newAccessToken, newRefreshToken);
     }
 
     @Transactional
@@ -257,6 +299,16 @@ public class MemberService {
 
     @Transactional
     public void logoutMember(String refreshToken) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof GuestMember guestMember) {
+            UnregisteredMemberSession session = unregisteredMemberRedisRepository.findBySessionId(guestMember.getSessionId());
+            if (session == null || !Objects.equals(session.getRefreshToken(), refreshToken)) {
+                throw new CustomException(MemberErrorCode.REFRESH_TOKEN_MATCH_FAILED);
+            }
+            unregisteredMemberRedisRepository.updateRefreshToken(guestMember.getSessionId(), "");
+            return;
+        }
+
         Member member = getMember();
         if (member.matchRefreshToken(refreshToken)) {
             member.updateRefreshToken(null);

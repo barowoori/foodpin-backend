@@ -63,4 +63,18 @@ public class TruckDetailService {
         TruckManager truckManager = truckManagerRepository.findByTruckIdAndMemberId(truckId, memberId);
         return TruckDetail.of(truckManager, truck, documentManager, regionNames, regionList, categories, truckMenus, truckLike != null, imageManager);
     }
+
+    @Transactional(readOnly = true)
+    public TruckDetail getBackOfficeTruckDetail(String truckId) {
+        Truck truck = truckRepository.getTruckWithPhotoById(truckId);
+        if (truck == null) {
+            throw new CustomException(TruckErrorCode.NOT_FOUND_TRUCK);
+        }
+        TruckDocumentManager documentManager = truckDocumentRepository.getDocumentManager(truckId);
+        List<TruckMenu> truckMenus = truckMenuRepository.getMenuListWithPhotoByTruckId(truckId);
+        List<RegionCode> regionNames = truckRegionFullNameGenerator.findRegionCodesByTruckId(truckId);
+        String regionList = truckRegionFullNameGenerator.makeRegionList(regionNames);
+        List<Category> categories = truckCategoryRepository.findCategoriesByTruckId(truckId);
+        return TruckDetail.of(null, truck, documentManager, regionNames, regionList, categories, truckMenus, false, imageManager);
+    }
 }

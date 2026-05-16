@@ -277,4 +277,38 @@ public class RequestTruck {
         @UnicodeSize(min = 1, max = 500, message = "1자 이상 500자 이하로 입력하세요.")
         private String rejectionReason;
     }
+
+    @Getter
+    public static class UpdateBackOfficeTruckDto {
+        @Schema(description = "트럭 기본 정보")
+        @Valid
+        @NotNull
+        private UpdateTruckInfoDto truckInfoDto;
+
+        @Schema(description = "트럭 운영 정보")
+        @Valid
+        @NotNull
+        private UpdateTruckOperationDto truckOperationDto;
+
+        @Schema(description = "트럭 메뉴 정보")
+        @Valid
+        @NotNull
+        private UpdateTruckMenuDto truckMenuDto;
+
+        @Schema(description = "트럭 결제 정보")
+        @Valid
+        @NotNull
+        private UpdateTruckPaymentDto truckPaymentDto;
+
+        @Schema(description = "트럭 서류 정보")
+        @Valid
+        private List<TruckDocumentDto> truckDocumentDtoList;
+    }
+
+    @Getter
+    public static class BackOfficeAssignTruckManagerDto {
+        @Schema(description = "운영자로 지정할 회원 ID")
+        @NotBlank
+        private String memberId;
+    }
 }

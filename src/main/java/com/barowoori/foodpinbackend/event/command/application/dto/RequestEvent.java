@@ -24,6 +24,18 @@ import java.util.List;
 import java.util.Set;
 
 public class RequestEvent {
+    private static boolean isValidOperatingTime(String operatingTime, List<EventDateDto> eventDateDtoList) {
+        boolean hasOperatingTime = operatingTime != null && !operatingTime.isBlank();
+        boolean allHaveTime = eventDateDtoList != null && !eventDateDtoList.isEmpty()
+                && eventDateDtoList.stream().allMatch(d -> d.getStartTime() != null && d.getEndTime() != null);
+        boolean anyHasTime = eventDateDtoList != null
+                && eventDateDtoList.stream().anyMatch(d -> d.getStartTime() != null || d.getEndTime() != null);
+        if (hasOperatingTime) {
+            return !anyHasTime;
+        }
+        return allHaveTime;
+    }
+
     @Builder
     @Data
     @Getter
@@ -91,6 +103,16 @@ public class RequestEvent {
         @Valid
         private List<EventDateDto> eventDateDtoList;
 
+        @UnicodeSize(max = 50, message = "50자 이하로 입력하세요.")
+        @Schema(description = "운영시간 직접입력(행사 전체), 날짜별 시간 미입력 시 필수")
+        private String operatingTime;
+
+        @JsonIgnore
+        @AssertTrue(message = "운영시간을 직접 입력하거나 모든 날짜에 시작/종료 시간을 입력해야 합니다. (둘 중 하나만)")
+        public boolean isValidOperatingTime() {
+            return RequestEvent.isValidOperatingTime(this.operatingTime, this.eventDateDtoList);
+        }
+
         public Event toEntity(String creator) {
             return Event.builder()
                     .createdBy(creator)
@@ -105,6 +127,7 @@ public class RequestEvent {
                     .saleType(null)
                     .priceRange(null)
                     .cateringDetail(null)
+                    .operatingTime(this.operatingTime)
                     .isDeleted(Boolean.FALSE)
                     .build();
         }
@@ -140,6 +163,16 @@ public class RequestEvent {
         @NotEmpty
         private String recruitmentUrl;
 
+        @UnicodeSize(max = 50, message = "50자 이하로 입력하세요.")
+        @Schema(description = "운영시간 직접입력(행사 전체), 날짜별 시간 미입력 시 필수")
+        private String operatingTime;
+
+        @JsonIgnore
+        @AssertTrue(message = "운영시간을 직접 입력하거나 모든 날짜에 시작/종료 시간을 입력해야 합니다. (둘 중 하나만)")
+        public boolean isValidOperatingTime() {
+            return RequestEvent.isValidOperatingTime(this.operatingTime, this.eventDateDtoList);
+        }
+
         public Event toEntity(String creator) {
             return Event.builder()
                     .createdBy(creator)
@@ -155,6 +188,7 @@ public class RequestEvent {
                     .priceRange(null)
                     .cateringDetail(null)
                     .recruitmentUrl(this.recruitmentUrl)
+                    .operatingTime(this.operatingTime)
                     .isDeleted(Boolean.FALSE)
                     .build();
         }
@@ -262,12 +296,10 @@ public class RequestEvent {
         @NotNull
         private LocalDate date;
 
-        @Schema(description = "시작 시간", example = "09:00:00")
-        @NotNull
+        @Schema(description = "시작 시간, 운영시간 직접입력 시 미입력", example = "09:00:00")
         private LocalTime startTime;
 
-        @Schema(description = "종료 시간", example = "20:00:00")
-        @NotNull
+        @Schema(description = "종료 시간, 운영시간 직접입력 시 미입력", example = "20:00:00")
         private LocalTime endTime;
 
         public EventDate toEntity(Event event) {
@@ -298,11 +330,22 @@ public class RequestEvent {
         private List<String> fileIdList;
 
         @NotEmpty
+        @Valid
         private List<EventDateDto> eventDateDtoList;
 
         @Schema(description = "행사 지역 코드", example = "GU85")
         @NotEmpty
         private String regionCode;
+
+        @UnicodeSize(max = 50, message = "50자 이하로 입력하세요.")
+        @Schema(description = "운영시간 직접입력(행사 전체), 날짜별 시간 미입력 시 필수")
+        private String operatingTime;
+
+        @JsonIgnore
+        @AssertTrue(message = "운영시간을 직접 입력하거나 모든 날짜에 시작/종료 시간을 입력해야 합니다. (둘 중 하나만)")
+        public boolean isValidOperatingTime() {
+            return RequestEvent.isValidOperatingTime(this.operatingTime, this.eventDateDtoList);
+        }
     }
 
     @Getter

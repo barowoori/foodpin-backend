@@ -28,6 +28,7 @@ public class EventAppliedTruckDetail extends TruckDetail {
     private Boolean isFullAttendanceRequired;
     private EventApplicationStatus status;
     private List<EventDetail.EventDateInfo> dates;
+    private String operatingTime;
 
     public static EventAppliedTruckDetail of(EventApplication eventApplication, Truck truck, TruckDocumentManager truckDocumentManager, List<RegionCode> regions, String regionList, List<Category> categories, List<TruckMenu> truckMenus, ImageManager imageManager) {
         return EventAppliedTruckDetail.builder()
@@ -52,6 +53,7 @@ public class EventAppliedTruckDetail extends TruckDetail {
                 .status(eventApplication.getStatus())
                 .dates(eventApplication.getSortedEventDates().stream()
                         .map(EventDateInfo::of).toList())
+                .operatingTime(eventApplication.getEvent().getOperatingTime())
                 .regionList(regionList)
                 .build();
     }

@@ -52,6 +52,7 @@ public class EventDetail {
     private String submissionEmail;
     private Boolean isRecruitEndOnSelection;
     private LocalDateTime recruitEndDateTime;
+    private String operatingTime;
 
     public static EventDetail of(Event event, String memberId, Boolean isLike, ImageManager imageManager, List<RegionCode> regions, String regionList) {
         return EventDetail.builder()
@@ -87,6 +88,7 @@ public class EventDetail {
                 .submissionEmail(event.getSubmissionEmail())
                 .recruitEndDateTime(event.getRecruitDetail().getRecruitEndDateTime())
                 .isRecruitEndOnSelection(event.getRecruitDetail().getIsRecruitEndOnSelection())
+                .operatingTime(event.getOperatingTime())
                 .build();
 
     }

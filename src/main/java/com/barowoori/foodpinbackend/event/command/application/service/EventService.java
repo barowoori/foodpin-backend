@@ -193,12 +193,12 @@ public class EventService {
         event.initEventRegion(eventRegion);
 
         if (Objects.equals(eventRecruitDto.getRecruitEndDateTime(), null)) {
-            LocalDateTime lastEndDateTime = eventDateDtoList.stream()
-                    .map(dto -> LocalDateTime.of(dto.getDate(), dto.getEndTime()))
-                    .max(LocalDateTime::compareTo)
+            LocalDate lastDate = eventDateDtoList.stream()
+                    .map(RequestEvent.EventDateDto::getDate)
+                    .max(LocalDate::compareTo)
                     .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_DATE_NOT_FOUND));
 
-            eventRecruitDto.setRecruitEndDateTime(lastEndDateTime.toLocalDate().atTime(23, 59, 59));
+            eventRecruitDto.setRecruitEndDateTime(lastDate.atTime(23, 59, 59));
         }
         EventRecruitDetail eventRecruitDetail = eventRecruitDto.toEntity(
                 event,
@@ -241,7 +241,8 @@ public class EventService {
         event.updateBasicInfo(
                 updateEventInfoDto.getName(),
                 updateEventInfoDto.getType(),
-                updateEventInfoDto.getExpectedParticipants()
+                updateEventInfoDto.getExpectedParticipants(),
+                updateEventInfoDto.getOperatingTime()
         );
 
         List<EventPhoto> photoList = eventPhotoRepository.findAllByEvent(event);
@@ -286,12 +287,12 @@ public class EventService {
         if (eventRecruitDetail == null)
             throw new CustomException(EventErrorCode.EVENT_RECRUIT_DETAIL_NOT_FOUND);
         if (Objects.equals(eventRecruitDto.getRecruitEndDateTime(), null)) {
-            LocalDateTime lastEndDateTime = event.getEventDates().stream()
-                    .map(eventDate -> LocalDateTime.of(eventDate.getDate(), eventDate.getEndTime()))
-                    .max(LocalDateTime::compareTo)
+            LocalDate lastDate = event.getEventDates().stream()
+                    .map(EventDate::getDate)
+                    .max(LocalDate::compareTo)
                     .orElseThrow(() -> new CustomException(EventErrorCode.EVENT_DATE_NOT_FOUND));
 
-            eventRecruitDto.setRecruitEndDateTime(lastEndDateTime.toLocalDate().atTime(23, 59, 59));
+            eventRecruitDto.setRecruitEndDateTime(lastDate.atTime(23, 59, 59));
         }
         eventRecruitDetail.update(
                 eventRecruitDto.getRecruitEndDateTime(),

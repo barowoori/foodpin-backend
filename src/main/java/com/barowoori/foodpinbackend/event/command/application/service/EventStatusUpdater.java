@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -39,11 +40,11 @@ public class EventStatusUpdater {
                 closeRecruiting(event);
             }
 
-            LocalDateTime eventEndDateTime = event.getEventDates().stream()
-                    .map(eventDate -> LocalDateTime.of(eventDate.getDate(), eventDate.getEndTime()))
-                    .max(LocalDateTime::compareTo)
+            LocalDate eventEndDate = event.getEventDates().stream()
+                    .map(EventDate::getDate)
+                    .max(LocalDate::compareTo)
                     .orElse(null);
-            boolean isEventEnded = eventEndDateTime != null && eventEndDateTime.toLocalDate().atTime(23, 59, 59).isBefore(now);
+            boolean isEventEnded = eventEndDate != null && eventEndDate.atTime(23, 59, 59).isBefore(now);
 
             if (isEventEnded) {
                 closeSelection(event);

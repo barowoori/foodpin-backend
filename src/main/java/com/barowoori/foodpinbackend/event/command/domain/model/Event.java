@@ -96,6 +96,9 @@ public class Event {
     @Column(name = "expected_participants")
     private String expectedParticipants;
 
+    @Column(name = "operating_time", length = 50)
+    private String operatingTime;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "sale_type")
     private SaleType saleType;
@@ -137,7 +140,7 @@ public class Event {
                  EventDocumentSubmissionTarget documentSubmissionTarget, String submissionEmail, EventType type,
                  String expectedParticipants, Set<TruckType> truckTypes, SaleType saleType,
                  PriceRange priceRange, String cateringDetail, String contact,
-                 String recruitmentUrl, int recruitmentUrlClickCount) {
+                 String recruitmentUrl, int recruitmentUrlClickCount, String operatingTime) {
         this.createdBy = createdBy;
         this.creatorType = creatorType;
         this.name = name;
@@ -156,12 +159,14 @@ public class Event {
         this.recruitmentUrl = recruitmentUrl;
         this.recruitmentUrlClickCount = recruitmentUrlClickCount;
         this.isHidden = false;
+        this.operatingTime = operatingTime;
     }
 
-    public void updateBasicInfo(String name, EventType type, String expectedParticipants) {
+    public void updateBasicInfo(String name, EventType type, String expectedParticipants, String operatingTime) {
         this.name = name;
         this.type = type;
         this.expectedParticipants = expectedParticipants;
+        this.operatingTime = operatingTime;
     }
 
     public void updateDetailInfo(String description, String guidelines, String contact) {

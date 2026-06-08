@@ -244,6 +244,7 @@ jobs:
             # Docker 컨테이너 실행
             docker run -d \
             --name ${{env.SERVICE}}-${{env.PROFILE}} \
+            --network barowoori-net \
             -p ${PORT}:8080 \
             -e SPRING_PROFILES_ACTIVE=${{env.PROFILE}} \
             ${{ env.ECR_URI }}:${{env.PROFILE}}-latest

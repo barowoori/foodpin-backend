@@ -112,6 +112,21 @@ jobs:
           echo "  basic:" >> ${APP_CONFIG_FILE}
           echo "    username: ${{ secrets.SWAGGER_USERNAME }}" >> ${APP_CONFIG_FILE}
           echo "    password: ${{ secrets.SWAGGER_PASSWORD }}" >> ${APP_CONFIG_FILE}
+
+      - name: Add monitoring config (prod only)
+        if: ${{ env.PROFILE == 'prod' }}
+        env:
+          APP_CONFIG_FILE: src/main/resources/application-${{ env.PROFILE }}.yml
+        run: |
+          echo "management:" >> ${APP_CONFIG_FILE}
+          echo "  endpoints:" >> ${APP_CONFIG_FILE}
+          echo "    web:" >> ${APP_CONFIG_FILE}
+          echo "      exposure:" >> ${APP_CONFIG_FILE}
+          echo "        include: health,info,prometheus" >> ${APP_CONFIG_FILE}
+          echo "  metrics:" >> ${APP_CONFIG_FILE}
+          echo "    tags:" >> ${APP_CONFIG_FILE}
+          echo "      application: ${SERVICE}-${PROFILE}" >> ${APP_CONFIG_FILE}
+
       # application-S3.properties 생성
       - name: Create aws-s3-config.yml
         env: # 환경 변수로 GitHub Secrets 값을 읽어옵니다.

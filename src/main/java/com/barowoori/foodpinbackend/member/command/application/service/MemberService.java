@@ -1,5 +1,9 @@
 package com.barowoori.foodpinbackend.member.command.application.service;
 
+import com.barowoori.foodpinbackend.behaviorLog.application.BehaviorLogPublisher;
+import com.barowoori.foodpinbackend.behaviorLog.application.dto.BehaviorLogMessage;
+import com.barowoori.foodpinbackend.behaviorLog.application.event.BehaviorLogEvent;
+import com.barowoori.foodpinbackend.behaviorLog.domain.model.BehaviorEvent;
 import com.barowoori.foodpinbackend.common.exception.CustomException;
 import com.barowoori.foodpinbackend.common.security.JwtTokenProvider;
 import com.barowoori.foodpinbackend.event.command.application.service.EventService;
@@ -41,11 +45,14 @@ import com.barowoori.foodpinbackend.truck.command.domain.model.TruckManagerRole;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckManagerRepository;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -79,6 +86,15 @@ public class MemberService {
     private final RegionGuRepository regionGuRepository;
     private final RegionGunRepository regionGunRepository;
     private final CategoryRepository categoryRepository;
+    private final ApplicationEventPublisher eventPublisher;
+
+    private String currentGuestSessionId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof GuestMember guestMember) {
+            return guestMember.getSessionId();
+        }
+        return null;
+    }
 
     private Member getMember() {
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -116,6 +132,17 @@ public class MemberService {
 
         member = registerMemberDto.toEntity();
         memberRepository.save(member);
+
+        String guestSessionId = currentGuestSessionId();
+        if (guestSessionId != null) {
+            eventPublisher.publishEvent(new BehaviorLogEvent(BehaviorLogMessage.builder()
+                    .event(BehaviorEvent.UNREG_SIGNUP.name())
+                    .sessionId(guestSessionId)
+                    .memberId(member.getId())
+                    .serverReceivedAt(Instant.now().toString())
+                    .ip(BehaviorLogPublisher.resolveClientIp())
+                    .build()));
+        }
     }
 
     @Transactional
@@ -134,7 +161,14 @@ public class MemberService {
             throw new CustomException(MemberErrorCode.MEMBER_SOCIAL_LOGIN_INFO_EXISTS);
         }
 
-        unregisteredMemberRedisRepository.createSession(socialLoginId);
+        UnregisteredMemberSession session = unregisteredMemberRedisRepository.createSession(socialLoginId);
+
+        eventPublisher.publishEvent(new BehaviorLogEvent(BehaviorLogMessage.builder()
+                .event(BehaviorEvent.UNREG_REGISTER.name())
+                .sessionId(session.getSessionId())
+                .serverReceivedAt(Instant.now().toString())
+                .ip(BehaviorLogPublisher.resolveClientIp())
+                .build()));
     }
 
     @Transactional

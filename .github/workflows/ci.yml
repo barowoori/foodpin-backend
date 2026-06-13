@@ -66,6 +66,18 @@ jobs:
           echo "oauth.apple.privateKeyPem=${{ secrets.APPLE_PRIVATE_KEY_PEM }}" >> ${APP_CONFIG_FILE}
           echo "oauth.kakao.adminKey=${{ secrets.KAKAO_ADMIN_KEY }}" >> ${APP_CONFIG_FILE}
 
+      - name: Create aws-sqs-config.yml
+        env:
+          APP_CONFIG_FILE: src/main/resources/secrets/aws-sqs-config.yml
+        run: |
+          mkdir -p $(dirname ${APP_CONFIG_FILE})
+          echo "sqs:" >> ${APP_CONFIG_FILE}
+          echo "  credentials:" >> ${APP_CONFIG_FILE}
+          echo "    access-key: ${{ secrets.AWS_S3_ACCESS_KEY_ID }}" >> ${APP_CONFIG_FILE}
+          echo "    secret-key: ${{ secrets.AWS_S3_SECRET_ACCESS_KEY }}" >> ${APP_CONFIG_FILE}
+          echo "  region: ${{ secrets.AWS_REGION }}" >> ${APP_CONFIG_FILE}
+          echo "  queue-url: ${{ secrets.SQS_QUEUE_URL }}" >> ${APP_CONFIG_FILE}
+
       - name: Create odcloud-config.yml
         env: # 환경 변수로 GitHub Secrets 값을 읽어옵니다.
           APP_CONFIG_FILE: src/main/resources/secrets/odcloud-config.yml

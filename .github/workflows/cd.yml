@@ -140,6 +140,18 @@ jobs:
           echo "  region: ${{ secrets.AWS_REGION }}" >> ${APP_CONFIG_FILE}
           echo "  bucket: ${{ secrets.S3_BUCKET }}" >> ${APP_CONFIG_FILE}
 
+      - name: Create aws-sqs-config.yml
+        env:
+          APP_CONFIG_FILE: src/main/resources/secrets/aws-sqs-config.yml
+        run: |
+          mkdir -p $(dirname ${APP_CONFIG_FILE})
+          echo "sqs:" >> ${APP_CONFIG_FILE}
+          echo "  credentials:" >> ${APP_CONFIG_FILE}
+          echo "    access-key: ${{ secrets.AWS_S3_ACCESS_KEY_ID }}" >> ${APP_CONFIG_FILE}
+          echo "    secret-key: ${{ secrets.AWS_S3_SECRET_ACCESS_KEY }}" >> ${APP_CONFIG_FILE}
+          echo "  region: ${{ secrets.AWS_REGION }}" >> ${APP_CONFIG_FILE}
+          echo "  queue-url: ${{ secrets.SQS_QUEUE_URL }}" >> ${APP_CONFIG_FILE}
+
       - name: Create jwt-secret-keys.properties
         env:
           APP_CONFIG_FILE: src/main/resources/secrets/jwt-secret-key.properties

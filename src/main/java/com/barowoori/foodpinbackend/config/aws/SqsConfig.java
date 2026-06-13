@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
 @Configuration
-//@PropertySource(value = "classpath:secrets/aws-sqs-config.yml", factory = YamlPropertySourceFactory.class)
+@PropertySource(value = "classpath:secrets/aws-sqs-config.yml", factory = YamlPropertySourceFactory.class)
 public class SqsConfig {
     @Value("${sqs.credentials.access-key:}")
     private String accessKey;

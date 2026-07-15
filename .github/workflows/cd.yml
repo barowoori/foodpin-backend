@@ -126,6 +126,9 @@ jobs:
           echo "  metrics:" >> ${APP_CONFIG_FILE}
           echo "    tags:" >> ${APP_CONFIG_FILE}
           echo "      application: ${SERVICE}-${PROFILE}" >> ${APP_CONFIG_FILE}
+          echo "    distribution:" >> ${APP_CONFIG_FILE}
+          echo "      percentiles-histogram:" >> ${APP_CONFIG_FILE}
+          echo "        http.server.requests: true" >> ${APP_CONFIG_FILE}
 
       # application-S3.properties 생성
       - name: Create aws-s3-config.yml

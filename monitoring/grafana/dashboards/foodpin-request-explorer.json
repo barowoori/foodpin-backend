@@ -1,0 +1,677 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Low-traffic friendly API request explorer backed by Tempo traces and Prometheus summaries.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Runtime Health 보기",
+      "tooltip": "JVM, GC, HikariCP 등 운영 상태 대시보드로 이동합니다.",
+      "type": "link",
+      "url": "/d/foodpin-api-overview/foodpin-operations-overview"
+    }
+  ],
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana",
+        "uid": "-- Grafana --"
+      },
+      "description": "이 화면은 통계보다 실제 요청 한 건을 찾고 추적하는 데 집중합니다.",
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "### 보는 순서\n1. **Recent API Requests**에서 실제 요청을 확인합니다.  \n2. 느린 요청은 **Slow Requests**에서 처리시간 순으로 찾습니다.  \n3. 해당 행의 **Trace 열기**를 누르면 Controller/Repository/DB/외부 호출 흐름이 Tempo에서 열립니다.  \n요청 한 건도 숨기지 않으며, 우측 상단 시간 범위를 바꾸면 과거 요청도 조회할 수 있습니다.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "13.0.2",
+      "title": "사용 방법",
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "tempo",
+        "uid": "tempo"
+      },
+      "description": "선택한 시간 범위에 발생한 API 요청을 최신순으로 표시합니다. Trace 열기를 누르면 해당 요청의 전체 처리 흐름이 열립니다.",
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "API"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 330
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 400
+                    },
+                    {
+                      "color": "red",
+                      "value": 500
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Duration"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trace 열기"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 190
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 12,
+        "x": 0,
+        "y": 3
+      },
+      "id": 2,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Time"
+          }
+        ]
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "limit": 100,
+          "query": "{ resource.service.name = \"foodpin-backend-prod\" && span:kind = server && span:name =~ \"${method} ${api}\" } | select(span.http.request.method, span.http.route, span.http.response.status_code)",
+          "queryType": "traceql",
+          "refId": "A",
+          "spanLimit": 3,
+          "tableType": "spans"
+        }
+      ],
+      "title": "Recent API Requests · selected range",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "kind": true,
+              "name": true,
+              "service.name": true,
+              "traceIdHidden": true,
+              "traceName": true,
+              "traceService": true
+            },
+            "indexByName": {
+              "duration": 4,
+              "http.request.method": 1,
+              "http.response.status_code": 3,
+              "http.route": 2,
+              "spanID": 5,
+              "time": 0
+            },
+            "renameByName": {
+              "duration": "Duration",
+              "http.request.method": "Method",
+              "http.response.status_code": "Status",
+              "http.route": "API",
+              "spanID": "Trace 열기",
+              "time": "Time"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "tempo",
+        "uid": "tempo"
+      },
+      "description": "선택한 시간 범위에서 기준 시간보다 오래 걸린 실제 요청을 처리시간이 긴 순서로 표시합니다. 요청 수 최소 조건은 없습니다.",
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "API"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 330
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 400
+                    },
+                    {
+                      "color": "red",
+                      "value": 500
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Duration"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 500000000
+                    },
+                    {
+                      "color": "red",
+                      "value": 2000000000
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Trace 열기"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 190
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 12,
+        "x": 12,
+        "y": 3
+      },
+      "id": 3,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Duration"
+          }
+        ]
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "limit": 100,
+          "query": "{ resource.service.name = \"foodpin-backend-prod\" && span:kind = server && span:name =~ \"${method} ${api}\" && span:duration > ${slow} } | select(span.http.request.method, span.http.route, span.http.response.status_code)",
+          "queryType": "traceql",
+          "refId": "A",
+          "spanLimit": 3,
+          "tableType": "spans"
+        }
+      ],
+      "title": "Slow Requests · slower than $slow",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "kind": true,
+              "name": true,
+              "service.name": true,
+              "traceIdHidden": true,
+              "traceName": true,
+              "traceService": true
+            },
+            "indexByName": {
+              "duration": 4,
+              "http.request.method": 1,
+              "http.response.status_code": 3,
+              "http.route": 2,
+              "spanID": 5,
+              "time": 0
+            },
+            "renameByName": {
+              "duration": "Duration",
+              "http.request.method": "Method",
+              "http.response.status_code": "Status",
+              "http.route": "API",
+              "spanID": "Trace 열기",
+              "time": "Time"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "선택한 시간 범위의 API별 요청 수와 응답시간 요약입니다. 요청 수가 한 건이어도 숨기지 않으며, p95/p99는 반드시 Requests와 함께 해석합니다.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 3,
+          "unit": "s"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Requests"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "API"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 420
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 15
+      },
+      "id": 4,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Requests"
+          }
+        ]
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "round(sum by(uri,method)(increase(http_server_requests_seconds_count{job=\"spring-boot\",method=~\"${method}\",method!=\"OPTIONS\",uri=~\"${api}\",uri!~\"/actuator.*|UNKNOWN\"}[$__range]))) > 0",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "(sum by(uri,method)(increase(http_server_requests_seconds_sum{job=\"spring-boot\",method=~\"${method}\",method!=\"OPTIONS\",uri=~\"${api}\",uri!~\"/actuator.*|UNKNOWN\"}[$__range])) / clamp_min(sum by(uri,method)(increase(http_server_requests_seconds_count{job=\"spring-boot\",method=~\"${method}\",method!=\"OPTIONS\",uri=~\"${api}\",uri!~\"/actuator.*|UNKNOWN\"}[$__range])), 1)) and on(uri,method) (sum by(uri,method)(increase(http_server_requests_seconds_count{job=\"spring-boot\",method=~\"${method}\",method!=\"OPTIONS\",uri=~\"${api}\",uri!~\"/actuator.*|UNKNOWN\"}[$__range])) > 0)",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max by(uri,method)(max_over_time(http_server_requests_seconds_max{job=\"spring-boot\",method=~\"${method}\",method!=\"OPTIONS\",uri=~\"${api}\",uri!~\"/actuator.*|UNKNOWN\"}[$__range])) and on(uri,method) (sum by(uri,method)(increase(http_server_requests_seconds_count{job=\"spring-boot\",method=~\"${method}\",method!=\"OPTIONS\",uri=~\"${api}\",uri!~\"/actuator.*|UNKNOWN\"}[$__range])) > 0)",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "histogram_quantile(0.95,sum by(le,uri,method)(increase(http_server_requests_seconds_bucket{job=\"spring-boot\",method=~\"${method}\",method!=\"OPTIONS\",uri=~\"${api}\",uri!~\"/actuator.*|UNKNOWN\"}[$__range]))) and on(uri,method) (sum by(uri,method)(increase(http_server_requests_seconds_count{job=\"spring-boot\",method=~\"${method}\",method!=\"OPTIONS\",uri=~\"${api}\",uri!~\"/actuator.*|UNKNOWN\"}[$__range])) > 0)",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "histogram_quantile(0.99,sum by(le,uri,method)(increase(http_server_requests_seconds_bucket{job=\"spring-boot\",method=~\"${method}\",method!=\"OPTIONS\",uri=~\"${api}\",uri!~\"/actuator.*|UNKNOWN\"}[$__range]))) and on(uri,method) (sum by(uri,method)(increase(http_server_requests_seconds_count{job=\"spring-boot\",method=~\"${method}\",method!=\"OPTIONS\",uri=~\"${api}\",uri!~\"/actuator.*|UNKNOWN\"}[$__range])) > 0)",
+          "format": "table",
+          "instant": true,
+          "range": false,
+          "refId": "E"
+        }
+      ],
+      "title": "API Summary · selected range · no minimum traffic",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "Value #A": 2,
+              "Value #B": 3,
+              "Value #C": 4,
+              "Value #D": 5,
+              "Value #E": 6,
+              "method": 0,
+              "uri": 1
+            },
+            "renameByName": {
+              "Value #A": "Requests",
+              "Value #B": "Average",
+              "Value #C": "Max",
+              "Value #D": "p95",
+              "Value #E": "p99",
+              "method": "Method",
+              "uri": "API"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 41,
+  "tags": [
+    "foodpin",
+    "requests",
+    "traces"
+  ],
+  "templating": {
+    "list": [
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "hide": 0,
+        "includeAll": true,
+        "label": "Method",
+        "multi": false,
+        "name": "method",
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "GET",
+            "value": "GET"
+          },
+          {
+            "selected": false,
+            "text": "POST",
+            "value": "POST"
+          },
+          {
+            "selected": false,
+            "text": "PUT",
+            "value": "PUT"
+          },
+          {
+            "selected": false,
+            "text": "PATCH",
+            "value": "PATCH"
+          },
+          {
+            "selected": false,
+            "text": "DELETE",
+            "value": "DELETE"
+          }
+        ],
+        "query": "GET,POST,PUT,PATCH,DELETE",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "text": "/api/.*",
+          "value": "/api/.*"
+        },
+        "hide": 0,
+        "label": "API regex",
+        "name": "api",
+        "options": [
+          {
+            "selected": true,
+            "text": "/api/.*",
+            "value": "/api/.*"
+          }
+        ],
+        "query": "/api/.*",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "500ms",
+          "value": "500ms"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Slow 기준",
+        "multi": false,
+        "name": "slow",
+        "options": [
+          {
+            "selected": false,
+            "text": "100ms",
+            "value": "100ms"
+          },
+          {
+            "selected": false,
+            "text": "300ms",
+            "value": "300ms"
+          },
+          {
+            "selected": true,
+            "text": "500ms",
+            "value": "500ms"
+          },
+          {
+            "selected": false,
+            "text": "1s",
+            "value": "1s"
+          },
+          {
+            "selected": false,
+            "text": "2s",
+            "value": "2s"
+          },
+          {
+            "selected": false,
+            "text": "5s",
+            "value": "5s"
+          }
+        ],
+        "query": "100ms,300ms,500ms,1s,2s,5s",
+        "skipUrlSync": false,
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Foodpin Request Explorer",
+  "uid": "foodpin-request-explorer",
+  "version": 1,
+  "weekStart": ""
+}

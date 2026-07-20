@@ -10,18 +10,410 @@
   "links": [
     {
       "asDropdown": false,
-      "icon": "external link",
+      "icon": "bell",
       "includeVars": false,
       "keepTime": true,
       "tags": [],
       "targetBlank": false,
-      "title": "Runtime Health 보기",
-      "tooltip": "JVM, GC, HikariCP 등 운영 상태 대시보드로 이동합니다.",
+      "title": "알림 규칙 보기",
+      "tooltip": "현재 알림 상태와 규칙을 확인합니다.",
       "type": "link",
-      "url": "/d/foodpin-api-overview/foodpin-operations-overview"
+      "url": "/alerting/list"
     }
   ],
   "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Prometheus가 Foodpin 애플리케이션 메트릭을 정상 수집 중인지 보여줍니다.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 0
+      },
+      "id": 10,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max(up{job=\"spring-boot\"}) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Service UP",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Prometheus 규칙 중 현재 firing 상태인 알림 개수입니다. 0이 아니면 상단의 알림 규칙 보기를 확인합니다.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 0
+      },
+      "id": 11,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "count(ALERTS{alertstate=\"firing\"}) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Firing alerts",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "전체 API의 최근 5분 5xx 비율입니다. 요청이 없거나 5xx가 없으면 0%로 표시합니다.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.01
+              },
+              {
+                "color": "red",
+                "value": 0.05
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 0
+      },
+      "id": 12,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "(sum(rate(http_server_requests_seconds_count{job=\"spring-boot\",status=~\"5..\",method!=\"OPTIONS\",uri!~\"/actuator.*|UNKNOWN\"}[5m])) / sum(rate(http_server_requests_seconds_count{job=\"spring-boot\",method!=\"OPTIONS\",uri!~\"/actuator.*|UNKNOWN\"}[5m]))) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "5xx rate · recent 5m",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "현재 사용 중인 DB 커넥션 / 최대 커넥션 비율입니다.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.7
+              },
+              {
+                "color": "red",
+                "value": 0.85
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 0
+      },
+      "id": 13,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(hikaricp_connections_active{job=\"spring-boot\"}) / sum(hikaricp_connections_max{job=\"spring-boot\"})",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Hikari utilization · now",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "현재 JVM Heap 사용량 / 최대 Heap 비율입니다.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.7
+              },
+              {
+                "color": "red",
+                "value": 0.85
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 0
+      },
+      "id": 14,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(jvm_memory_used_bytes{job=\"spring-boot\",area=\"heap\"}) / sum(jvm_memory_max_bytes{job=\"spring-boot\",area=\"heap\"})",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "JVM heap usage · now",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "최근 15분에 관측된 JVM GC pause 최대값입니다. 1초 이상이면 알림 규칙과 같은 시점을 확인합니다.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.5
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 0
+      },
+      "id": 15,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max(max_over_time(jvm_gc_pause_seconds_max{job=\"spring-boot\"}[15m])) or vector(0)",
+          "instant": true,
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "GC max pause · recent 15m",
+      "type": "stat"
+    },
     {
       "datasource": {
         "type": "grafana",
@@ -29,10 +421,10 @@
       },
       "description": "이 화면은 통계보다 실제 요청 한 건을 찾고 추적하는 데 집중합니다.",
       "gridPos": {
-        "h": 3,
+        "h": 2,
         "w": 24,
         "x": 0,
-        "y": 0
+        "y": 4
       },
       "id": 1,
       "options": {
@@ -133,7 +525,23 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 190
+                "value": 170
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Trace 상세 열기",
+                    "url": "/explore?left=%7B%22range%22%3A%7B%22from%22%3A%22${__from}%22%2C%22to%22%3A%22${__to}%22%7D%2C%22datasource%22%3A%22tempo%22%2C%22queries%22%3A%5B%7B%22query%22%3A%22${__value.raw}%22%2C%22queryType%22%3A%22traceql%22%2C%22datasource%22%3A%7B%22uid%22%3A%22tempo%22%7D%7D%5D%7D"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "data-links"
+                }
               }
             ]
           }
@@ -143,7 +551,7 @@
         "h": 12,
         "w": 12,
         "x": 0,
-        "y": 3
+        "y": 6
       },
       "id": 2,
       "options": {
@@ -180,7 +588,7 @@
               "kind": true,
               "name": true,
               "service.name": true,
-              "traceIdHidden": true,
+              "spanID": true,
               "traceName": true,
               "traceService": true
             },
@@ -189,7 +597,7 @@
               "http.request.method": 1,
               "http.response.status_code": 3,
               "http.route": 2,
-              "spanID": 5,
+              "traceIdHidden": 5,
               "time": 0
             },
             "renameByName": {
@@ -197,7 +605,7 @@
               "http.request.method": "Method",
               "http.response.status_code": "Status",
               "http.route": "API",
-              "spanID": "Trace 열기",
+              "traceIdHidden": "Trace 열기",
               "time": "Time"
             }
           }
@@ -316,7 +724,23 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 190
+                "value": 170
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Trace 상세 열기",
+                    "url": "/explore?left=%7B%22range%22%3A%7B%22from%22%3A%22${__from}%22%2C%22to%22%3A%22${__to}%22%7D%2C%22datasource%22%3A%22tempo%22%2C%22queries%22%3A%5B%7B%22query%22%3A%22${__value.raw}%22%2C%22queryType%22%3A%22traceql%22%2C%22datasource%22%3A%7B%22uid%22%3A%22tempo%22%7D%7D%5D%7D"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "data-links"
+                }
               }
             ]
           }
@@ -326,7 +750,7 @@
         "h": 12,
         "w": 12,
         "x": 12,
-        "y": 3
+        "y": 6
       },
       "id": 3,
       "options": {
@@ -363,7 +787,7 @@
               "kind": true,
               "name": true,
               "service.name": true,
-              "traceIdHidden": true,
+              "spanID": true,
               "traceName": true,
               "traceService": true
             },
@@ -372,7 +796,7 @@
               "http.request.method": 1,
               "http.response.status_code": 3,
               "http.route": 2,
-              "spanID": 5,
+              "traceIdHidden": 5,
               "time": 0
             },
             "renameByName": {
@@ -380,7 +804,7 @@
               "http.request.method": "Method",
               "http.response.status_code": "Status",
               "http.route": "API",
-              "spanID": "Trace 열기",
+              "traceIdHidden": "Trace 열기",
               "time": "Time"
             }
           }
@@ -434,7 +858,7 @@
         "h": 10,
         "w": 24,
         "x": 0,
-        "y": 15
+        "y": 18
       },
       "id": 4,
       "options": {

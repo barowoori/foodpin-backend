@@ -7,11 +7,10 @@ import com.barowoori.foodpinbackend.region.command.domain.query.application.Regi
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionDoRepository;
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckDocumentRepository;
-import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckMenuRepository;
-import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckRegionRepository;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckRepository;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckDocumentInfoDto;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckList;
+import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -19,27 +18,25 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 @Component
 public class TruckListService {
     private final TruckRepository truckRepository;
     private final RegionDoRepository regionDoRepository;
-    private final TruckMenuRepository truckMenuRepository;
     private final TruckDocumentRepository truckDocumentRepository;
-    private final TruckRegionRepository truckRegionRepository;
     private final ImageManager imageManager;
     private final TruckRegionFullNameGenerator truckRegionFullNameGenerator;
     private final RegionCacheService regionCacheService;
 
-    public TruckListService(TruckRepository truckRepository, RegionDoRepository regionDoRepository, TruckMenuRepository truckMenuRepository,
-                            TruckDocumentRepository truckDocumentRepository, TruckRegionRepository truckRegionRepository, TruckRegionFullNameGenerator truckRegionFullNameGenerator,
+    public TruckListService(TruckRepository truckRepository, RegionDoRepository regionDoRepository,
+                            TruckDocumentRepository truckDocumentRepository,
+                            TruckRegionFullNameGenerator truckRegionFullNameGenerator,
                             ImageManager imageManager, RegionCacheService regionCacheService) {
         this.truckRepository = truckRepository;
         this.regionDoRepository = regionDoRepository;
-        this.truckMenuRepository = truckMenuRepository;
         this.truckDocumentRepository = truckDocumentRepository;
-        this.truckRegionRepository = truckRegionRepository;
         this.imageManager = imageManager;
         this.truckRegionFullNameGenerator = truckRegionFullNameGenerator;
         this.regionCacheService = regionCacheService;
@@ -50,34 +47,67 @@ public class TruckListService {
     }
 
     @Transactional(readOnly = true)
-    public Page<TruckList> findTruckList( List<String> regionCodes,
-                                          List<String> categoryNames,
-                                          String searchTerm,
-                                          Set<TruckType> types,
-                                          Integer minAvgMenuPrice,
-                                          Integer maxAvgMenuPrice,
-                                          Set<TruckColor> colors,
-                                          Set<TruckBodyType> bodyTypes,
-                                          Set<PaymentMethod> paymentMethods,
-                                          Set<ProofIssuanceType> proofIssuanceTypes,
-                                          Boolean isCatering,
-                                          Pageable pageable) {
+    public Page<TruckList> findTruckList(List<String> regionCodes,
+                                         List<String> categoryNames,
+                                         String searchTerm,
+                                         Set<TruckType> types,
+                                         Integer minAvgMenuPrice,
+                                         Integer maxAvgMenuPrice,
+                                         Set<TruckColor> colors,
+                                         Set<TruckBodyType> bodyTypes,
+                                         Set<PaymentMethod> paymentMethods,
+                                         Set<ProofIssuanceType> proofIssuanceTypes,
+                                         Boolean isCatering,
+                                         Pageable pageable) {
         RegionSearchProcessor regionSearchProcessor = getRegionSearchProcessor();
         Map<RegionType, List<String>> regionIds = regionDoRepository.findRegionIdsByFilter(regionCodes);
-        Page<Truck> trucks = truckRepository.findTruckListByFilter(searchTerm, categoryNames, regionIds, types, minAvgMenuPrice, maxAvgMenuPrice,
+        Page<TruckProjection> projections = truckRepository.findTruckListByFilter(searchTerm, categoryNames, regionIds, types, minAvgMenuPrice, maxAvgMenuPrice,
                 colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering, pageable);
-        List<String> truckIds = trucks.map(Truck::getId).stream().toList();
+        List<String> truckIds = projections.getContent().stream().map(TruckProjection::getId).toList();
         Map<String, List<TruckDocumentInfoDto>> documents = truckDocumentRepository.getDocumentTypeByTruckIds(truckIds);
 
-        return trucks.map(truck -> {
-            List<String> regionNames = truck.getTruckRegionNames(regionSearchProcessor);
+        return projections.map(projection -> {
+            List<String> regionNames = projection.getRegions().stream()
+                    .map(r -> regionSearchProcessor.findFullRegionName(r.regionType(), r.regionId()))
+                    .filter(Objects::nonNull)
+                    .toList();
             String regionList = truckRegionFullNameGenerator.makeRegionListByRegionNames(regionNames);
-            return TruckList.of(truck, documents.get(truck.getId()), regionNames, regionList, imageManager);
+            return TruckList.of(projection, documents.get(projection.getId()), regionNames, regionList, imageManager);
         });
     }
 
     @Transactional(readOnly = true)
     public Page<TruckList> findLikeTruckByTruckList(String memberId, List<String> regionCodes,
+                                                     List<String> categoryNames,
+                                                     String searchTerm,
+                                                     Set<TruckType> types,
+                                                     Integer minAvgMenuPrice,
+                                                     Integer maxAvgMenuPrice,
+                                                     Set<TruckColor> colors,
+                                                     Set<TruckBodyType> bodyTypes,
+                                                     Set<PaymentMethod> paymentMethods,
+                                                     Set<ProofIssuanceType> proofIssuanceTypes,
+                                                     Boolean isCatering,
+                                                     Pageable pageable) {
+        RegionSearchProcessor regionSearchProcessor = getRegionSearchProcessor();
+        Map<RegionType, List<String>> regionIds = regionDoRepository.findRegionIdsByFilter(regionCodes);
+        Page<TruckProjection> projections = truckRepository.findLikeTruckListByFilter(memberId, searchTerm, categoryNames, regionIds, types, minAvgMenuPrice, maxAvgMenuPrice,
+                colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering, pageable);
+        List<String> truckIds = projections.getContent().stream().map(TruckProjection::getId).toList();
+        Map<String, List<TruckDocumentInfoDto>> documents = truckDocumentRepository.getDocumentTypeByTruckIds(truckIds);
+
+        return projections.map(projection -> {
+            List<String> regionNames = projection.getRegions().stream()
+                    .map(r -> regionSearchProcessor.findFullRegionName(r.regionType(), r.regionId()))
+                    .filter(Objects::nonNull)
+                    .toList();
+            String regionList = truckRegionFullNameGenerator.makeRegionListByRegionNames(regionNames);
+            return TruckList.of(projection, documents.get(projection.getId()), regionNames, regionList, imageManager);
+        });
+    }
+
+    @Transactional(readOnly = true)
+    public Page<TruckList> findBackOfficeTruckList(List<String> regionCodes,
                                                     List<String> categoryNames,
                                                     String searchTerm,
                                                     Set<TruckType> types,
@@ -88,46 +118,22 @@ public class TruckListService {
                                                     Set<PaymentMethod> paymentMethods,
                                                     Set<ProofIssuanceType> proofIssuanceTypes,
                                                     Boolean isCatering,
+                                                    Boolean isDeleted,
                                                     Pageable pageable) {
         RegionSearchProcessor regionSearchProcessor = getRegionSearchProcessor();
-
         Map<RegionType, List<String>> regionIds = regionDoRepository.findRegionIdsByFilter(regionCodes);
-        Page<Truck> trucks = truckRepository.findLikeTruckListByFilter(memberId, searchTerm, categoryNames, regionIds, types, minAvgMenuPrice, maxAvgMenuPrice,
-                colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering, pageable);
-        List<String> truckIds = trucks.map(Truck::getId).stream().toList();
-        Map<String, List<TruckDocumentInfoDto>> documents = truckDocumentRepository.getDocumentTypeByTruckIds(truckIds);
-        return trucks.map(truck -> {
-            List<String> regionNames = truck.getTruckRegionNames(regionSearchProcessor);
-            String regionList = truckRegionFullNameGenerator.makeRegionListByRegionNames(regionNames);
-            return TruckList.of(truck, documents.get(truck.getId()), regionNames, regionList, imageManager);
-        });
-    }
-
-    @Transactional(readOnly = true)
-    public Page<TruckList> findBackOfficeTruckList(List<String> regionCodes,
-                                                   List<String> categoryNames,
-                                                   String searchTerm,
-                                                   Set<TruckType> types,
-                                                   Integer minAvgMenuPrice,
-                                                   Integer maxAvgMenuPrice,
-                                                   Set<TruckColor> colors,
-                                                   Set<TruckBodyType> bodyTypes,
-                                                   Set<PaymentMethod> paymentMethods,
-                                                   Set<ProofIssuanceType> proofIssuanceTypes,
-                                                   Boolean isCatering,
-                                                   Boolean isDeleted,
-                                                   Pageable pageable) {
-        RegionSearchProcessor regionSearchProcessor = getRegionSearchProcessor();
-        Map<RegionType, List<String>> regionIds = regionDoRepository.findRegionIdsByFilter(regionCodes);
-        Page<Truck> trucks = truckRepository.findBackOfficeTruckListByFilter(searchTerm, categoryNames, regionIds, types, minAvgMenuPrice, maxAvgMenuPrice,
+        Page<TruckProjection> projections = truckRepository.findBackOfficeTruckListByFilter(searchTerm, categoryNames, regionIds, types, minAvgMenuPrice, maxAvgMenuPrice,
                 colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering, isDeleted, pageable);
-        List<String> truckIds = trucks.map(Truck::getId).stream().toList();
+        List<String> truckIds = projections.getContent().stream().map(TruckProjection::getId).toList();
         Map<String, List<TruckDocumentInfoDto>> documents = truckDocumentRepository.getDocumentTypeByTruckIds(truckIds);
 
-        return trucks.map(truck -> {
-            List<String> regionNames = truck.getTruckRegionNames(regionSearchProcessor);
+        return projections.map(projection -> {
+            List<String> regionNames = projection.getRegions().stream()
+                    .map(r -> regionSearchProcessor.findFullRegionName(r.regionType(), r.regionId()))
+                    .filter(Objects::nonNull)
+                    .toList();
             String regionList = truckRegionFullNameGenerator.makeRegionListByRegionNames(regionNames);
-            return TruckList.of(truck, documents.get(truck.getId()), regionNames, regionList, imageManager);
+            return TruckList.of(projection, documents.get(projection.getId()), regionNames, regionList, imageManager);
         });
     }
 }

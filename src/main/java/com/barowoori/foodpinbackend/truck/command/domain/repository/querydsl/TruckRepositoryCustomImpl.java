@@ -5,6 +5,7 @@ import com.barowoori.foodpinbackend.file.command.domain.model.QFile;
 import com.barowoori.foodpinbackend.member.command.domain.model.QTruckLike;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
+import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckProjection;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Order;
@@ -30,6 +31,7 @@ import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckCate
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckDocument.truckDocument;
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckManager.truckManager;
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckMenu.truckMenu;
+import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckMenuPhoto.truckMenuPhoto;
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckPhoto.truckPhoto;
 import static com.barowoori.foodpinbackend.truck.command.domain.model.QTruckRegion.truckRegion;
 
@@ -61,130 +63,116 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
     }
 
     @Override
-    public Page<Truck> findTruckListByFilter(String searchTerm, List<String> categoryCodes, Map<RegionType, List<String>> regionIds,
-                                             Set<TruckType> types, Integer minAvgMenuPrice,  Integer maxAvgMenuPrice, Set<TruckColor> colors, Set<TruckBodyType> bodyTypes,
-                                             Set<PaymentMethod> paymentMethods, Set<ProofIssuanceType> proofIssuanceTypes, Boolean isCatering,
-                                             Pageable pageable) {
-        List<Tuple> result = jpaQueryFactory.selectDistinct(truck.id, truck.createdAt, truck.views)
-                .from(truck)
-                .leftJoin(truck.regions, truckRegion)
-                .leftJoin(truck.categories, truckCategory)
-                .leftJoin(truckCategory.category, category)
-                .leftJoin(truck.menus, truckMenu)
-                .where(
-                        truck.isDeleted.isFalse()
-                                .and(
-                                        createFilterBuilder(searchTerm, categoryCodes,
-                                                types, minAvgMenuPrice, maxAvgMenuPrice, colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering,
-                                                truck, category, truckMenu
-                                        )
-                                                .and(regionFilterCondition(regionIds))
-                                )
-                )
-                .orderBy(getOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
-                .fetch();
-
-        List<String> truckIds = result.stream()
-                .map(tuple -> tuple.get(truck.id))
-                .collect(Collectors.toList());
-
-        List<Truck> trucks = jpaQueryFactory.selectDistinct(truck)
-                .from(truck)
-                .leftJoin(truck.photos, truckPhoto).fetchJoin()
-                .leftJoin(truckPhoto.file, file).fetchJoin()
-                .where(truck.id.in(truckIds))
-                .orderBy(getOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
-                .fetch();
-
-        Long total = jpaQueryFactory.select(truck.countDistinct()).from(truck)
-                .leftJoin(truck.regions, truckRegion)
-                .leftJoin(truck.categories, truckCategory)
-                .leftJoin(truckCategory.category, category)
-                .leftJoin(truck.menus, truckMenu)
-                .where(
-                        truck.isDeleted.isFalse()
-                                .and(
-                                        createFilterBuilder(searchTerm, categoryCodes,
-                                                types, minAvgMenuPrice, maxAvgMenuPrice, colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering,
-                                                truck, category, truckMenu
-                                        )
-                                                .and(regionFilterCondition(regionIds))
-                                )
-                )
-                .fetchOne();
-
-        return new PageImpl<>(trucks, pageable, total);
-    }
-
-    @Override
-    public Page<Truck> findLikeTruckListByFilter(String memberId, String searchTerm, List<String> categoryCodes, Map<RegionType, List<String>> regionIds,
-                                                 Set<TruckType> types, Integer minAvgMenuPrice,  Integer maxAvgMenuPrice, Set<TruckColor> colors, Set<TruckBodyType> bodyTypes,
-                                                 Set<PaymentMethod> paymentMethods, Set<ProofIssuanceType> proofIssuanceTypes, Boolean isCatering,
-                                                 Pageable pageable) {
-        List<Tuple> result = jpaQueryFactory.selectDistinct(truck.id, truck.createdAt, truck.views)
-                .from(truck)
-                .innerJoin(truckLike).on(truckLike.truck.eq(truck).and(truckLike.member.id.eq(memberId)))
-                .leftJoin(truck.regions, truckRegion)
-                .leftJoin(truck.categories, truckCategory)
-                .leftJoin(truckCategory.category, category)
-                .leftJoin(truck.menus, truckMenu)
-                .where(
-                        truck.isDeleted.isFalse()
-                                .and(
-                                        createFilterBuilder(searchTerm, categoryCodes,
-                                                types, minAvgMenuPrice, maxAvgMenuPrice, colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering,
-                                                truck, category, truckMenu
-                                        )
-                                                .and(regionFilterCondition(regionIds))
-                                )
-                )
-                .orderBy(getOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
-                .fetch();
-
-        List<String> truckIds = result.stream()
-                .map(tuple -> tuple.get(truck.id))
-                .collect(Collectors.toList());
-
-        List<Truck> trucks = jpaQueryFactory.selectDistinct(truck)
-                .from(truck)
-                .innerJoin(truckLike).on(truckLike.truck.eq(truck).and(truckLike.member.id.eq(memberId)))
-                .leftJoin(truck.photos, truckPhoto).fetchJoin()
-                .leftJoin(truckPhoto.file, file).fetchJoin()
-                .where(truck.id.in(truckIds))
-                .orderBy(getOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
-                .fetch();
-
-
-        Long total = jpaQueryFactory.select(truck.countDistinct()).from(truck)
-                .innerJoin(truckLike).on(truckLike.truck.eq(truck).and(truckLike.member.id.eq(memberId)))
-                .leftJoin(truck.regions, truckRegion)
-                .leftJoin(truck.categories, truckCategory)
-                .leftJoin(truckCategory.category, category)
-                .leftJoin(truck.menus, truckMenu)
-                .where(
-                        truck.isDeleted.isFalse()
-                                .and(
-                                        createFilterBuilder(searchTerm, categoryCodes,
-                                                types, minAvgMenuPrice, maxAvgMenuPrice, colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering,
-                                                truck, category, truckMenu
-                                        )
-                                                .and(regionFilterCondition(regionIds))
-                                )
-                )
-                .fetchOne();
-
-        return new PageImpl<>(trucks, pageable, total);
-    }
-
-    @Override
-    public Page<Truck> findBackOfficeTruckListByFilter(String searchTerm, List<String> categoryCodes, Map<RegionType, List<String>> regionIds,
+    public Page<TruckProjection> findTruckListByFilter(String searchTerm, List<String> categoryCodes, Map<RegionType, List<String>> regionIds,
                                                        Set<TruckType> types, Integer minAvgMenuPrice, Integer maxAvgMenuPrice, Set<TruckColor> colors, Set<TruckBodyType> bodyTypes,
-                                                       Set<PaymentMethod> paymentMethods, Set<ProofIssuanceType> proofIssuanceTypes, Boolean isCatering, Boolean isDeleted,
+                                                       Set<PaymentMethod> paymentMethods, Set<ProofIssuanceType> proofIssuanceTypes, Boolean isCatering,
                                                        Pageable pageable) {
+        List<Tuple> result = jpaQueryFactory.selectDistinct(truck.id, truck.createdAt, truck.views)
+                .from(truck)
+                .leftJoin(truck.regions, truckRegion)
+                .leftJoin(truck.categories, truckCategory)
+                .leftJoin(truckCategory.category, category)
+                .leftJoin(truck.menus, truckMenu)
+                .where(
+                        truck.isDeleted.isFalse()
+                                .and(
+                                        createFilterBuilder(searchTerm, categoryCodes,
+                                                types, minAvgMenuPrice, maxAvgMenuPrice, colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering,
+                                                truck, category, truckMenu
+                                        )
+                                                .and(regionFilterCondition(regionIds))
+                                )
+                )
+                .orderBy(getOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        List<String> truckIds = result.stream()
+                .map(tuple -> tuple.get(truck.id))
+                .collect(Collectors.toList());
+
+        List<TruckProjection> projections = loadTruckProjections(truckIds);
+
+        Long total = jpaQueryFactory.select(truck.countDistinct()).from(truck)
+                .leftJoin(truck.regions, truckRegion)
+                .leftJoin(truck.categories, truckCategory)
+                .leftJoin(truckCategory.category, category)
+                .leftJoin(truck.menus, truckMenu)
+                .where(
+                        truck.isDeleted.isFalse()
+                                .and(
+                                        createFilterBuilder(searchTerm, categoryCodes,
+                                                types, minAvgMenuPrice, maxAvgMenuPrice, colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering,
+                                                truck, category, truckMenu
+                                        )
+                                                .and(regionFilterCondition(regionIds))
+                                )
+                )
+                .fetchOne();
+
+        return new PageImpl<>(projections, pageable, total);
+    }
+
+    @Override
+    public Page<TruckProjection> findLikeTruckListByFilter(String memberId, String searchTerm, List<String> categoryCodes, Map<RegionType, List<String>> regionIds,
+                                                           Set<TruckType> types, Integer minAvgMenuPrice, Integer maxAvgMenuPrice, Set<TruckColor> colors, Set<TruckBodyType> bodyTypes,
+                                                           Set<PaymentMethod> paymentMethods, Set<ProofIssuanceType> proofIssuanceTypes, Boolean isCatering,
+                                                           Pageable pageable) {
+        List<Tuple> result = jpaQueryFactory.selectDistinct(truck.id, truck.createdAt, truck.views)
+                .from(truck)
+                .innerJoin(truckLike).on(truckLike.truck.eq(truck).and(truckLike.member.id.eq(memberId)))
+                .leftJoin(truck.regions, truckRegion)
+                .leftJoin(truck.categories, truckCategory)
+                .leftJoin(truckCategory.category, category)
+                .leftJoin(truck.menus, truckMenu)
+                .where(
+                        truck.isDeleted.isFalse()
+                                .and(
+                                        createFilterBuilder(searchTerm, categoryCodes,
+                                                types, minAvgMenuPrice, maxAvgMenuPrice, colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering,
+                                                truck, category, truckMenu
+                                        )
+                                                .and(regionFilterCondition(regionIds))
+                                )
+                )
+                .orderBy(getOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        List<String> truckIds = result.stream()
+                .map(tuple -> tuple.get(truck.id))
+                .collect(Collectors.toList());
+
+        List<TruckProjection> projections = loadTruckProjections(truckIds);
+
+        Long total = jpaQueryFactory.select(truck.countDistinct()).from(truck)
+                .innerJoin(truckLike).on(truckLike.truck.eq(truck).and(truckLike.member.id.eq(memberId)))
+                .leftJoin(truck.regions, truckRegion)
+                .leftJoin(truck.categories, truckCategory)
+                .leftJoin(truckCategory.category, category)
+                .leftJoin(truck.menus, truckMenu)
+                .where(
+                        truck.isDeleted.isFalse()
+                                .and(
+                                        createFilterBuilder(searchTerm, categoryCodes,
+                                                types, minAvgMenuPrice, maxAvgMenuPrice, colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering,
+                                                truck, category, truckMenu
+                                        )
+                                                .and(regionFilterCondition(regionIds))
+                                )
+                )
+                .fetchOne();
+
+        return new PageImpl<>(projections, pageable, total);
+    }
+
+    @Override
+    public Page<TruckProjection> findBackOfficeTruckListByFilter(String searchTerm, List<String> categoryCodes, Map<RegionType, List<String>> regionIds,
+                                                                 Set<TruckType> types, Integer minAvgMenuPrice, Integer maxAvgMenuPrice, Set<TruckColor> colors, Set<TruckBodyType> bodyTypes,
+                                                                 Set<PaymentMethod> paymentMethods, Set<ProofIssuanceType> proofIssuanceTypes, Boolean isCatering, Boolean isDeleted,
+                                                                 Pageable pageable) {
         BooleanBuilder filterBuilder = createFilterBuilder(searchTerm, categoryCodes,
                 types, minAvgMenuPrice, maxAvgMenuPrice, colors, bodyTypes, paymentMethods, proofIssuanceTypes, isCatering,
                 truck, category, truckMenu);
@@ -213,13 +201,7 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
                 .map(tuple -> tuple.get(truck.id))
                 .collect(Collectors.toList());
 
-        List<Truck> trucks = truckIds.isEmpty() ? List.of() : jpaQueryFactory.selectDistinct(truck)
-                .from(truck)
-                .leftJoin(truck.photos, truckPhoto).fetchJoin()
-                .leftJoin(truckPhoto.file, file).fetchJoin()
-                .where(truck.id.in(truckIds))
-                .orderBy(getOrderSpecifier(pageable.getSort()).stream().toArray(OrderSpecifier[]::new))
-                .fetch();
+        List<TruckProjection> projections = loadTruckProjections(truckIds);
 
         Long total = jpaQueryFactory.select(truck.countDistinct()).from(truck)
                 .leftJoin(truck.regions, truckRegion)
@@ -229,7 +211,86 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
                 .where(filterBuilder)
                 .fetchOne();
 
-        return new PageImpl<>(trucks, pageable, total == null ? 0 : total);
+        return new PageImpl<>(projections, pageable, total == null ? 0 : total);
+    }
+
+    private List<TruckProjection> loadTruckProjections(List<String> truckIds) {
+        if (truckIds.isEmpty()) return Collections.emptyList();
+
+        // Query 2a: basic truck info (id, name, avgMenuPrice)
+        Map<String, Tuple> basicByTruck = jpaQueryFactory
+                .select(truck.id, truck.name, truck.avgMenuPrice)
+                .from(truck)
+                .where(truck.id.in(truckIds))
+                .fetch()
+                .stream()
+                .collect(Collectors.toMap(t -> t.get(truck.id), t -> t));
+
+        // Query 2b: first truck photo path per truck (ordered by created_at)
+        Map<String, String> mainPhotoByTruck = new LinkedHashMap<>();
+        jpaQueryFactory
+                .select(truckPhoto.truck.id, file.path)
+                .from(truckPhoto)
+                .join(truckPhoto.file, file)
+                .where(truckPhoto.truck.id.in(truckIds))
+                .orderBy(truckPhoto.createAt.asc())
+                .fetch()
+                .forEach(t -> mainPhotoByTruck.putIfAbsent(t.get(truckPhoto.truck.id), t.get(file.path)));
+
+        // Query 2c: menu names per truck (ordered by created_at)
+        Map<String, List<String>> menuNamesByTruck = new LinkedHashMap<>();
+        jpaQueryFactory
+                .select(truckMenu.truck.id, truckMenu.name)
+                .from(truckMenu)
+                .where(truckMenu.truck.id.in(truckIds))
+                .orderBy(truckMenu.createAt.asc())
+                .fetch()
+                .forEach(t -> menuNamesByTruck
+                        .computeIfAbsent(t.get(truckMenu.truck.id), k -> new ArrayList<>())
+                        .add(t.get(truckMenu.name)));
+
+        // Query 2d: menu photo paths per truck (first 2 per truck, ordered by menu.created_at, photo.created_at)
+        Map<String, List<String>> menuPhotosByTruck = new LinkedHashMap<>();
+        jpaQueryFactory
+                .select(truckMenu.truck.id, file.path)
+                .from(truckMenuPhoto)
+                .join(truckMenuPhoto.truckMenu, truckMenu)
+                .join(truckMenuPhoto.file, file)
+                .where(truckMenu.truck.id.in(truckIds))
+                .orderBy(truckMenu.createAt.asc(), truckMenuPhoto.createAt.asc())
+                .fetch()
+                .forEach(t -> {
+                    String truckId = t.get(truckMenu.truck.id);
+                    List<String> paths = menuPhotosByTruck.computeIfAbsent(truckId, k -> new ArrayList<>());
+                    if (paths.size() < 2) {
+                        paths.add(t.get(file.path));
+                    }
+                });
+
+        // Query 2e: regions per truck (ordered by created_at)
+        Map<String, List<TruckProjection.RegionEntry>> regionsByTruck = new LinkedHashMap<>();
+        jpaQueryFactory
+                .select(truckRegion.truck.id, truckRegion.regionType, truckRegion.regionId)
+                .from(truckRegion)
+                .where(truckRegion.truck.id.in(truckIds))
+                .orderBy(truckRegion.createAt.asc())
+                .fetch()
+                .forEach(t -> regionsByTruck
+                        .computeIfAbsent(t.get(truckRegion.truck.id), k -> new ArrayList<>())
+                        .add(new TruckProjection.RegionEntry(t.get(truckRegion.regionType), t.get(truckRegion.regionId))));
+
+        return truckIds.stream().map(id -> {
+            Tuple basic = basicByTruck.get(id);
+            return new TruckProjection(
+                    id,
+                    basic != null ? basic.get(truck.name) : null,
+                    basic != null ? basic.get(truck.avgMenuPrice) : null,
+                    mainPhotoByTruck.get(id),
+                    menuNamesByTruck.getOrDefault(id, Collections.emptyList()),
+                    menuPhotosByTruck.getOrDefault(id, Collections.emptyList()),
+                    regionsByTruck.getOrDefault(id, Collections.emptyList())
+            );
+        }).toList();
     }
 
     public BooleanBuilder createFilterBuilder(String searchTerm,
@@ -280,8 +341,7 @@ public class TruckRepositoryCustomImpl implements TruckRepositoryCustom {
 
         BooleanBuilder typeBuilder = new BooleanBuilder();
 
-        // QTruck.truck.types 대신 DB 컬럼명을 stringPath로 사용
-        StringPath typesPath = Expressions.stringPath("types"); // 실제 컬럼명 사용
+        StringPath typesPath = Expressions.stringPath("types");
 
         for (TruckType type : types) {
             typeBuilder.or(

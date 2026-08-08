@@ -51,4 +51,32 @@ public class TruckList {
                 .menuPhotos(truck.getFirstTwoCreatedTruckMenuPhotos(imageManager))
                 .build();
     }
+
+    public static TruckList of(TruckProjection projection, List<TruckDocumentInfoDto> documents, List<String> regions, String regionList, ImageManager imageManager) {
+        return TruckList.builder()
+                .id(projection.getId())
+                .name(projection.getName())
+                .businessRegistrationApproved(documents != null ?
+                        documents.stream()
+                                .filter(document -> document.getType().equals(DocumentType.BUSINESS_REGISTRATION))
+                                .map(TruckDocumentInfoDto::getStatus)
+                                .anyMatch(status -> status.equals(TruckDocumentStatus.APPROVED)) : Boolean.FALSE)
+                .documents(documents != null
+                        ? documents.stream()
+                        .filter(document -> document.getType() != DocumentType.BUSINESS_REGISTRATION
+                                || document.getStatus() == TruckDocumentStatus.APPROVED)
+                        .map(TruckDocumentInfoDto::getType)
+                        .distinct()
+                        .toList()
+                        : new ArrayList<>())
+                .regions(regions)
+                .regionList(regionList)
+                .menuNames(projection.getMenuNames())
+                .photo(projection.getMainPhotoPath() != null ? imageManager.getPreSignUrl(projection.getMainPhotoPath()) : null)
+                .avgMenuPrice(projection.getAvgMenuPrice())
+                .menuPhotos(projection.getMenuPhotoPaths().stream()
+                        .map(imageManager::getPreSignUrl)
+                        .toList())
+                .build();
+    }
 }

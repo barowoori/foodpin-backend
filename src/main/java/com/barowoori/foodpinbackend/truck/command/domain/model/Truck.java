@@ -67,9 +67,11 @@ public class Truck {
     private Set<TruckDocument> documents;
 
     @OneToMany(mappedBy = "truck")
+    @BatchSize(size = 100)
     private Set<TruckCategory> categories;
 
     @OneToMany(mappedBy = "truck")
+    @BatchSize(size = 100)
     private Set<TruckRegion> regions;
 
     @Column(name = "colors")

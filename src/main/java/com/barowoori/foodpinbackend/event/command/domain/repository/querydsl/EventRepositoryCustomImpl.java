@@ -202,6 +202,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
                 .from(event)
                 .innerJoin(event.recruitDetail, eventRecruitDetail).fetchJoin()
                 .leftJoin(event.view, eventView).fetchJoin()
+                .leftJoin(event.eventRegion, eventRegion).fetchJoin()
                 .where(event.id.in(eventIds))
                 .fetch();
 

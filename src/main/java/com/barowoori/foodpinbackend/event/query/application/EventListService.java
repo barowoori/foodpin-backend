@@ -55,8 +55,7 @@ public class EventListService {
         }
 
         Page<Event> events = eventRepository.findEventListByFilter(searchTerm, regionIds, startDate, endDate, categoryCodes, type, truckTypes, isCatering, recruitingStatuses, pageable);
-        List<String> eventIds = events.map(Event::getId).stream().toList();
-        Map<String, List<String>> regionNames = eventRegionFullNameGenerator.findRegionNamesByEventIds(eventIds);
+        Map<String, List<String>> regionNames = eventRegionFullNameGenerator.findRegionNamesByEvents(events.getContent());
 
         return events.map(event -> EventList.of(event, regionNames.get(event.getId()), imageManager));
     }
@@ -70,8 +69,7 @@ public class EventListService {
                                                                 Pageable pageable) {
         Map<RegionType, List<String>> regionIds = regionDoRepository.findRegionIdsByFilter(regionCodes);
         Page<Event> events = eventRepository.findBackOfficeEventListByFilter(searchTerm, regionIds, startDate, endDate, categoryCodes, type, truckTypes, isCatering, recruitEndDateFrom, recruitEndDateTo, pageable);
-        List<String> eventIds = events.map(Event::getId).stream().toList();
-        Map<String, List<String>> regionNames = eventRegionFullNameGenerator.findRegionNamesByEventIds(eventIds);
+        Map<String, List<String>> regionNames = eventRegionFullNameGenerator.findRegionNamesByEvents(events.getContent());
 
         return events.map(event -> BackOfficeEventList.of(event, regionNames.get(event.getId()), imageManager));
     }
@@ -95,8 +93,7 @@ public class EventListService {
         }
 
         Page<Event> events = eventRepository.findLikeEventListByFilter(memberId, searchTerm, regionIds, startDate, endDate, categoryCodes, type, truckTypes, isCatering, recruitingStatuses, pageable);
-        List<String> eventIds = events.map(Event::getId).stream().toList();
-        Map<String, List<String>> regionNames = eventRegionFullNameGenerator.findRegionNamesByEventIds(eventIds);
+        Map<String, List<String>> regionNames = eventRegionFullNameGenerator.findRegionNamesByEvents(events.getContent());
 
         return events.map(event -> EventList.of(event, regionNames.get(event.getId()), imageManager));
     }

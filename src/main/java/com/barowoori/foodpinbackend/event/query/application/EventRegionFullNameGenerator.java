@@ -1,5 +1,7 @@
 package com.barowoori.foodpinbackend.event.query.application;
 
+import com.barowoori.foodpinbackend.event.command.domain.model.Event;
+import com.barowoori.foodpinbackend.event.command.domain.model.EventRegion;
 import com.barowoori.foodpinbackend.event.command.domain.model.QEventRegion;
 import com.barowoori.foodpinbackend.region.command.domain.model.RegionType;
 import com.barowoori.foodpinbackend.region.command.domain.query.application.RegionFullNameGenerator;
@@ -58,11 +60,7 @@ public class EventRegionFullNameGenerator {
             regionIdsByType.get(regionType).add(regionId);
         }
 
-        Map<RegionType, Map<String, String>> fullNameMapByType = new EnumMap<>(RegionType.class);
-        fullNameMapByType.put(RegionType.REGION_DO, findRegionDoNames(regionIdsByType.get(RegionType.REGION_DO)));
-        fullNameMapByType.put(RegionType.REGION_SI, findRegionSiNames(regionIdsByType.get(RegionType.REGION_SI)));
-        fullNameMapByType.put(RegionType.REGION_GU, findRegionGuNames(regionIdsByType.get(RegionType.REGION_GU)));
-        fullNameMapByType.put(RegionType.REGION_GUN, findRegionGunNames(regionIdsByType.get(RegionType.REGION_GUN)));
+        Map<RegionType, Map<String, String>> fullNameMapByType = findFullNamesByType(regionIdsByType);
 
         for (Tuple row : results) {
             String eventId = row.get(eventRegion.event.id);
@@ -76,6 +74,55 @@ public class EventRegionFullNameGenerator {
         }
 
         return result;
+    }
+
+    /**
+     * 이미 로딩된 Event.eventRegion을 재사용하여 event_regions 재조회를 생략한다.
+     * 호출부는 eventRegion이 fetch join 등으로 초기화된 Event를 넘겨야 한다.
+     */
+    public Map<String, List<String>> findRegionNamesByEvents(List<Event> events) {
+        Map<String, List<String>> result = new HashMap<>();
+        if (events == null || events.isEmpty()) {
+            return result;
+        }
+
+        Map<RegionType, List<String>> regionIdsByType = new EnumMap<>(RegionType.class);
+        for (RegionType regionType : RegionType.values()) {
+            regionIdsByType.put(regionType, new ArrayList<>());
+        }
+
+        for (Event event : events) {
+            result.put(event.getId(), new ArrayList<>());
+            EventRegion region = event.getEventRegion();
+            if (region != null) {
+                regionIdsByType.get(region.getRegionType()).add(region.getRegionId());
+            }
+        }
+
+        Map<RegionType, Map<String, String>> fullNameMapByType = findFullNamesByType(regionIdsByType);
+
+        for (Event event : events) {
+            EventRegion region = event.getEventRegion();
+            if (region == null) {
+                continue;
+            }
+            String fullRegionName = fullNameMapByType.get(region.getRegionType()).get(region.getRegionId());
+
+            if (fullRegionName != null) {
+                result.get(event.getId()).add(fullRegionName);
+            }
+        }
+
+        return result;
+    }
+
+    private Map<RegionType, Map<String, String>> findFullNamesByType(Map<RegionType, List<String>> regionIdsByType) {
+        Map<RegionType, Map<String, String>> fullNameMapByType = new EnumMap<>(RegionType.class);
+        fullNameMapByType.put(RegionType.REGION_DO, findRegionDoNames(regionIdsByType.get(RegionType.REGION_DO)));
+        fullNameMapByType.put(RegionType.REGION_SI, findRegionSiNames(regionIdsByType.get(RegionType.REGION_SI)));
+        fullNameMapByType.put(RegionType.REGION_GU, findRegionGuNames(regionIdsByType.get(RegionType.REGION_GU)));
+        fullNameMapByType.put(RegionType.REGION_GUN, findRegionGunNames(regionIdsByType.get(RegionType.REGION_GUN)));
+        return fullNameMapByType;
     }
 
     public List<String> findRegionNamesByEventId(String eventId) {

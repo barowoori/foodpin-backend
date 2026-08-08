@@ -26,15 +26,8 @@ import com.barowoori.foodpinbackend.member.command.domain.repository.TruckLikeRe
 import com.barowoori.foodpinbackend.notification.command.domain.model.NotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.event.SelectionCanceledNotificationEvent;
 import com.barowoori.foodpinbackend.notification.command.domain.model.truck.*;
-import com.barowoori.foodpinbackend.region.command.domain.model.RegionDo;
-import com.barowoori.foodpinbackend.region.command.domain.model.RegionGu;
-import com.barowoori.foodpinbackend.region.command.domain.model.RegionGun;
-import com.barowoori.foodpinbackend.region.command.domain.model.RegionSi;
+import com.barowoori.foodpinbackend.region.command.domain.query.application.RegionCacheService;
 import com.barowoori.foodpinbackend.region.command.domain.query.application.RegionSearchProcessor;
-import com.barowoori.foodpinbackend.region.command.domain.repository.RegionDoRepository;
-import com.barowoori.foodpinbackend.region.command.domain.repository.RegionGuRepository;
-import com.barowoori.foodpinbackend.region.command.domain.repository.RegionGunRepository;
-import com.barowoori.foodpinbackend.region.command.domain.repository.RegionSiRepository;
 import com.barowoori.foodpinbackend.region.command.domain.repository.dto.RegionInfo;
 import com.barowoori.foodpinbackend.truck.command.application.dto.CreateBackOfficeTruckDto;
 import com.barowoori.foodpinbackend.truck.command.application.dto.RequestTruck;
@@ -75,14 +68,11 @@ public class TruckService {
     private final TruckDocumentRepository truckDocumentRepository;
     private final TruckManagerRepository truckManagerRepository;
     private final FileRepository fileRepository;
-    private final RegionDoRepository regionDoRepository;
+    private final RegionCacheService regionCacheService;
     private final ImageManager imageManager;
     private final TruckDocumentPhotoRepository truckDocumentPhotoRepository;
     private final BusinessRegistrationRepository businessRegistrationRepository;
     private final TruckManagerInvitationGenerator truckManagerInvitationGenerator;
-    private final RegionSiRepository regionSiRepository;
-    private final RegionGuRepository regionGuRepository;
-    private final RegionGunRepository regionGunRepository;
     private final EventApplicationRepository eventApplicationRepository;
     private final EventService eventService;
     private final TruckLikeRepository truckLikeRepository;
@@ -206,12 +196,7 @@ public class TruckService {
             truckPhotoRepository.save(truckPhoto);
         }
 
-        List<RegionDo> regionDos = regionDoRepository.findAll();
-        List<RegionSi> regionSis = regionSiRepository.findAll();
-        List<RegionGu> regionGus = regionGuRepository.findAll();
-        List<RegionGun> regionGuns = regionGunRepository.findAll();
-
-        RegionSearchProcessor regionSearchProcessor = new RegionSearchProcessor(regionDos, regionSis, regionGus, regionGuns);
+        RegionSearchProcessor regionSearchProcessor = regionCacheService.buildRegionSearchProcessor();
 
         // 트럭 지역 생성
         List<TruckRegion> truckRegions = createTruckDto.getTruckRegionCodeSet().stream()
@@ -342,8 +327,9 @@ public class TruckService {
 
         List<TruckRegion> truckRegionList = truckRegionRepository.findAllByTruck(truck);
         truckRegionList.forEach(truckRegionRepository::delete);
+        RegionSearchProcessor regionSearchProcessor = regionCacheService.buildRegionSearchProcessor();
         updateTruckOperationDto.getTruckRegionCodeSet().forEach(truckRegionCode -> {
-            RegionInfo regionInfo = regionDoRepository.findByCode(truckRegionCode);
+            RegionInfo regionInfo = regionSearchProcessor.findByCode(truckRegionCode);
             TruckRegion truckRegion = TruckRegion.builder()
                     .truck(truck)
                     .regionType(regionInfo.getRegionType())
@@ -711,12 +697,7 @@ public class TruckService {
             truckPhotoRepository.save(truckPhoto);
         }
 
-        List<RegionDo> regionDos = regionDoRepository.findAll();
-        List<RegionSi> regionSis = regionSiRepository.findAll();
-        List<RegionGu> regionGus = regionGuRepository.findAll();
-        List<RegionGun> regionGuns = regionGunRepository.findAll();
-
-        RegionSearchProcessor regionSearchProcessor = new RegionSearchProcessor(regionDos, regionSis, regionGus, regionGuns);
+        RegionSearchProcessor regionSearchProcessor = regionCacheService.buildRegionSearchProcessor();
 
         List<TruckRegion> truckRegions = createTruckDto.getTruckRegionCodeSet().stream()
                 .map(truckRegionCode -> {
@@ -809,8 +790,9 @@ public class TruckService {
 
         List<TruckRegion> truckRegionList = truckRegionRepository.findAllByTruck(truck);
         truckRegionList.forEach(truckRegionRepository::delete);
+        RegionSearchProcessor backOfficeRegionSearchProcessor = regionCacheService.buildRegionSearchProcessor();
         updateBackOfficeTruckDto.getTruckOperationDto().getTruckRegionCodeSet().forEach(truckRegionCode -> {
-            RegionInfo regionInfo = regionDoRepository.findByCode(truckRegionCode);
+            RegionInfo regionInfo = backOfficeRegionSearchProcessor.findByCode(truckRegionCode);
             TruckRegion truckRegion = TruckRegion.builder()
                     .truck(truck)
                     .regionType(regionInfo.getRegionType())

@@ -1,13 +1,10 @@
 package com.barowoori.foodpinbackend.truck.query.application;
 
-import com.barowoori.foodpinbackend.document.command.domain.model.DocumentType;
 import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import com.barowoori.foodpinbackend.region.command.domain.model.*;
+import com.barowoori.foodpinbackend.region.command.domain.query.application.RegionCacheService;
 import com.barowoori.foodpinbackend.region.command.domain.query.application.RegionSearchProcessor;
 import com.barowoori.foodpinbackend.region.command.domain.repository.RegionDoRepository;
-import com.barowoori.foodpinbackend.region.command.domain.repository.RegionGuRepository;
-import com.barowoori.foodpinbackend.region.command.domain.repository.RegionGunRepository;
-import com.barowoori.foodpinbackend.region.command.domain.repository.RegionSiRepository;
 import com.barowoori.foodpinbackend.truck.command.domain.model.*;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckDocumentRepository;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckMenuRepository;
@@ -15,7 +12,6 @@ import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckRegionR
 import com.barowoori.foodpinbackend.truck.command.domain.repository.TruckRepository;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckDocumentInfoDto;
 import com.barowoori.foodpinbackend.truck.command.domain.repository.dto.TruckList;
-import org.junit.Before;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -34,13 +30,11 @@ public class TruckListService {
     private final TruckRegionRepository truckRegionRepository;
     private final ImageManager imageManager;
     private final TruckRegionFullNameGenerator truckRegionFullNameGenerator;
-    private final RegionSiRepository regionSiRepository;
-    private final RegionGuRepository regionGuRepository;
-    private final RegionGunRepository regionGunRepository;
+    private final RegionCacheService regionCacheService;
 
     public TruckListService(TruckRepository truckRepository, RegionDoRepository regionDoRepository, TruckMenuRepository truckMenuRepository,
                             TruckDocumentRepository truckDocumentRepository, TruckRegionRepository truckRegionRepository, TruckRegionFullNameGenerator truckRegionFullNameGenerator,
-                            ImageManager imageManager, RegionSiRepository regionSiRepository, RegionGuRepository regionGuRepository, RegionGunRepository regionGunRepository) {
+                            ImageManager imageManager, RegionCacheService regionCacheService) {
         this.truckRepository = truckRepository;
         this.regionDoRepository = regionDoRepository;
         this.truckMenuRepository = truckMenuRepository;
@@ -48,19 +42,11 @@ public class TruckListService {
         this.truckRegionRepository = truckRegionRepository;
         this.imageManager = imageManager;
         this.truckRegionFullNameGenerator = truckRegionFullNameGenerator;
-        this.regionSiRepository = regionSiRepository;
-        this.regionGuRepository = regionGuRepository;
-        this.regionGunRepository = regionGunRepository;
-
+        this.regionCacheService = regionCacheService;
     }
 
     private RegionSearchProcessor getRegionSearchProcessor() {
-        List<RegionDo> regionDos = regionDoRepository.findAll();
-        List<RegionSi> regionSis = regionSiRepository.findAll();
-        List<RegionGu> regionGus = regionGuRepository.findAll();
-        List<RegionGun> regionGuns = regionGunRepository.findAll();
-
-        return new RegionSearchProcessor(regionDos, regionSis, regionGus, regionGuns);
+        return regionCacheService.buildRegionSearchProcessor();
     }
 
     @Transactional(readOnly = true)

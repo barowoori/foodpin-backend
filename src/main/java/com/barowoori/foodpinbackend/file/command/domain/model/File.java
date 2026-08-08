@@ -4,6 +4,7 @@ import com.barowoori.foodpinbackend.file.command.domain.service.ImageManager;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.net.URL;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "files")
 @Getter
+@BatchSize(size = 100)
 public class File {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
